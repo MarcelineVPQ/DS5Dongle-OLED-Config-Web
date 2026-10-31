@@ -271,6 +271,8 @@
       "rateLimited": "no se puede comprobar (el servidor de actualizaciones está limitando las solicitudes; inténtalo más tarde)",
       "server": "no se puede comprobar (el servidor de actualizaciones respondió HTTP {{status}})",
       "internal": "no se puede comprobar (un error dentro de la app)",
+      "wrongChannel": "no se puede comprobar (el canal de actualizaciones trajo compilaciones de otro canal)",
+      "olderFeed": "no se puede comprobar (el canal de actualizaciones es más antiguo que uno ya comprobado)",
       "bundled": "incluido con la app",
       "checkedNewer": "Comprobado ahora: {{version}} está disponible.",
       "checkedCurrent": "Comprobado ahora: estás al día.",
@@ -645,7 +647,10 @@
       "rateLimited": "El servidor de actualizaciones está limitando las solicitudes ahora mismo (HTTP 429), así que no se comprobó nada. No es tu conexión: vuelve a intentarlo en unos minutos.",
       "server": "El servidor de actualizaciones respondió con un error (HTTP {{status}}), así que no se comprobó nada. No es tu conexión: vuelve a intentarlo más tarde.",
       "internal": "La comprobación falló dentro de la app, no en la red. Reinicia la app y vuelve a intentarlo.",
-      "noBuild": "Hay una versión nueva, pero todavía no hay una compilación para este sistema. Inténtalo más tarde."
+      "noBuild": "Hay una versión nueva, pero todavía no hay una compilación para este sistema. Inténtalo más tarde.",
+      "wrongChannel": "El canal de actualizaciones trajo compilaciones de otro canal, así que se rechazó y no se instaló nada. El problema es nuestro, no de tu conexión: vuelve a intentarlo más tarde.",
+      "olderFeed": "El canal de actualizaciones es más antiguo que uno que esta app ya comprobó, así que se rechazó y no se instaló nada. El problema es nuestro, no de tu conexión: vuelve a intentarlo más tarde.",
+      "stableMismatch": "El canal estable todavía no coincide con la versión estable más reciente, así que no se instaló nada. Vuelve a intentarlo en unos minutos."
     },
     "live": {
       "part": {

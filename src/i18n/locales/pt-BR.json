@@ -271,6 +271,8 @@
       "rateLimited": "não dá para verificar (o servidor de atualizações está limitando os pedidos; tente mais tarde)",
       "server": "não dá para verificar (o servidor de atualizações respondeu HTTP {{status}})",
       "internal": "não dá para verificar (um erro dentro do app)",
+      "wrongChannel": "não foi possível verificar (o feed de atualizações trouxe builds de outro canal)",
+      "olderFeed": "não foi possível verificar (o feed de atualizações é mais antigo que um já verificado)",
       "bundled": "incluído no app",
       "checkedNewer": "Verificado agora: {{version}} está disponível.",
       "checkedCurrent": "Verificado agora: você está atualizado.",
@@ -645,7 +647,10 @@
       "rateLimited": "O servidor de atualizações está limitando os pedidos agora (HTTP 429), então nada foi verificado. Não é a sua conexão: tente de novo em alguns minutos.",
       "server": "O servidor de atualizações respondeu com um erro (HTTP {{status}}), então nada foi verificado. Não é a sua conexão: tente de novo mais tarde.",
       "internal": "A verificação falhou dentro do app, não na rede. Reinicie o app e tente de novo.",
-      "noBuild": "Há uma versão nova, mas ainda não existe uma build dela para este sistema. Tente de novo mais tarde."
+      "noBuild": "Há uma versão nova, mas ainda não existe uma build dela para este sistema. Tente de novo mais tarde.",
+      "wrongChannel": "O feed de atualizações deste canal trouxe builds de outro canal, então foi recusado e nada foi instalado. O problema é do nosso lado, não da sua conexão: tente de novo mais tarde.",
+      "olderFeed": "O feed de atualizações é mais antigo que um que este app já verificou, então foi recusado e nada foi instalado. O problema é do nosso lado, não da sua conexão: tente de novo mais tarde.",
+      "stableMismatch": "O feed estável ainda não corresponde à versão estável mais recente, então nada foi instalado. Tente de novo em alguns minutos."
     },
     "live": {
       "part": {

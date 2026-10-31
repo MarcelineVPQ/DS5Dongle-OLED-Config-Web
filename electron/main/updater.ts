@@ -20,7 +20,7 @@ import type { UpdateChannel } from "../../src/desktop/api";
 import type { UpdateState } from "../../src/desktop/api";
 import { downloadBytes, downloadVerified } from "./download";
 import { FIRMWARE_MAX_BYTES } from "./firmwareSource";
-import { FeedCache, FeedError, FeedMissingError, feedProblem, httpProblem } from "./updateFeed";
+import { FeedCache, FeedError, FeedMissingError, checkFeed, feedProblem, feedSeenInMemory, httpProblem, type FeedSeen } from "./updateFeed";
 import { pathWithoutAppImageMounts } from "./games/schemeHandler";
 import { WINDOWS_SETUP_NAME, installerArgs, isInstalledApp } from "./windowsInstall";
 import { linkStableAppImage } from "./integration";
@@ -114,6 +114,8 @@ export class Updater {
   constructor(
     private readonly emit: (state: UpdateState) => void,
     private readonly channel: () => UpdateChannel = () => "stable",
+    // The newest issued_at verified per channel (the app's settings; index.ts).
+    private readonly feedSeen: FeedSeen = feedSeenInMemory(),
   ) {}
 
   getState(): UpdateState {
@@ -192,6 +194,12 @@ export class Updater {
       this.manifest = manifest;
       this.manifestChannel = channel;
       const remote = manifest.app.version;
+      // Back to stable installs only the newest stable release, and only from a
+      // stable feed whose version is it (schema 2; a schema 1 feed has no
+      // newest_stable: the stable feed's version, as before).
+      // error: SHOWN — desktop.updateFeed.stableMismatch (CheckNow, SetupScreen)
+      if (allowOlder && manifest.newest_stable !== undefined && !sameVersion(remote, manifest.newest_stable))
+        return this.set({ phase: "failed", detail: keyedText("desktop.updateFeed.stableMismatch"), problem: "stableMismatch" });
       const offer = allowOlder ? !sameVersion(remote, app.getVersion()) : isNewer(remote, app.getVersion());
       if (!offer) return this.set({ phase: "up-to-date", version: app.getVersion() });
       const key = this.platformKey();
@@ -203,7 +211,7 @@ export class Updater {
       const dropsDevTools = updateDropsDevTools(DEV_TOOLS_BUILT, remote) || undefined;
       return this.set({ phase: "available", version: remote, size: download.size, notesUrl: manifest.app.notes_url, dropsDevTools });
     } catch (cause) {
-      // error: SHOWN — desktop.setup.checkFailed or desktop.updateFeed.unsigned / .malformed (by problem, after Check for updates; a scheduled check that fails stays quiet: phase failed without "install"); a stale check's failure is dropped (the newest check answers)
+      // error: SHOWN — desktop.setup.checkFailed or desktop.updateFeed.unsigned / .malformed / .wrongChannel / .olderFeed (by problem, after Check for updates; a scheduled check that fails stays quiet: phase failed without "install"); a stale check's failure is dropped (the newest check answers)
       if (stale()) return dropped();
       return this.set({ phase: "failed", detail: `Couldn't check for updates: ${errorText(cause)}`, problem: feedProblem(cause) });
     }
@@ -247,6 +255,10 @@ export class Updater {
     // error: PASSES-ON — a malformed manifest throws FeedError "malformed" to check()'s catch
     const parsed = Manifest.safeParse(json);
     if (!parsed.success) throw new FeedError("malformed", "the update manifest is malformed");
+    const seen = this.feedSeen.get(channel);
+    // error: PASSES-ON — another channel's feed or one older than already verified throws FeedError "wrongChannel" / "olderFeed" to check()'s / the lookups' catch
+    const newest = checkFeed(parsed.data, channel, seen);
+    if (newest !== undefined && newest !== seen) this.feedSeen.set(channel, newest);
     return parsed.data;
   }
 

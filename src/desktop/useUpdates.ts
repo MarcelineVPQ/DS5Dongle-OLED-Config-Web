@@ -68,10 +68,13 @@ export function firmwareOffer(latest: string | null | undefined, installed: stri
 // feed, the server's HTTP error or rate limit, an error inside the app), or
 // `offlineKey` when the server didn't answer at all (never "offline?" when
 // the network worked).
-export function feedProblemText(t: TFunction, problem: FeedProblem | "noBuild" | "unpublished" | "disabled" | null | undefined, offlineKey: string): string {
+export function feedProblemText(t: TFunction, problem: FeedProblem | "noBuild" | "stableMismatch" | "unpublished" | "disabled" | null | undefined, offlineKey: string): string {
   if (problem === "noBuild") return t("desktop.updateFeed.noBuild");
+  if (problem === "stableMismatch") return t("desktop.updateFeed.stableMismatch");
   if (problem === "unsigned") return t("desktop.updateFeed.unsigned");
   if (problem === "malformed") return t("desktop.updateFeed.malformed");
+  if (problem === "wrongChannel") return t("desktop.updateFeed.wrongChannel");
+  if (problem === "olderFeed") return t("desktop.updateFeed.olderFeed");
   if (problem === "rateLimited") return t("desktop.updateFeed.rateLimited");
   if (problem === "internal") return t("desktop.updateFeed.internal");
   if (problem?.startsWith("http")) return t("desktop.updateFeed.server", { status: problem.slice(4) });

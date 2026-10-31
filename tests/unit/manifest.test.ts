@@ -39,6 +39,7 @@ describe("isNewer (strict, fail-safe)", () => {
 describe("manifest schema", () => {
   const sha = "a".repeat(64);
   const good = {
+    channel: "stable",
     app: { version: "0.2.0", platforms: { linux: { url: "https://github.com/x/y/releases/download/v0.2.0/a.AppImage", size: 10, sha256: sha } } },
     firmware: { version: "v0.8.0-oled-edition", uf2: { url: "https://github.com/x/y/releases/download/v0.8.0/f.uf2", size: 10, sha256: sha } },
   };

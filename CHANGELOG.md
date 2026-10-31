@@ -15,6 +15,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ### Security
 
+- **The update feed must be the channel's own and never older than one the app already checked.** A signed feed for another channel (Stable's builds served as Development's, or the other way round) or an older signed copy served again was accepted, and Back to stable installed whatever version the stable feed named. The app now refuses such a feed and says why (not "offline"), remembers the newest feed date it checked per channel (compared feed to feed, never against the computer's clock), and Back to stable installs only the newest stable release; in all 7 languages. Today's feeds keep working until they are republished in the new format.
 - **Electron 45.2.1 (stable), up from the 45 beta.** Fixes CVE-2026-115570: Electron did not block the compromised eMudhra intermediate certificates, so connections signed by them were trusted. Chromium 156.0.8078.75, Node 24.22.1.
 
 ## [0.9.5-dev.20] — Release Candidate 2 — 2026-10-18

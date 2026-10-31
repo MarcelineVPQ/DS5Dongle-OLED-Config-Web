@@ -271,6 +271,8 @@
       "rateLimited": "vérification impossible (le serveur de mises à jour limite les requêtes ; réessaie plus tard)",
       "server": "vérification impossible (le serveur de mises à jour a répondu HTTP {{status}})",
       "internal": "vérification impossible (une erreur dans l’app)",
+      "wrongChannel": "vérification impossible (le flux de mises à jour contenait les builds d’un autre canal)",
+      "olderFeed": "vérification impossible (le flux de mises à jour est plus ancien qu’un flux déjà vérifié)",
       "bundled": "incluse dans l'app",
       "checkedNewer": "Vérifié à l'instant : {{version}} est disponible.",
       "checkedCurrent": "Vérifié à l'instant : tu es à jour.",
@@ -645,7 +647,10 @@
       "rateLimited": "Le serveur de mises à jour limite les requêtes en ce moment (HTTP 429), donc rien n’a été vérifié. Ce n’est pas ta connexion : réessaie dans quelques minutes.",
       "server": "Le serveur de mises à jour a répondu par une erreur (HTTP {{status}}), donc rien n’a été vérifié. Ce n’est pas ta connexion : réessaie plus tard.",
       "internal": "La vérification a échoué dans l’app, pas sur le réseau. Redémarre l’app et réessaie.",
-      "noBuild": "Une nouvelle version est sortie, mais il n'y en a pas encore de build pour ce système. Réessaie plus tard."
+      "noBuild": "Une nouvelle version est sortie, mais il n'y en a pas encore de build pour ce système. Réessaie plus tard.",
+      "wrongChannel": "Le flux de mises à jour de ce canal contenait les builds d’un autre canal, donc il a été refusé et rien n’a été installé. Le problème vient de notre côté, pas de ta connexion : réessaie plus tard.",
+      "olderFeed": "Le flux de mises à jour est plus ancien qu’un flux que l’app a déjà vérifié, donc il a été refusé et rien n’a été installé. Le problème vient de notre côté, pas de ta connexion : réessaie plus tard.",
+      "stableMismatch": "Le flux stable ne correspond pas encore à la dernière version stable, donc rien n’a été installé. Réessaie dans quelques minutes."
     },
     "live": {
       "part": {

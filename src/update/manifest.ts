@@ -21,37 +21,48 @@ export const Download = z.object({
 });
 export type Download = z.infer<typeof Download>;
 
-export const Manifest = z.object({
-  // Only "stable" exists today; an opt-in development channel can be added later.
-  channel: z.string().max(32).optional(),
-  app: z.object({
-    version: z.string(),
-    notes_url: z.string().url().optional(),
-    // The release's notes for the app (Markdown, from the CHANGELOG), shown
-    // before someone joins the Development channel. Older apps ignore it.
-    notes: z.string().max(20000).optional(),
-    platforms: z.object({
-      linux: Download.optional(),
-      windows: Download.optional(),
-      macos: Download.optional(),
-    }),
-  }),
-  firmware: z
-    .object({
+export const Manifest = z
+  .object({
+    // The channel this feed is for ("stable" or "dev"): checked against the
+    // channel the app asked for (checkFeed, electron/main/updateFeed.ts).
+    channel: z.string().max(32),
+    // Schema 2 (DESIGN_FIRMWARE_IDENTITY §2): no schema = schema 1, today's feeds.
+    schema: z.number().int().positive().optional(),
+    // When the feed was built (signed with it): a feed older than one already
+    // verified on this channel is refused. Required from schema 2.
+    issued_at: z.iso.datetime().optional(),
+    // The newest stable release, in both feeds: the only version Back to stable
+    // installs. Required from schema 2.
+    newest_stable: z.string().max(64).optional(),
+    app: z.object({
       version: z.string(),
       notes_url: z.string().url().optional(),
-      uf2: Download,
-    })
-    .optional(),
-  // Our GE-Proton DualSense build, installed by the Games page (Linux).
-  proton: z
-    .object({
-      name: z.string().regex(PROTON_NAME, "proton name must be a GE-Proton<version>-DualSense folder name"),
-      notes_url: z.string().url().optional(),
-      tarball: Download,
-    })
-    .optional(),
-});
+      // The release's notes for the app (Markdown, from the CHANGELOG), shown
+      // before someone joins the Development channel. Older apps ignore it.
+      notes: z.string().max(20000).optional(),
+      platforms: z.object({
+        linux: Download.optional(),
+        windows: Download.optional(),
+        macos: Download.optional(),
+      }),
+    }),
+    firmware: z
+      .object({
+        version: z.string(),
+        notes_url: z.string().url().optional(),
+        uf2: Download,
+      })
+      .optional(),
+    // Our GE-Proton DualSense build, installed by the Games page (Linux).
+    proton: z
+      .object({
+        name: z.string().regex(PROTON_NAME, "proton name must be a GE-Proton<version>-DualSense folder name"),
+        notes_url: z.string().url().optional(),
+        tarball: Download,
+      })
+      .optional(),
+  })
+  .refine((m) => (m.schema ?? 1) < 2 || (m.issued_at !== undefined && m.newest_stable !== undefined), "a schema 2 feed carries issued_at and newest_stable");
 export type Manifest = z.infer<typeof Manifest>;
 
 // `v0.8.0-oled-edition`, `0.8.0`, `0.7.0-vendor` -> [0, 8, 0]. Anything after

@@ -48,6 +48,7 @@ const SettingsFile = z.object({
   headsetStereo: z.boolean().optional(),
   headsetStereoExplained: z.boolean().optional(),
   devFakeGames: z.boolean().optional(),
+  feedIssuedAt: z.object({ stable: z.iso.datetime().optional(), dev: z.iso.datetime().optional() }).optional(),
 });
 
 export const SettingUpdate = z.discriminatedUnion("key", [

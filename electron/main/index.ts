@@ -167,6 +167,17 @@ function start(): void {
       tray?.updateUpdateState(state);
     },
     () => settings.updateChannel,
+    {
+      get: (channel) => settings.feedIssuedAt?.[channel],
+      set: (channel, issuedAt) => {
+        try {
+          updateSetting("feedIssuedAt", { ...settings.feedIssuedAt, [channel]: issuedAt }, false);
+        } catch (cause) {
+          // error: LOGGED-OK — the feed was verified and is used; only the memory of its date is lost, so the next check can't refuse an older copy until a save works
+          logged("saving the update feed's issued_at")(cause);
+        }
+      },
+    },
   );
   updater.pruneStaleFiles();
   if (process.platform === "win32") {

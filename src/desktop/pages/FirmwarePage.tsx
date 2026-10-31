@@ -40,13 +40,17 @@ export default function FirmwareSection({ bridge, fw }: { bridge: UseDs5BridgeRe
                   ? t("desktop.firmware.unsigned")
                   : fw.problem === "malformed"
                     ? t("desktop.firmware.malformed")
-                    : fw.problem === "rateLimited"
-                      ? t("desktop.firmware.rateLimited")
-                      : fw.problem === "internal"
-                        ? t("desktop.firmware.internal")
-                        : fw.problem?.startsWith("http")
-                          ? t("desktop.firmware.server", { status: fw.problem.slice(4) })
-                          : t("desktop.firmware.offline")}
+                    : fw.problem === "wrongChannel"
+                      ? t("desktop.firmware.wrongChannel")
+                      : fw.problem === "olderFeed"
+                        ? t("desktop.firmware.olderFeed")
+                        : fw.problem === "rateLimited"
+                          ? t("desktop.firmware.rateLimited")
+                          : fw.problem === "internal"
+                            ? t("desktop.firmware.internal")
+                            : fw.problem?.startsWith("http")
+                              ? t("desktop.firmware.server", { status: fw.problem.slice(4) })
+                              : t("desktop.firmware.offline")}
         </dd>
       </dl>
       <div className="dk-row-btns">

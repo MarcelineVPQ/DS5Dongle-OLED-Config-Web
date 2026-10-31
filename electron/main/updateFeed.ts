@@ -40,6 +40,41 @@ export function httpProblem(status: number): FeedProblem {
   return status === 429 ? "rateLimited" : `http${status}`;
 }
 
+// A verified feed is used only when it is the channel's feed and no older
+// than the newest one this app already verified on that channel (design
+// DESIGN_FIRMWARE_IDENTITY §2: feed against feed, never the PC clock; no
+// expiry). `newestSeen` is that issued_at, if any. Returns the issued_at to
+// remember from now on (unchanged when this feed is not newer).
+// Schema 1 (no issued_at, today's feeds until they are republished) is
+// accepted while nothing newer has been seen on the channel; once a schema 2
+// feed has been seen there, a feed without issued_at is an older copy.
+export function checkFeed(manifest: Manifest, asked: UpdateChannel, newestSeen: string | undefined): string | undefined {
+  if (manifest.channel !== asked) throw new FeedError("wrongChannel", `the ${asked} update feed is for the ${manifest.channel} channel`);
+  const at = manifest.issued_at;
+  if (newestSeen === undefined) return at;
+  if (at === undefined || Date.parse(at) < Date.parse(newestSeen))
+    throw new FeedError("olderFeed", `the ${asked} update feed (${at ?? "no issued_at"}) is older than one already verified (${newestSeen})`);
+  return Date.parse(at) > Date.parse(newestSeen) ? at : newestSeen;
+}
+
+// Where the newest issued_at per channel is kept: the app's settings in the
+// app (index.ts), in memory for tests and tools.
+export interface FeedSeen {
+  get(channel: UpdateChannel): string | undefined;
+  set(channel: UpdateChannel, issuedAt: string): void;
+}
+
+export function feedSeenInMemory(): FeedSeen {
+  // cache: OK — key=channel; invalidated=replaced by a newer verified feed's issued_at; bound=2 entries (stable, dev)
+  const seen = new Map<UpdateChannel, string>();
+  return {
+    get: (channel) => seen.get(channel),
+    set: (channel, issuedAt) => {
+      seen.set(channel, issuedAt);
+    },
+  };
+}
+
 export class FeedCache {
   // cache: OK — key=channel; invalidated=FEED_REUSE_MS for lookups, every update check refetches, a failed fetch is dropped; bound=1 in flight
   private inflight: { channel: UpdateChannel; promise: Promise<Manifest> } | null = null;

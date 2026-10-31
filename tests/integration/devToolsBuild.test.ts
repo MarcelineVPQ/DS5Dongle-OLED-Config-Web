@@ -25,7 +25,7 @@ const FEED = "http://127.0.0.1:8765/latest.json";
 const { privateKey, publicKey } = generateKeyPairSync("ed25519");
 const DL = { url: "http://127.0.0.1:8765/a", size: 1, sha256: "0".repeat(64) };
 function serve(version: string) {
-  const feed = JSON.stringify({ app: { version, platforms: { linux: DL, windows: DL, macos: DL } } });
+  const feed = JSON.stringify({ channel: "stable", app: { version, platforms: { linux: DL, windows: DL, macos: DL } } });
   const sig = sign(null, Buffer.from(feed), privateKey).toString("base64");
   net.fetch = async (url) => new Response(url.endsWith(".sig") ? sig : feed);
 }

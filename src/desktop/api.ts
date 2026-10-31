@@ -56,10 +56,12 @@ export interface DevChannelPreview {
 // network, a timeout, a blocked host), "rateLimited" (the server answered
 // HTTP 429), `http<status>` (it answered with another HTTP error, e.g.
 // "http503"), "unsigned" (it answered, but the feed failed its signature
-// check), "malformed" (signed, but not a feed this app can read) or
-// "internal" (the page couldn't get an answer from the app's own main
-// process). Only "offline" can be the user's connection.
-export type FeedProblem = "offline" | "rateLimited" | `http${number}` | "unsigned" | "malformed" | "internal";
+// check), "malformed" (signed, but not a feed this app can read),
+// "wrongChannel" (signed, but for another channel than the one asked),
+// "olderFeed" (signed, but older than one this app already verified: an old
+// copy served again) or "internal" (the page couldn't get an answer from the
+// app's own main process). Only "offline" can be the user's connection.
+export type FeedProblem = "offline" | "rateLimited" | `http${number}` | "unsigned" | "malformed" | "wrongChannel" | "olderFeed" | "internal";
 
 // The join dialog's answer: the preview, why there's none, or null (not checked).
 // error: SHOWN — desktop.channel.joinOffline / .joinUnpublished, desktop.updateFeed.unsigned / .malformed (DevChannelDialog)
@@ -105,6 +107,9 @@ export interface DesktopSettings {
   // Dev builds only (Developer card → Fake games): Games shows a made-up
   // library instead of scanning. A stable release ignores it (electron/main/devTools.ts).
   devFakeGames: boolean;
+  // The newest issued_at of a verified update feed, per channel (schema 2 feeds):
+  // an older feed is refused ("olderFeed"). Main process only, not a page setting.
+  feedIssuedAt?: Partial<Record<UpdateChannel, string>>;
 }
 
 // Developer card → Fake games (dev builds only; electron/main/games/fake/).
@@ -134,9 +139,10 @@ export type UpdateState =
   | { phase: "installing"; version: string }
   | { phase: "ready"; version: string }
   // during "install": the user's Download and install (or an automatic one) failed, which the banner shows.
-  // problem: why a check failed (the feed's own problem, see FeedProblem; "noBuild": the new version has no build for this system yet).
-  // error: SHOWN — desktop.setup.checkFailed, or desktop.updateFeed.unsigned / .malformed / .noBuild by problem (CheckNow, SetupScreen)
-  | { phase: "failed"; detail: string; during?: "install"; problem?: FeedProblem | "noBuild" };
+  // problem: why a check failed (the feed's own problem, see FeedProblem; "noBuild": the new version has no build for this system yet;
+  // "stableMismatch": Back to stable, and the stable feed's version isn't its newest_stable).
+  // error: SHOWN — desktop.setup.checkFailed, or desktop.updateFeed.unsigned / .malformed / .wrongChannel / .olderFeed / .noBuild / .stableMismatch by problem (CheckNow, SetupScreen)
+  | { phase: "failed"; detail: string; during?: "install"; problem?: FeedProblem | "noBuild" | "stableMismatch" };
 
 export interface LatestFirmware {
   version: string;

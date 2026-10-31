@@ -39,7 +39,7 @@ vi.mock("electron", () => ({
 const FEED = "http://127.0.0.1:8765/latest.json";
 const { privateKey, publicKey } = generateKeyPairSync("ed25519");
 const signed = (text: string) => sign(null, Buffer.from(text), privateKey).toString("base64");
-const GOOD = JSON.stringify({ app: { version: "0.0.1", platforms: {} } });
+const GOOD = JSON.stringify({ channel: "stable", app: { version: "0.0.1", platforms: {} } });
 
 // The real Updater against a loopback test feed signed with a test key.
 let Updater: typeof import("../../electron/main/updater").Updater;
@@ -121,8 +121,16 @@ const WORDS: Record<FeedProblem, { check: string; card: string; checked: string;
     proton: "didn't pass its security check",
   },
   malformed: { check: "couldn't be read", card: "couldn't be read", checked: "couldn't be read", join: "couldn't be read", proton: "couldn't be read" },
+  wrongChannel: {
+    check: "carried another channel's builds",
+    card: "carried another channel's builds",
+    checked: "carried another channel's builds",
+    join: "carried another channel's builds",
+    proton: "carried another channel's builds",
+  },
+  olderFeed: { check: "older than one", card: "older than one", checked: "older than one", join: "older than one", proton: "older than one" },
 };
-const failure = (problem: FeedProblem) => (problem === "offline" ? new Error("net::ERR_INTERNET_DISCONNECTED") : new FeedError(problem, "refused"));
+const failure = (problem: FeedProblem) => (problem === "offline" ? new Error("net::ERR_INTERNET_DISCONNECTED") : new FeedError(problem, "raw feed error"));
 
 let container: HTMLDivElement;
 let root: Root;
@@ -169,7 +177,7 @@ function fakeMain(problem: FeedProblem) {
 const button = (text: string) => [...container.querySelectorAll("button")].find((b) => b.textContent === text)!;
 const text = () => container.textContent ?? "";
 
-describe.each(["offline", "rateLimited", "http503", "unsigned", "malformed"] as const)("a %s feed, on every page", (problem) => {
+describe.each(["offline", "rateLimited", "http503", "unsigned", "malformed", "wrongChannel", "olderFeed"] as const)("a %s feed, on every page", (problem) => {
   const words = WORDS[problem];
   const notOffline = (s: string) => problem === "offline" || expect(s).not.toMatch(/online|offline/i);
 
@@ -250,7 +258,7 @@ describe.each(["offline", "rateLimited", "http503", "unsigned", "malformed"] as 
     await act(async () => [...container.querySelectorAll("button")].find((b) => b.textContent?.startsWith("Install "))!.click());
     await act(async () => button("Download and install").click());
     expect(text()).toContain(words.proton);
-    expect(text()).not.toContain("refused");
+    expect(text()).not.toContain("raw feed error");
     expect(text()).not.toContain("ERR_INTERNET_DISCONNECTED");
     notOffline(text());
     expect(warn).toHaveBeenCalled();
@@ -284,7 +292,7 @@ describe("the app's own call fails", () => {
 // Bug hunt A9 (0.9.5): a newer version with no build for this system (macOS
 // before its build is published) read as "Are you online?", with an English detail.
 describe("a newer version with no build for this system", () => {
-  const NEWER = JSON.stringify({ app: { version: "0.0.2", platforms: {} } });
+  const NEWER = JSON.stringify({ channel: "stable", app: { version: "0.0.2", platforms: {} } });
 
   it("the check says so (keyed), and App settings and the setup screen show it, not 'online'", async () => {
     serve(NEWER, signed(NEWER));

@@ -270,6 +270,8 @@
       "rateLimited": "can't check (the update server is limiting requests; try again later)",
       "server": "can't check (the update server answered HTTP {{status}})",
       "internal": "can't check (an error inside the app)",
+      "wrongChannel": "can't check (the update feed carried another channel's builds)",
+      "olderFeed": "can't check (the update feed is older than one already checked)",
       "bundled": "included with the app",
       "checkedNewer": "Checked just now: {{version}} is available.",
       "checkedCurrent": "Checked just now: you're up to date.",
@@ -644,7 +646,10 @@
       "rateLimited": "The update server is limiting requests right now (HTTP 429), so nothing was checked. This isn't your connection: try again in a few minutes.",
       "server": "The update server answered with an error (HTTP {{status}}), so nothing was checked. This isn't your connection: try again later.",
       "internal": "The check failed inside the app, not on the network. Restart the app and try again.",
-      "noBuild": "A new version is out, but there's no build of it for this system yet. Try again later."
+      "noBuild": "A new version is out, but there's no build of it for this system yet. Try again later.",
+      "wrongChannel": "The update feed for this channel carried another channel's builds, so it was refused and nothing was installed. This is on our side, not your connection: try again later.",
+      "olderFeed": "The update feed is older than one this app already checked, so it was refused and nothing was installed. This is on our side, not your connection: try again later.",
+      "stableMismatch": "The stable update feed doesn't match the newest stable release yet, so nothing was installed. Try again in a few minutes."
     },
     "live": {
       "part": {

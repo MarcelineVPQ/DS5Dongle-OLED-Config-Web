@@ -16,8 +16,8 @@ const FEED = "http://127.0.0.1:8765/latest.json";
 const { privateKey, publicKey } = generateKeyPairSync("ed25519");
 const signed = (t: string) => sign(null, Buffer.from(t), privateKey).toString("base64");
 const dl = (v: string) => ({ url: `http://127.0.0.1:8765/DS5Dongle-OLED-Edition-Configurator-${v}-linux-x86_64.AppImage`, size: 10, sha256: "0".repeat(64) });
-const STABLE = JSON.stringify({ app: { version: "0.9.5", platforms: { linux: dl("0.9.5") } } });
-const DEV = JSON.stringify({ app: { version: "0.9.6-dev.1", platforms: { linux: dl("0.9.6-dev.1") } } });
+const STABLE = JSON.stringify({ channel: "stable", app: { version: "0.9.5", platforms: { linux: dl("0.9.5") } } });
+const DEV = JSON.stringify({ channel: "dev", app: { version: "0.9.6-dev.1", platforms: { linux: dl("0.9.6-dev.1") } } });
 
 let Updater: typeof import("../../electron/main/updater").Updater;
 const saved = { appimage: process.env.APPIMAGE, platform: process.platform };
