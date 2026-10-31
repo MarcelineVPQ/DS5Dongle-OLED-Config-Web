@@ -52,7 +52,7 @@ const ROW_CONTROL = "select, input, textarea, button, [tabindex]:not([tabindex='
 function onHeaderKeys(e: KeyboardEvent<HTMLDivElement>) {
   if (!(e.target instanceof HTMLElement) || !e.target.classList.contains("dk-sec-toggle")) return;
   if (!["ArrowDown", "ArrowUp", "Home", "End"].includes(e.key)) return;
-  const heads = [...e.currentTarget.querySelectorAll<HTMLButtonElement>(":scope > .dk-sec > .dk-sec-head > button.dk-sec-toggle")];
+  const heads = [...e.currentTarget.querySelectorAll<HTMLButtonElement>(":scope > .dk-sec > .dk-sec-head > .dk-sec-h > button.dk-sec-toggle")];
   const at = heads.indexOf(e.target as HTMLButtonElement);
   const next = e.key === "Home" ? 0 : e.key === "End" ? heads.length - 1 : (at + (e.key === "ArrowDown" ? 1 : -1) + heads.length) % heads.length;
   e.preventDefault();
@@ -119,18 +119,23 @@ export function Section({ id, icon: Icon, title, status, task, notice, idle = fa
     return (
       <section ref={ref} className="dk-sec idle" data-section={id}>
         <div className="dk-sec-head">
-          <div className="dk-sec-toggle dk-sec-static">
-            <HeadContent icon={Icon} title={title} status={status} task={task} chevron={false} />
-          </div>
+          <h3 className="dk-sec-h">
+            <div className="dk-sec-toggle dk-sec-static">
+              <HeadContent icon={Icon} title={title} status={status} task={task} chevron={false} />
+            </div>
+          </h3>
         </div>
       </section>
     );
   return (
     <section ref={ref} className={`dk-sec${open ? " open" : ""}${pinned ? " pinned" : ""}${statusWrap ? " status-wrap" : ""}`} data-section={id}>
       <div className="dk-sec-head">
-        <button type="button" className="dk-sec-toggle" id={`${uid}-h`} aria-label={ariaLabel} aria-expanded={open} aria-controls={open ? `${uid}-b` : undefined} onClick={() => acc.toggle(id)}>
-          <HeadContent icon={Icon} title={title} status={status} task={task} />
-        </button>
+        {/* The WAI-ARIA accordion pattern: the header button inside a heading, so a screen reader can jump from section to section. */}
+        <h3 className="dk-sec-h">
+          <button type="button" className="dk-sec-toggle" id={`${uid}-h`} aria-label={ariaLabel} aria-expanded={open} aria-controls={open ? `${uid}-b` : undefined} onClick={() => acc.toggle(id)}>
+            <HeadContent icon={Icon} title={title} status={status} task={task} />
+          </button>
+        </h3>
         <button
           type="button"
           className="dk-sec-pin"

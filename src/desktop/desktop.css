@@ -5193,6 +5193,14 @@ main.dk-body:focus:not(:focus-visible),
   display: flex;
   align-items: center;
 }
+/* The heading around a section's header button (screen readers jump by
+   heading): no box and no type of its own, the button lays out as before. */
+.dk-sec-h {
+  display: contents;
+  font: inherit;
+  color: inherit;
+  letter-spacing: inherit;
+}
 .dk-sec-toggle {
   flex: 1;
   min-width: 0;
