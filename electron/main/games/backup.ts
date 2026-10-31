@@ -231,10 +231,13 @@ export class Backups {
   restore(id: string): { files: string[]; after: string[]; mixer: Mixer; mixerSaved: boolean } {
     const manifest = this.manifest(id);
     if (manifest.restored) throw new KeyedError("desktop.errors.main.alreadyUndone");
-    const changed = manifest.files.filter((f) => f.written !== undefined && sha256(f.path) !== f.written).map((f) => f.path);
-    if (changed.length) throw new UndoConflictError(changed);
     const setDir = join(this.dir, id);
-    this.putBack(setDir, manifest);
+    // A file already back to its original was put back by an Undo that failed
+    // part-way (a launcher held the next file): skip it, so Undo can be retried.
+    const pending = manifest.files.filter((f) => sha256(f.path) !== (f.backup === null ? null : sha256(join(setDir, f.backup))));
+    const changed = pending.filter((f) => f.written !== undefined && sha256(f.path) !== f.written).map((f) => f.path);
+    if (changed.length) throw new UndoConflictError(changed);
+    this.putBack(setDir, { ...manifest, files: pending });
     manifest.restored = new Date().toISOString();
     writeFileAtomic(join(setDir, "manifest.json"), JSON.stringify(manifest, null, 2));
     return { files: manifest.files.map((f) => f.path), after: manifest.after ?? [], mixer: manifest.mixer ?? [], mixerSaved: manifest.mixerSaved ?? false };
