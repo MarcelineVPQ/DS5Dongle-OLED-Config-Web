@@ -1,10 +1,12 @@
 // Security regression tests for the desktop app. The allowlists are tested
 // directly; the window/session baseline is checked in the source so a change
 // to it has to come with a change here (and a SECURITY_AUDIT.md note).
-import { readFileSync, readdirSync } from "node:fs";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { describe, expect, it } from "vitest";
 import { parse as parseYaml } from "yaml";
-import afterPack, { devToolsBuild } from "../../tools/inspect_fuse.mjs";
+import afterPack, { builtDevTools } from "../../tools/inspect_fuse.mjs";
 import { refusedDebugSwitch } from "../../electron/main/debugSwitches";
 import { isAllowedUsbDevice } from "../../electron/main/devices";
 import { artRequestTarget } from "../../electron/main/games/artRequest";
@@ -619,7 +621,6 @@ describe("Electron fuses (electron-builder.yml)", () => {
 // 2026-10-31 app review S1, the owner's choice (b): released builds refuse both
 // debug entry points; dev-tools builds keep them for the test tools.
 describe("debug entry points: off in released builds", () => {
-  afterEach(() => vi.unstubAllEnvs());
   const builderConfig = () => parseYaml(readFileSync(new URL("../../electron-builder.yml", import.meta.url), "utf8")) as { afterPack?: string; electronFuses?: Record<string, boolean> };
 
   it("the inspect fuse is decided by the afterPack hook, never by the fixed list (flipped after it)", () => {
@@ -630,11 +631,11 @@ describe("debug entry points: off in released builds", () => {
 
   it("--inspect: off in a release build, on in a dev-tools build", async () => {
     const flipped: Array<Record<string, unknown>> = [];
-    const context = (version: string, electronPlatformName = "linux", arch = 1 /* builder-util Arch.x64 */) => ({
+    const context = (projectDir: string, electronPlatformName = "linux", arch = 1 /* builder-util Arch.x64 */) => ({
       electronPlatformName,
       arch,
       packager: {
-        appInfo: { version },
+        projectDir,
         addElectronFuses: async (_context: unknown, fuses: Record<string, unknown>) => {
           flipped.push(fuses);
           return 1;
@@ -642,14 +643,14 @@ describe("debug entry points: off in released builds", () => {
       },
     });
     // EnableNodeCliInspectArguments is fuse 3 of @electron/fuses' FuseV1Options.
-    vi.stubEnv("DS5_DEV_TOOLS", "");
-    await afterPack(context("0.9.5"));
-    await afterPack(context("0.9.5-dev.20", "darwin", 4 /* universal: the merged app */));
+    // The bundle's decision (out/main/dev-tools.json), faked per project dir.
+    const built = (projectDir: string) => projectDir === "dev-tools";
+    await afterPack(context("release"), built);
+    await afterPack(context("dev-tools", "darwin", 4 /* universal: the merged app */), built);
     // The universal build's per-arch temp apps are left alone (re-review S1).
-    await afterPack(context("0.9.5-dev.20", "darwin", 1 /* x64 */));
-    await afterPack(context("0.9.5-dev.20", "darwin", 3 /* arm64 */));
-    vi.stubEnv("DS5_DEV_TOOLS", "1");
-    await afterPack(context("0.9.5", "win32"));
+    await afterPack(context("dev-tools", "darwin", 1 /* x64 */), built);
+    await afterPack(context("dev-tools", "darwin", 3 /* arm64 */), built);
+    await afterPack(context("dev-tools", "win32"), built);
     expect(flipped).toEqual([
       { version: "1", resetAdHocDarwinSignature: false, 3: false },
       { version: "1", resetAdHocDarwinSignature: true, 3: true },
@@ -657,12 +658,23 @@ describe("debug entry points: off in released builds", () => {
     ]);
   });
 
-  it("a dev-tools build is the same rule as the bundle's DEV_TOOLS (electron.vite.config.ts)", () => {
+  // 2026-11-01 re-review N5: the hook reads the bundle's own decision, so a
+  // build with DS5_DEV_TOOLS=1 on only one step can't come out mixed.
+  it("a dev-tools build is the bundle's own DEV_TOOLS (electron.vite.config.ts writes it for the hook)", () => {
     expect(viteSource).toContain('const DEV_TOOLS = process.env.DS5_DEV_TOOLS === "1" || /-dev\\.\\d+$/.test(version);');
-    expect(devToolsBuild("0.9.5", {})).toBe(false);
-    expect(devToolsBuild("0.9.5-rc.1", {})).toBe(false);
-    expect(devToolsBuild("0.9.5-dev.20", {})).toBe(true);
-    expect(devToolsBuild("0.9.5", { DS5_DEV_TOOLS: "1" })).toBe(true);
+    expect(viteSource).toContain('this.emitFile({ type: "asset", fileName: "dev-tools.json", source: JSON.stringify({ devTools: DEV_TOOLS }) });');
+    expect(viteSource).toMatch(/main: \{\s*define: DEV_TOOLS_DEFINE,\s*plugins: \[devToolsMarker\(\)\],/);
+    const project = mkdtempSync(join(tmpdir(), "ds5-fuse-"));
+    try {
+      expect(() => builtDevTools(project)).toThrow(/dev-tools\.json/); // not built: the packaging stops
+      mkdirSync(join(project, "out", "main"), { recursive: true });
+      writeFileSync(join(project, "out", "main", "dev-tools.json"), JSON.stringify({ devTools: true }));
+      expect(builtDevTools(project)).toBe(true);
+      writeFileSync(join(project, "out", "main", "dev-tools.json"), JSON.stringify({ devTools: false }));
+      expect(builtDevTools(project)).toBe(false);
+    } finally {
+      rmSync(project, { recursive: true, force: true });
+    }
   });
 
   it("--remote-debugging-port / -pipe: refused by a packaged build without the dev tools only", () => {

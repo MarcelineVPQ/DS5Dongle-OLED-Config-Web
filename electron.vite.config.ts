@@ -60,9 +60,23 @@ function desktopCsp(): Plugin {
 // The main process's half of the dev tools (Fake games, electron/main/devTools.ts).
 const DEV_TOOLS_DEFINE = { "import.meta.env.VITE_DEV_TOOLS": JSON.stringify(DEV_TOOLS ? "1" : "0") };
 
+// The packager's afterPack hook (tools/inspect_fuse.mjs) reads this build's
+// decision from out/main/dev-tools.json, so the --inspect fuse always matches
+// the bundle it packs (2026-11-01 re-review N5).
+function devToolsMarker(): Plugin {
+  return {
+    name: "ds5-dev-tools-marker",
+    apply: "build",
+    generateBundle() {
+      this.emitFile({ type: "asset", fileName: "dev-tools.json", source: JSON.stringify({ devTools: DEV_TOOLS }) });
+    },
+  };
+}
+
 export default defineConfig({
   main: {
     define: DEV_TOOLS_DEFINE,
+    plugins: [devToolsMarker()],
     build: {
       outDir: "out/main",
       rollupOptions: { input: resolve("electron/main/index.ts") },
