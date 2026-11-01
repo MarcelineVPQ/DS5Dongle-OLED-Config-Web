@@ -3,12 +3,46 @@ name: CI
 on:
   push:
     branches: [master]
-    # Docs-only pushes run nothing (Marcy 2026-11-01: CI only where it proves something).
-    paths-ignore: ["**.md", "docs/**"]
+    # Docs-only pushes run nothing (Marcy 2026-11-01: CI only where it proves
+    # something), except the documents the app ships or the tests read (owner,
+    # re-review S2): a later pattern wins, so those come back after the "!" ones.
+    paths:
+      - "**"
+      - "!**.md"
+      - "!docs/**"
+      - "CHANGELOG.md"
+      - "README.md"
+      - "SECURITY.md"
+      - "CODE_OF_CONDUCT.md"
+      - "docs/BACKLOG.md"
+      - "docs/GUIDE.md"
+      - "docs/GLOSSARY.md"
+      - "docs/CONTRIBUTING.md"
+      - "docs/DEDUPE_AUDIT.md"
+      - "docs/LINT_SUPPRESSIONS.md"
+      - "docs/PROTON_CHANGELOG.md"
+      - "docs/SECURITY_AUDIT.md"
   pull_request:
     branches: [master]
-    # Docs-only pushes run nothing (Marcy 2026-11-01: CI only where it proves something).
-    paths-ignore: ["**.md", "docs/**"]
+    # Docs-only pushes run nothing (Marcy 2026-11-01: CI only where it proves
+    # something), except the documents the app ships or the tests read (owner,
+    # re-review S2): a later pattern wins, so those come back after the "!" ones.
+    paths:
+      - "**"
+      - "!**.md"
+      - "!docs/**"
+      - "CHANGELOG.md"
+      - "README.md"
+      - "SECURITY.md"
+      - "CODE_OF_CONDUCT.md"
+      - "docs/BACKLOG.md"
+      - "docs/GUIDE.md"
+      - "docs/GLOSSARY.md"
+      - "docs/CONTRIBUTING.md"
+      - "docs/DEDUPE_AUDIT.md"
+      - "docs/LINT_SUPPRESSIONS.md"
+      - "docs/PROTON_CHANGELOG.md"
+      - "docs/SECURITY_AUDIT.md"
   # Windows and macOS run only by hand (Marcy 2026-11-01): once before every
   # release tag, and the release itself builds and tests on both:
   # gh workflow run CI --ref master
