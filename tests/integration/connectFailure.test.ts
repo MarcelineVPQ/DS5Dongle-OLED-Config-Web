@@ -6,6 +6,7 @@
 import { act, createElement } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
+import { PROTOCOL_MINOR_KNOWN } from "../../src/protocol/bridgeClient";
 import type { SimulatedDongle } from "../../src/protocol/simulatedDongle";
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
@@ -107,7 +108,7 @@ describe("a connect that fails", () => {
     });
     expect(seen.connected).toBe(false);
     expect(seen.error).toContain("2.");
-    expect(seen.error).toBe(t("desktop.errors.board.protocol", { have: `2.${21}`, need: "1.x", interpolation: { escapeValue: false } }));
+    expect(seen.error).toBe(t("desktop.errors.board.protocol", { have: `2.${PROTOCOL_MINOR_KNOWN}`, need: "1.x", interpolation: { escapeValue: false } }));
     expect(opens.count).toBe(1);
     expect(dongle.isOpen).toBe(false);
   });

@@ -30,7 +30,7 @@ async function goTo(client: Ds5BridgeClient, dongle: SimulatedDongle, screen: nu
   expect(dongle.oledScreen).toBe(screen);
 }
 const savedBody = (d: SimulatedDongle) => {
-  const whole = new Uint8Array(51);
+  const whole = new Uint8Array(42 + d.flashTail.length);
   whole.set(d.flashConfig, 0);
   whole.set(d.rightGain, 38);
   whole.set(d.flashTail, 42);

@@ -847,7 +847,7 @@ describe("the Pico 2 W page on the accordion", () => {
     expect(diagText.indexOf(m.i18n.t("desktop.dash.usb"))).toBeLessThan(diagText.indexOf(m.i18n.t("desktop.dash.audio")));
     expect(diagText.indexOf(m.i18n.t("desktop.dash.audio"))).toBeLessThan(diagText.indexOf(m.i18n.t("desktop.dash.timing.title")));
     // Audio reports is a setting: the Controller page's Haptic feedback section, not the Timing readout.
-    expect(diagText).not.toContain(m.i18n.t("haptics.packetMode"));
+    expect(diagText).not.toContain(m.i18n.t("haptics.packetDouble"));
     // The board's specs: its zone's title line (name, then chip · cores · clock · SRAM · flash · wireless), not in Diagnostics.
     const zone = container.querySelector<HTMLElement>(".dk-split-main .pico-zone")!;
     expect(zone.querySelector("h3")?.textContent).toBe("Pico 2 W");

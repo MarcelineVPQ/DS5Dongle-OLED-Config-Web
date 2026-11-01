@@ -678,7 +678,10 @@ describe("debug entry points: off in released builds", () => {
   });
 
   it("--remote-debugging-port / -pipe: refused by a packaged build without the dev tools only", () => {
-    const has = (...names: string[]) => (name: string) => names.includes(name);
+    const has =
+      (...names: string[]) =>
+      (name: string) =>
+        names.includes(name);
     expect(refusedDebugSwitch(has("remote-debugging-port"), true, false)).toBe("remote-debugging-port");
     expect(refusedDebugSwitch(has("remote-debugging-pipe"), true, false)).toBe("remote-debugging-pipe");
     expect(refusedDebugSwitch(has("no-sandbox", "hidden"), true, false)).toBeNull();
