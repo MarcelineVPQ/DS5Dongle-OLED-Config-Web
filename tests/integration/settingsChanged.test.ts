@@ -70,3 +70,22 @@ it("App settings follows a change made in the tray or by the app", async () => {
   expect(changed).toBeNull(); // unsubscribed with the page
   root = createRoot(container);
 });
+
+// 2026-11-01 re-review S3: GNOME without a tray. Close to tray and Start
+// minimized couldn't act there, so App settings says why instead of showing them.
+it("with no tray on this desktop, App settings shows the line instead of the two tray switches", async () => {
+  await act(async () =>
+    root.render(createElement(AppSettingsPage, { bridge: { firmwareVersion: null, identity: null } as never, fw: { refreshLatest: () => Promise.resolve({ latest: null }) } as never })),
+  );
+  await act(async () => undefined);
+  await act(async () => changed?.({ ...SETTINGS, startMinimized: true, trayMissing: true }));
+  expect(startup()).not.toContain("Close to tray");
+  expect(startup()).not.toContain("Start minimized");
+  const toggle = container.querySelector<HTMLElement>('[data-section="startup"] .dk-sec-toggle');
+  act(() => toggle?.click());
+  expect(startup()).toContain("This desktop shows no tray icons, so closing the window quits the app.");
+  const switches = [...container.querySelectorAll('[data-section="startup"] [role="switch"]')].map((s) => s.getAttribute("aria-label"));
+  expect(switches).toContain("Start at login");
+  expect(switches).not.toContain("Close to tray");
+  expect(switches).not.toContain("Start minimized");
+});

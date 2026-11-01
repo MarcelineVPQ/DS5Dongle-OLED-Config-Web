@@ -16,7 +16,7 @@ import { createDesktopShortcut, integrateDesktop } from "./integration";
 import { registerIpc } from "./ipc";
 import { GamesService, moveOldSteamKeys } from "./games/service";
 import { DEV_TOOLS_BUILT } from "./devTools";
-import { trayHostMissing } from "./trayHost";
+import { closeHides, showsAfterTrayCheck, trayHostMissing } from "./trayHost";
 import { appMenuTemplate, pageShortcut } from "./appMenu";
 import { FakeGamesService } from "./games/fake/service";
 import { dominantColor } from "./games/artColor";
@@ -586,7 +586,7 @@ function start(): void {
   // No tray on this desktop: started hidden, there'd be no way to the window.
   void trayHostMissing().then((missing) => {
     trayMissing = missing;
-    if (missing && startHidden) showWindow();
+    if (showsAfterTrayCheck(missing, startHidden)) showWindow();
   }, logged("asking whether this desktop shows tray icons (close-to-tray stays as set)"));
   // Stopped at quit (lifetime pass batch 4: the stop was dropped).
   const stopPalette = watchDesktopPalette(
@@ -750,7 +750,7 @@ function createWindow(visible: boolean): void {
   // Close-to-tray: hide instead of quitting; tray Quit and logout still quit.
   // lifetime: OK — goes with the window (destroyed on "closed")
   mainWindow.on("close", (event) => {
-    if (settings.closeToTray && !trayMissing && !quitting) {
+    if (closeHides(settings.closeToTray, trayMissing, quitting)) {
       event.preventDefault();
       mainWindow?.hide();
     } else if (!hold.allowQuit(event, () => app.quit())) {
