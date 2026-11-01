@@ -6,6 +6,10 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ## [Unreleased]
 
+### Fixed
+
+- **macOS: ⌘W closes the window again.** The app's own menu (dev.21) kept the App, Edit and Window menus but left out File, where Close lives, so ⌘W stopped closing the window. The File menu is back with Close (⌘W).
+
 ## [0.9.5-dev.21] - 2026-11-01
 
 ### Added
