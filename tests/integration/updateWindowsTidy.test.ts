@@ -21,6 +21,8 @@ vi.mock("node:child_process", () => ({ spawn: (...args: unknown[]) => (spawned(.
 const saved = process.platform;
 let Updater: typeof import("../../electron/main/updater").Updater;
 beforeAll(async () => {
+  // The loopback test feed works only in a dev-tools build.
+  vi.stubEnv("VITE_DEV_TOOLS", "1");
   process.env.DS5_UPDATE_MANIFEST = "http://127.0.0.1:8765/latest.json";
   Object.defineProperty(process, "platform", { value: "win32" });
   ({ Updater } = await import("../../electron/main/updater"));

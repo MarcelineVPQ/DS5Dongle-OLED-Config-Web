@@ -38,6 +38,8 @@ function serve(body: string) {
 let Updater: typeof import("../../electron/main/updater").Updater;
 const saved = { appimage: process.env.APPIMAGE, platform: process.platform };
 beforeAll(async () => {
+  // The loopback test feed works only in a dev-tools build.
+  vi.stubEnv("VITE_DEV_TOOLS", "1");
   process.env.DS5_UPDATE_MANIFEST = FEED;
   process.env.DS5_UPDATE_PUBKEY = publicKey.export({ format: "der", type: "spki" }).toString("base64");
   // A Linux AppImage that can replace itself, so a check can answer "available".

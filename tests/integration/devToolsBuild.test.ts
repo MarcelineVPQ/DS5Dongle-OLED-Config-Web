@@ -80,12 +80,31 @@ describe("the updater in a dev-tools build", () => {
     expect((state as { dropsDevTools?: true }).dropsDevTools).toBeUndefined();
     expect(u.autoInstallable()).toBe(true);
   });
-  it("a release build installs a release automatically as before", async () => {
+});
+
+// The loopback test feed (DS5_UPDATE_MANIFEST + DS5_UPDATE_PUBKEY) is a dev-build
+// tool (2026-10-31 review N4): a release build asks GitHub and never trusts the
+// test key, whatever the environment says.
+describe("the loopback test feed", () => {
+  it("a release build ignores it: GitHub's feed, and the test key isn't trusted", async () => {
     const { updater } = await build(false);
     serve("0.9.6");
+    const asked: string[] = [];
+    const answer = net.fetch;
+    net.fetch = (url) => (asked.push(url), answer(url));
     const u = new updater.Updater(() => undefined);
-    expect(((await u.check()) as { dropsDevTools?: true }).dropsDevTools).toBeUndefined();
-    expect(u.autoInstallable()).toBe(true);
+    expect(await u.check()).toMatchObject({ phase: "failed", problem: "unsigned" });
+    expect(asked.length).toBeGreaterThan(0);
+    expect(asked.every((url) => url.startsWith("https://raw.githubusercontent.com/MarcelineVPQ/"))).toBe(true);
+  });
+  it("a dev-tools build uses it", async () => {
+    const { updater } = await build(true);
+    serve("0.9.6");
+    const asked: string[] = [];
+    const answer = net.fetch;
+    net.fetch = (url) => (asked.push(url), answer(url));
+    expect(await new updater.Updater(() => undefined).check()).toMatchObject({ phase: "available", version: "0.9.6" });
+    expect(asked.every((url) => url.startsWith("http://127.0.0.1:8765/"))).toBe(true);
   });
 });
 

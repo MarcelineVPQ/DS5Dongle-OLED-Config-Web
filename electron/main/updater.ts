@@ -38,6 +38,8 @@ const OUR_APPIMAGE = /^DS5Dongle-OLED-Edition-Configurator-(\d+\.\d+\.\d+(?:-dev
 // updater at a server on this machine, so a full update cycle can be exercised
 // before anything is published. Loopback only, so nothing on the network can
 // stand in for GitHub; with it set, downloads must also come from loopback.
+// Dev builds only (DEV_TOOLS_BUILT): a stable release ignores it, so it has no
+// update path but GitHub's (2026-10-31 review N4).
 function isLoopbackHttp(raw: string | undefined): boolean {
   if (!raw) return false;
   try {
@@ -49,7 +51,7 @@ function isLoopbackHttp(raw: string | undefined): boolean {
   }
 }
 
-const testFeed = isLoopbackHttp(process.env.DS5_UPDATE_MANIFEST) ? process.env.DS5_UPDATE_MANIFEST! : null;
+const testFeed = DEV_TOOLS_BUILT && isLoopbackHttp(process.env.DS5_UPDATE_MANIFEST) ? process.env.DS5_UPDATE_MANIFEST! : null;
 
 // The test feed may be signed with a test key (DS5_UPDATE_PUBKEY, base64
 // SPKI); only together with a loopback feed, never for the real one.
