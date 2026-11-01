@@ -583,15 +583,14 @@ function HomeSections({ setup, report, status }: { setup: GamesSetup; report: Ga
         >
           {() => (
             <>
-              {builds.length > 0 ? (
-                <ProtonBuilds builds={builds} setup={setup} />
-              ) : ours ? (
-                <p>
-                  <span className="dk-mono">{ours}</span> {t("desktop.games.protonFound", "is installed.")}
-                </p>
-              ) : (
-                <p>{t("desktop.games.protonMissing", "Our Proton build isn't installed yet. Windows games need it for adaptive triggers and haptic feedback through {{device}}.")}</p>
-              )}
+              {builds.length === 0 &&
+                (ours ? (
+                  <p>
+                    <span className="dk-mono">{ours}</span> {t("desktop.games.protonFound", "is installed.")}
+                  </p>
+                ) : (
+                  <p>{t("desktop.games.protonMissing", "Our Proton build isn't installed yet. Windows games need it for adaptive triggers and haptic feedback through {{device}}.")}</p>
+                ))}
               {report.ourProton.updateAvailable && report.ourProton.latest && !setup.protonConfirm && busy !== "proton" && (
                 <div className="dk-row-btns">
                   <button type="button" className="dk-btn primary" onClick={() => setup.setProtonConfirm(true)}>
@@ -614,6 +613,8 @@ function HomeSections({ setup, report, status }: { setup: GamesSetup; report: Ga
                   </div>
                 </div>
               )}
+              {/* The builds, each with its Remove, after Install / Update: the destructive row last (2026-11-01 re-review N3). */}
+              {builds.length > 0 && <ProtonBuilds builds={builds} setup={setup} />}
               {busy === "proton" && <ProtonProgressView progress={setup.protonProgress} />}
               {busy === "proton-remove" && <p className="dk-hint">{t("desktop.games.protonRemoving")}</p>}
               {setup.protonMessage && <p className="dk-hint">{setup.protonMessage}</p>}
@@ -892,11 +893,11 @@ function ProtonBuilds({ builds, setup }: { builds: InstalledProton[]; setup: Gam
               <div className="dk-confirm">
                 <p>{t("desktop.games.protonRemoveConfirm", { name: b.name })}</p>
                 <div className="dk-row-btns">
-                  <button type="button" className="dk-btn danger" onClick={() => void setup.removeProton(b.name).catch(logged("removeProton (it shows its own errors)"))}>
-                    {t("desktop.games.protonRemoveGo")}
-                  </button>
                   <button type="button" className="dk-btn" onClick={() => setup.setProtonRemove(null)}>
                     {t("desktop.common.cancel")}
+                  </button>
+                  <button type="button" className="dk-btn danger" onClick={() => void setup.removeProton(b.name).catch(logged("removeProton (it shows its own errors)"))}>
+                    {t("desktop.games.protonRemoveGo")}
                   </button>
                 </div>
               </div>

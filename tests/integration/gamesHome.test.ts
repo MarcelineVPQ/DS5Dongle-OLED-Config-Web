@@ -410,9 +410,42 @@ describe("Games → Home, needs attention", () => {
     await click(removes[0]);
     expect(removed).toEqual([]);
     expect(proton.textContent).toContain(i18n.t("desktop.games.protonRemoveConfirm", { name: OLD }));
+    // One order for every Remove, as USB access's (2026-11-01 re-review N3): Cancel, then the danger button.
+    expect([...proton.querySelectorAll(".dk-confirm button")].map((b) => b.textContent)).toEqual([i18n.t("desktop.common.cancel"), i18n.t("desktop.games.protonRemoveGo")]);
     await click(button(i18n.t("desktop.games.protonRemoveGo"), proton));
     expect(removed).toEqual([OLD]);
     expect($(place("proton"))!.textContent).toContain(i18n.t("desktop.games.protonRemoved", { name: OLD }));
+  });
+
+  const OLD_BUILD = "GE-Proton11-6-DualSense";
+  const oldBuild = { name: OLD_BUILD, paths: [`~/.steam/root/compatibilitytools.d/${OLD_BUILD}`], usedBy: { games: [], launchers: [] } };
+
+  // 2026-11-01 re-review N3: the constructive row (Install / Update) before the destructive one (each build's Remove).
+  it("the Proton card offers the update before any Remove", async () => {
+    const r = homeReport("healthy");
+    const NEWER = "GE-Proton11-8-DualSense";
+    await render("healthy", { ...r, ourProton: { ...r.ourProton, latest: NEWER, updateAvailable: true, builds: [oldBuild] } });
+    const proton = await open("proton");
+    const update = button(i18n.t("desktop.games.protonUpdate", { name: NEWER }), proton)!;
+    const remove = button(i18n.t("desktop.games.protonRemove"), proton)!;
+    expect(update.compareDocumentPosition(remove) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  // 2026-11-01 re-review N4: the rescan after a Remove shows its own failure; the Remove's result stays on the card.
+  it("a failed rescan after a Remove keeps the result and shows its own error", async () => {
+    const r = homeReport("healthy");
+    const report = { ...r, ourProton: { ...r.ourProton, builds: [oldBuild] } };
+    const base = homeDesktop("healthy", [], report) as { gamesScan: () => Promise<unknown> };
+    let scans = 0;
+    const gamesScan = () => (++scans === 1 ? base.gamesScan() : Promise.reject(new Error("The scan failed.")));
+    const removeProton = (name: string) => Promise.resolve({ ok: true, name, removed: [] });
+    await render("healthy", report, { gamesScan, removeProton });
+    const proton = await open("proton");
+    await click(button(i18n.t("desktop.games.protonRemove"), proton));
+    await click(button(i18n.t("desktop.games.protonRemoveGo"), proton));
+    expect(scans).toBeGreaterThan(1);
+    expect($(place("proton"))!.textContent).toContain(i18n.t("desktop.games.protonRemoved", { name: OLD_BUILD }));
+    expect(container!.textContent).toContain("The scan failed.");
   });
 });
 
