@@ -1,12 +1,12 @@
 name: npm-audit
 
 on:
-  push:
-    branches: [master]
+  # Once a day and on pull requests (Dependabot's), not on every push (Marcy 2026-11-01).
   pull_request:
     branches: [master]
   schedule:
-    - cron: "0 3 * * 1" # weekly on Monday 03:00 UTC
+    - cron: "0 3 * * *" # daily 03:00 UTC
+  workflow_dispatch:
 
 jobs:
   npm-audit:

@@ -7,13 +7,12 @@ name: Security Scans
 # on the runner itself (pinned, checked downloads), never in a container.
 
 on:
-  push:
-    branches: [master]
+  # Once a day and on pull requests, not on every push (Marcy 2026-11-01).
   pull_request:
     branches: [master]
   schedule:
-    # Weekly sweep (Mondays 05:30 UTC) so rule updates catch drift without a push.
-    - cron: "30 5 * * 1"
+    - cron: "30 5 * * *" # daily 05:30 UTC
+  workflow_dispatch:
 
 jobs:
   semgrep:

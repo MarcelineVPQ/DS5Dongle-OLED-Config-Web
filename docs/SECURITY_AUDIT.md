@@ -55,7 +55,7 @@ The app runs locally and talks to one USB device. It loads no remote content and
 | DOM sinks                  | `.hooks/check_dom_sinks.sh` + ESLint      | No `innerHTML`/`eval`/`new Function`; two documented `dangerouslySetInnerHTML` uses render bundled build-time SVGs only                                                                |
 | Regression tests           | `tests/security/electron.test.ts`        | Allowlists and the window/session/CSP baseline                                                                                                                                           |
 | Dependencies               | `package.json`, Dependabot, `npm-audit.yml` | Exact versions, chosen ≥ 2 weeks after release (waivers: the Electron 45 beta, owner decision 2026-10-14, ended 2026-10-31; Electron 45 stable, owner decision 2026-10-15, taken as 45.2.1 for CVE-2026-115570; the binary is checked against the SHA-256 checksums in the package when it is installed); weekly grouped Dependabot PRs; CI fails on high-severity advisories in shipped dependencies                                         |
-| SAST / secrets             | `security-scans.yml`                     | Semgrep (security-audit, secrets, typescript, react, javascript, owasp-top-ten) and Gitleaks over full history, weekly and on every push                                             |
+| SAST / secrets             | `security-scans.yml`                     | Semgrep (security-audit, secrets, typescript, react, javascript, owasp-top-ten) and Gitleaks over full history, daily and on pull requests                                           |
 
 ## Open items
 

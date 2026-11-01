@@ -3,10 +3,15 @@ name: CI
 on:
   push:
     branches: [master]
+    # Docs-only pushes run nothing (Marcy 2026-11-01: CI only where it proves something).
+    paths-ignore: ["**.md", "docs/**"]
   pull_request:
     branches: [master]
-  # A branch can be checked on every runner before it's merged:
-  # gh workflow run CI --ref <branch>
+    # Docs-only pushes run nothing (Marcy 2026-11-01: CI only where it proves something).
+    paths-ignore: ["**.md", "docs/**"]
+  # Windows and macOS run only by hand (Marcy 2026-11-01): once before every
+  # release tag, and the release itself builds and tests on both:
+  # gh workflow run CI --ref master
   workflow_dispatch:
 
 env:
@@ -101,11 +106,12 @@ jobs:
         run: npx vitest run --coverage --coverage.reporter=text --coverage.reporter=html
 
   # The release builds the app on Windows and macOS too and runs the tests
-  # there first; running them on Windows on every push catches a
-  # Windows-only failure before a release tag does (0.9.4: Games tests).
-  # Same on macOS (no Mac to test on by hand: this and the release build are it).
+  # there first. These two jobs run only by hand (Marcy 2026-11-01), once
+  # before every release tag, so a Windows-only failure (0.9.4: Games tests)
+  # is still caught before the tag: gh workflow run CI --ref master.
   test-macos:
     name: Test (macOS)
+    if: github.event_name == 'workflow_dispatch'
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -120,6 +126,7 @@ jobs:
 
   test-windows:
     name: Test (Windows)
+    if: github.event_name == 'workflow_dispatch'
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
