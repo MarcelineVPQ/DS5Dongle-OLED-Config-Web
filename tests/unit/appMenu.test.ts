@@ -8,7 +8,7 @@ describe("app menu (no reload, zoom or DevTools items)", () => {
     expect(appMenuTemplate("linux")).toBeNull();
     expect(appMenuTemplate("win32")).toBeNull();
     const roles = JSON.stringify(appMenuTemplate("darwin"));
-    expect(roles).toBe(JSON.stringify([{ role: "appMenu" }, { role: "editMenu" }, { role: "windowMenu" }]));
+    expect(roles).toBe(JSON.stringify([{ role: "appMenu" }, { role: "fileMenu" }, { role: "editMenu" }, { role: "windowMenu" }]));
     for (const banned of ["reload", "forceReload", "toggleDevTools", "zoomIn", "zoomOut", "resetZoom", "viewMenu"]) expect(roles).not.toContain(banned);
   });
 });

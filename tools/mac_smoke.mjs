@@ -5,8 +5,9 @@
 // and starts it with DevTools on --port and the main process's inspector on
 // --inspect; this script then:
 //
-//   1. turns on the Developer card's Simulate board, Pretend more controllers
-//      and Fake games by clicking their switches (as a developer would);
+//   1. turns on the Developer card's Simulate board and Pretend more
+//      controllers by clicking their switches (as a developer would; Fake
+//      games is hidden on macOS, which has no Games page);
 //   2. visits every page on the rail and opens every accordion section
 //      (src/desktop/accordion/sections.ts, plus any section the page shows
 //      that isn't listed), every controller part, and screenshots each;
@@ -284,11 +285,11 @@ await step("system", async () => {
 // 1. The Developer card's switches, clicked as a developer would
 await step("dev switches", async () => {
   await ev(`window.desktop.setSetting("updatesAsked", true).then(() => 1)`);
-  // Each switch (the first two reload the page), from the Developer section.
+  // Each switch (the first reloads the page), from the Developer section.
+  // Fake games is hidden on macOS (no Games page there), so it isn't clicked.
   // loop: SERIAL-REQUIRED — one page: each switch is clicked after the previous reload
   for (const [label, reloads] of [
     ["Simulate", true],
-    ["Fake games", true],
     ["Pretend more controllers", false],
   ]) {
     await tap('[data-rail="app"]');
@@ -304,8 +305,7 @@ await step("dev switches", async () => {
   }
   await sleep(1000);
   const state = await ev(`({ simulated: localStorage.getItem("ds5.dev.simulated"), fakeSlots: localStorage.getItem("ds5.dev.fakeSlots") })`);
-  const fg = await ev(`window.desktop.devFakeGames({}).then((s) => s.on)`);
-  record("dev switches", "all three on", state.simulated === "1" && state.fakeSlots === "1" && fg === true, JSON.stringify({ ...state, fakeGames: fg }));
+  record("dev switches", "both on", state.simulated === "1" && state.fakeSlots === "1", JSON.stringify(state));
   await shot("app-developer-on");
 });
 

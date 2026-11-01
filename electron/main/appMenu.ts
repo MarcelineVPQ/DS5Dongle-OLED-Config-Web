@@ -2,12 +2,13 @@
 // shortcuts reload the page (Ctrl+R / ⌘R, F5: a reload mid firmware write
 // leaves the board half-written and drops staged drafts), open DevTools in a
 // stable release and zoom past the pinned 100 %. Windows and Linux get no menu
-// (the bar was hidden anyway); macOS keeps its App, Edit (copy and paste in
-// text fields) and Window menus, none of which reload, zoom or open DevTools.
+// (the bar was hidden anyway); macOS keeps its App, File (Close, ⌘W), Edit
+// (copy and paste in text fields) and Window menus, none of which reload, zoom
+// or open DevTools.
 import type { MenuItemConstructorOptions } from "electron";
 
 export function appMenuTemplate(platform: NodeJS.Platform): MenuItemConstructorOptions[] | null {
-  return platform === "darwin" ? [{ role: "appMenu" }, { role: "editMenu" }, { role: "windowMenu" }] : null;
+  return platform === "darwin" ? [{ role: "appMenu" }, { role: "fileMenu" }, { role: "editMenu" }, { role: "windowMenu" }] : null;
 }
 
 export type ShortcutInput = { type: string; key: string; code: string; control: boolean; meta: boolean; shift: boolean; alt: boolean };
