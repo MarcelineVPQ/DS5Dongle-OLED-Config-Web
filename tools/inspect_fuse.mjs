@@ -14,7 +14,13 @@
 // The other fuses are in electron-builder.yml (electronFuses, which leaves this
 // one out so it doesn't undo this); electron-builder flips them right after
 // this hook and then resets the Mac build's ad-hoc signature.
-import { FuseV1Options, FuseVersion } from "@electron/fuses";
+//
+// @electron/fuses' values written out (it's only the packager's dependency, not
+// ours, so importing it would depend on npm's hoisting; 2026-11-01 re-review
+// N1): FuseVersion.V1 is "1" and FuseV1Options.EnableNodeCliInspectArguments
+// is 3 (@electron/fuses 1.8.0, dist/config.js).
+const FUSE_VERSION_V1 = "1";
+const ENABLE_NODE_CLI_INSPECT_ARGUMENTS = 3;
 
 export const devToolsBuild = (version, env = process.env) => env.DS5_DEV_TOOLS === "1" || /-dev\.\d+$/.test(version);
 
@@ -30,8 +36,8 @@ export default async function afterPack(context) {
   const inspect = devToolsBuild(context.packager.appInfo.version);
   console.log(`  • inspect fuse: ${inspect ? "on (dev-tools build)" : "off (release build)"}`);
   await context.packager.addElectronFuses(context, {
-    version: FuseVersion.V1,
+    version: FUSE_VERSION_V1,
     resetAdHocDarwinSignature: context.electronPlatformName === "darwin",
-    [FuseV1Options.EnableNodeCliInspectArguments]: inspect,
+    [ENABLE_NODE_CLI_INSPECT_ARGUMENTS]: inspect,
   });
 }
