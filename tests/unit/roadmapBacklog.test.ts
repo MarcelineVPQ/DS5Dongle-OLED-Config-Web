@@ -60,6 +60,7 @@ const BACKLOG_ROW: Record<string, string> = {
   "Controller plugins": "Controller plugins: an API",
   "More games in the background": "Game-art background: more games",
   "Pick any Proton version": "Game page: Proton version picker",
+  "Rotate display 180°": "Rotate display 180°",
   "Steam Gaming Mode panel": "Steam Gaming Mode: our own Decky plugin",
   "Set up games in Gaming Mode": 'Gaming Mode: "Set up this game" from Decky',
   "Local co-op": "Local co-op: 2–4 controllers at once",
