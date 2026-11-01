@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+# Every static check before a push (Marcy 2026-11-01: CI is limited to 5 runs
+# a day; a push that fails on something this machine can check in seconds is
+# careless). The same steps as CI's Lint and Typecheck jobs, no tests: those
+# stay CI's. Refuses the push on the first failure.
+# Install once per clone: git config core.hooksPath .hooks
+set -euo pipefail
+cd "$(git rev-parse --show-toplevel)"
+export NODE_OPTIONS="${NODE_OPTIONS:---max-old-space-size=4096}"
+# The firmware checkout the cross-repo gates read (as CI checks it out).
+export DS5_FIRMWARE_REPO="${DS5_FIRMWARE_REPO:-$HOME/projects/DS5Dongle/.claude/worktrees/rel20-fw}"
+step() { echo "pre-push: $*"; "$@" > /tmp/ds5-pre-push.$$ 2>&1 || { cat /tmp/ds5-pre-push.$$; rm -f /tmp/ds5-pre-push.$$; echo "pre-push: FAILED: $* (push refused)" >&2; exit 1; }; rm -f /tmp/ds5-pre-push.$$; }
+step npx tsc -b
+step npx eslint . --max-warnings=0
+step npx prettier --check .
+step ./.hooks/check_electron_security.sh
+step ./.hooks/check_dom_sinks.sh
+step node .hooks/check_theme_colors.mjs
+step node tools/list_duplicates.mjs --check
+step node tools/check_identical_files.mjs
+step node tools/list_loops.mjs --check
+step node tools/list_caches.mjs --check
+step node tools/list_errors.mjs --check
+step node tools/list_lifetimes.mjs --check
+step node tools/list_settings.mjs --check
+step node tools/list_hints.mjs --check
+step node tools/doc_gates.mjs --check
+echo "pre-push: every static check passed"
