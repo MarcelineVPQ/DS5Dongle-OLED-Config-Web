@@ -102,6 +102,7 @@ describe("on screen, in German", () => {
     vi.stubGlobal("desktop", {
       platform: "linux",
       usbAccessInstalled: () => Promise.resolve(false),
+      usbAccessFiles: () => Promise.resolve([]),
       setupUsbAccess: () => Promise.resolve({ ok: false, message: keyedText("desktop.usbAccess.result.noUdevadm") }),
     });
     act(() => root.render(createElement(UsbAccessSetup)));

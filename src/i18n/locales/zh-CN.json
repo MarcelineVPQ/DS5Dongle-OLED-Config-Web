@@ -327,6 +327,19 @@
         "noUdevadm": "未安装 udevadm，因此无法加载该规则。请手动复制（见 README）。",
         "cancelled": "已取消。未做任何更改。",
         "failed": "设置失败：{{detail}}"
+      },
+      "remove": {
+        "button": "移除 USB 访问设置…",
+        "confirm": "以 root 身份删除“设置 USB 访问”安装的内容：系统会要求输入你的密码，取消则不做任何更改。将删除这些文件：",
+        "after": "之后，本应用和你的游戏将无法再通过 USB 打开 {{device}} 或控制器。“设置 USB 访问”会放回相同的文件。",
+        "afterSandbox": "之后，本应用和你的游戏将无法再通过 USB 打开 {{device}} 或控制器，应用也会在没有沙盒的情况下启动。“设置 USB 访问”会放回相同的文件。",
+        "scriptTitle": "将运行的完整脚本：",
+        "run": "移除",
+        "nothing": "没有可移除的内容：尚未设置 USB 访问。",
+        "done": "已移除 USB 访问设置。“设置 USB 访问”可将其恢复。",
+        "doneSandbox": "已移除 USB 访问设置和沙盒配置文件。从下次启动起应用将在没有沙盒的情况下运行；“设置 USB 访问”可将两者恢复。",
+        "noPkexec": "未安装 pkexec。请以 root 身份手动删除这些文件。",
+        "failed": "移除失败：{{detail}}"
       }
     },
     "windowsUsb": {
@@ -612,7 +625,14 @@
       "nothingToChange": "无需更改",
       "historyStatus_other": "{{count}} 项更改 · 最近 {{date}}",
       "historyNone": "暂无更改",
-      "historyDamaged": "此更改无法在此撤销：无法读取其备份。备份所在文件夹："
+      "historyDamaged": "此更改无法在此撤销：无法读取其备份。备份所在文件夹：",
+      "protonRemove": "移除…",
+      "protonRemoveConfirm": "移除 {{name}}？上面的文件夹将被删除。目前没有任何东西在使用它；在这里只能重新安装最新的版本。",
+      "protonRemoveGo": "移除",
+      "protonRemoving": "正在移除…",
+      "protonRemoved": "已移除 {{name}}。",
+      "protonInUse": "未移除 {{name}}：{{users}} 仍在使用它。请先为它们选择另一个 Proton。",
+      "protonUsedBy": "使用者：{{users}}"
     },
     "setup": {
       "installing": "正在安装固件…",
@@ -1818,7 +1838,8 @@
         "noPkexec": "未安装 pkexec，因此应用无法请求管理员密码。",
         "cancelled": "密码窗口已取消",
         "startFailed": "应用无法启动：{{detail}}\n\n请再次启动。如果仍然发生，请重新安装应用。",
-        "updateMissing": "下载的更新已不在这台电脑上（已从临时文件夹中删除）。请检查更新以重新下载。"
+        "updateMissing": "下载的更新已不在这台电脑上（已从临时文件夹中删除）。请检查更新以重新下载。",
+        "protonGone": "{{name}} 已不再安装。"
       },
       "headsetUndo": "无法切回控制器的声音：{{reason}}",
       "saveFailed": "未能全部保存到 {{device}}：出问题的部分会说明原因。你的更改仍在，请再次点击保存。",

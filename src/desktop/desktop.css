@@ -1197,7 +1197,8 @@
 .dk-setup-steps li + li {
   margin-top: 4px;
 }
-.dk-setup-steps pre {
+.dk-setup-steps pre,
+.dk-confirm pre {
   max-height: 140px;
   overflow-y: auto;
   margin: 0;

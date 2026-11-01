@@ -29,7 +29,7 @@ import { hasSchemeHandler, openForUser, pathWithoutAppImageMounts, startForUser 
 import { firmwareBytes, firmwareFeed, installFeed, latestFirmware, readBundled, type FirmwareSourceDeps } from "./firmwareSource";
 import { devChannelPreview, protonFeed } from "./updateFeed";
 import { OfficialFirmwareSource } from "./officialFirmware";
-import { installUsbRule, usbRuleInstalled } from "./linuxSetup";
+import { installUsbRule, removeUsbRule, usbAccessFiles, usbRuleInstalled } from "./linuxSetup";
 import { repairWindowsUsb } from "./windowsSetup";
 import { loadSettings, settingsPath, saveSettings } from "./settings";
 import { recoveredHere } from "../../src/persisted";
@@ -468,6 +468,11 @@ function start(): void {
       ),
     installProton: () =>
       fakeGames()?.installLatestProton() ?? withGames((g) => (process.platform === "linux" ? g.installLatestProton() : Promise.reject(new KeyedError("desktop.errors.main.protonLinuxOnly")))),
+    // Fake games has no builds on disk (its report lists none, so the page never offers Remove).
+    removeProton: (name) =>
+      fakeGames()
+        ? Promise.resolve({ ok: false as const, message: keyedText("desktop.errors.main.protonGone", { name }) })
+        : withGames((g) => (process.platform === "linux" ? g.removeProton(name) : Promise.reject(new KeyedError("desktop.errors.main.protonLinuxOnly")))),
     gamesDetails: () => fakeGames()?.details() ?? withGames((g) => g.details()),
     gamesRunning: () => {
       const f = fakeGames();
@@ -550,6 +555,8 @@ function start(): void {
     usbAccessInstalled: () => usbRuleInstalled(resourcesDir),
     boardHolders: () => boardHolders(),
     setupUsbAccess: () => installUsbRule(resourcesDir),
+    usbAccessFiles: () => usbAccessFiles(),
+    removeUsbAccess: () => removeUsbRule(),
     repairWindowsUsb,
     appVersion: () => app.getVersion(),
     checkForUpdates: () => updater.check(),

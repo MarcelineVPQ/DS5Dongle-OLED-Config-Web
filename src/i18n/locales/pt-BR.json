@@ -327,6 +327,19 @@
         "noUdevadm": "O udevadm não está instalado, então a regra não pode ser carregada. Copie-a manualmente (veja o README).",
         "cancelled": "Cancelado. Nada foi alterado.",
         "failed": "A configuração falhou: {{detail}}"
+      },
+      "remove": {
+        "button": "Remover a configuração do acesso USB…",
+        "confirm": "Apaga como root o que “Configurar acesso USB” instalou: o sistema pede sua senha e, se você cancelar, nada muda. Estes arquivos são apagados:",
+        "after": "Depois disso, o app e seus jogos não conseguem mais abrir {{device}} nem o controle por USB. “Configurar acesso USB” coloca os mesmos arquivos de volta.",
+        "afterSandbox": "Depois disso, o app e seus jogos não conseguem mais abrir {{device}} nem o controle por USB, e o app inicia sem o sandbox. “Configurar acesso USB” coloca os mesmos arquivos de volta.",
+        "scriptTitle": "O script exato que ele executa:",
+        "run": "Remover",
+        "nothing": "Nada a remover: o acesso USB não está configurado.",
+        "done": "Configuração do acesso USB removida. “Configurar acesso USB” coloca de volta.",
+        "doneSandbox": "Configuração do acesso USB e perfil do sandbox removidos. O app inicia sem o sandbox a partir da próxima vez; “Configurar acesso USB” coloca os dois de volta.",
+        "noPkexec": "O pkexec não está instalado. Apague os arquivos manualmente, como root.",
+        "failed": "A remoção falhou: {{detail}}"
       }
     },
     "windowsUsb": {
@@ -619,7 +632,14 @@
       "historyStatus_one": "{{count}} mudança · última em {{date}}",
       "historyStatus_other": "{{count}} mudanças · última em {{date}}",
       "historyNone": "Nenhuma mudança ainda",
-      "historyDamaged": "Esta mudança não pode ser desfeita aqui: o backup dela não pode ser lido. Pasta do backup:"
+      "historyDamaged": "Esta mudança não pode ser desfeita aqui: o backup dela não pode ser lido. Pasta do backup:",
+      "protonRemove": "Remover…",
+      "protonRemoveConfirm": "Remover {{name}}? As pastas acima são apagadas. Nada usa esse build agora; daqui só dá para instalar de novo o build mais recente.",
+      "protonRemoveGo": "Remover",
+      "protonRemoving": "Removendo…",
+      "protonRemoved": "{{name}} foi removido.",
+      "protonInUse": "{{name}} não foi removido: {{users}} ainda usa. Escolha outro Proton para eles primeiro.",
+      "protonUsedBy": "Em uso por {{users}}"
     },
     "setup": {
       "installing": "Instalando o firmware…",
@@ -1833,7 +1853,8 @@
         "noPkexec": "O pkexec não está instalado, então o app não consegue pedir a senha de administrador.",
         "cancelled": "a janela da senha foi cancelada",
         "startFailed": "O app não conseguiu iniciar: {{detail}}\n\nAbra de novo. Se continuar acontecendo, reinstale o app.",
-        "updateMissing": "A atualização baixada não está mais neste PC (foi apagada da pasta temporária). Procure atualizações para baixá-la de novo."
+        "updateMissing": "A atualização baixada não está mais neste PC (foi apagada da pasta temporária). Procure atualizações para baixá-la de novo.",
+        "protonGone": "{{name}} não está mais instalado."
       },
       "headsetUndo": "Não foi possível voltar o som do controle: {{reason}}",
       "saveFailed": "Nem tudo foi salvo {{device_em}}: a seção com o problema diz o que deu errado. Suas mudanças continuam aqui; tente Salvar de novo.",

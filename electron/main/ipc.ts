@@ -17,6 +17,7 @@ import { FAKE_GAMES_HDR, type DevChannelAnswer, type DevFakeGamesChange, type De
 import { GAME_ACTIONS, type GameAction, type GameInfo } from "../../src/desktop/games/types";
 import { z } from "zod";
 import { BoardIdentity } from "../../src/update/boardIdentity";
+import { PROTON_NAME } from "../../src/update/manifest";
 import {
   IPC,
   type DesktopSettings,
@@ -28,6 +29,7 @@ import {
   type LatestFirmware,
   type OfficialFirmwareLookup,
   type ProtonInstallResult,
+  type ProtonRemoveResult,
   type UndoResult,
   type UpdateState,
 } from "../../src/desktop/api";
@@ -51,6 +53,8 @@ export function parseRequest<T>(channel: string, schema: z.ZodType<T>, raw: unkn
   }
   return r.data;
 }
+
+export const ProtonNameSchema = z.string().max(100).regex(PROTON_NAME);
 
 export const DeviceStatusSchema = z.strictObject({
   dongle: z.boolean(),
@@ -136,6 +140,9 @@ export interface IpcHandlers {
   boardHolders: () => Promise<BoardHolder[]>;
   // error: SHOWN — desktop.usbAccess.result.* (keyed text) under Set up USB access (UsbAccessSetup)
   setupUsbAccess: () => Promise<{ ok: boolean; message: string }>;
+  usbAccessFiles: () => string[];
+  // error: SHOWN — desktop.usbAccess.remove.* (keyed text) under Set up USB access (UsbAccessSetup)
+  removeUsbAccess: () => Promise<{ ok: boolean; message: string }>;
   // error: SHOWN — desktop.windowsUsb.result.* (keyed text) under the Windows USB repair (WindowsUsbRepair)
   repairWindowsUsb: () => Promise<{ ok: boolean; message: string }>;
   appVersion: () => string;
@@ -160,6 +167,7 @@ export interface IpcHandlers {
   gamesBackups: () => GameBackup[];
   gamesRunningLaunchers: () => LauncherId[] | Promise<LauncherId[]>;
   installProton: () => Promise<ProtonInstallResult>;
+  removeProton: (name: string) => Promise<ProtonRemoveResult>;
   // Share your OLED (oledShare.ts): `sender` is the asking page, for a modal save dialog.
   saveOledImage: (image: OledImage, sender: WebContents) => Promise<SaveOledResult>;
   copyOledImage: (png: Uint8Array) => Promise<void>;
@@ -264,6 +272,8 @@ export function registerIpc(h: IpcHandlers): void {
   invoke(IPC.gamesBackups, h.gamesBackups);
   invoke(IPC.gamesRunningLaunchers, h.gamesRunningLaunchers);
   invoke(IPC.installProton, h.installProton);
+  invoke(IPC.usbAccessFiles, h.usbAccessFiles);
+  invoke(IPC.removeUsbAccess, h.removeUsbAccess);
   const invokeWith = <T>(channel: string, schema: z.ZodType<T>, run: (value: T) => unknown) =>
     // lifetime: NOT-WORTH — one handler per channel, registered once by registerIpc(), lives until quit
     ipcMain.handle(channel, (event, raw: unknown) => {
@@ -272,6 +282,8 @@ export function registerIpc(h: IpcHandlers): void {
     });
   invokeWith(IPC.gamesApply, ApplyRequestSchema, h.gamesApply);
   invokeWith(IPC.gamesUndo, UndoRequestSchema, h.gamesUndo);
+  // Only one of our own build names (no "/", so never a path): the service finds it in the launchers' folders.
+  invokeWith(IPC.removeProton, ProtonNameSchema, h.removeProton);
   invoke(IPC.gamesDetails, h.gamesDetails);
   invoke(IPC.gamesRunning, h.gamesRunning);
   invoke(IPC.libraryGet, h.libraryGet);

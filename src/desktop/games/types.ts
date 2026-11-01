@@ -181,8 +181,17 @@ export interface SystemInfo {
   fixes: Fix[];
 }
 
+// One of our DualSense Proton builds on this PC (Linux: the Proton card's list
+// and its Remove).
+export interface InstalledProton {
+  name: string;
+  paths: string[]; // each launcher folder it's in, a folder or a link to one (~/… on the page)
+  usedBy: { games: string[]; launchers: LauncherId[] }; // what still runs with it: no Remove while either has anything
+}
+
 export interface GamesReport {
-  ourProton: { name: string | null; latest: string | null; latestSize: number | null; updateAvailable: boolean };
+  // builds: Linux, from the games service's scan (absent elsewhere: Windows, Fake games)
+  ourProton: { name: string | null; latest: string | null; latestSize: number | null; updateAvailable: boolean; builds?: InstalledProton[] };
   launchers: LauncherInfo[];
   games: GameEntry[];
   system: SystemInfo;

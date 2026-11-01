@@ -1,5 +1,5 @@
 import type { Recovered } from "../persisted";
-import type { ApplyResult, CloseProblem, GamesReport, LauncherId, Msg, RestartList } from "./games/types";
+import type { ApplyResult, CloseProblem, GamesReport, InstalledProton, LauncherId, Msg, RestartList } from "./games/types";
 import type { GameAction, GameInfo } from "./games/types";
 import type { LibraryFile, Mine, ProfileSettings } from "./games/library";
 import type { DesktopPalette } from "./theme/desktopPalette";
@@ -199,6 +199,9 @@ export type ProtonProgress = { phase: "downloading"; got: number; total: number 
 // problem: the update feed itself failed (the page shows its own words for it; message is English, for the log).
 // error: SHOWN — desktop.errors.main.protonNotPublished and the other keyed errors (shownText) on the Proton card; a feed problem shows desktop.updateFeed.offline / .unsigned / .malformed
 export type ProtonInstallResult = { ok: true; name: string; installed: string[] } | { ok: false; message: string; problem?: FeedProblem };
+// inUse: games or launcher defaults still run with the build (the page names them; nothing was removed).
+// error: SHOWN — desktop.games.protonInUse (inUse) or desktop.errors.main.protonGone and the other keyed errors (shownText) on the Proton card
+export type ProtonRemoveResult = { ok: true; name: string; removed: string[] } | { ok: false; message: string } | { ok: false; inUse: InstalledProton["usedBy"] };
 // conflict: files a launcher changed after our write (undo would discard that, so it refuses).
 // blockedBy: as in ApplyResult (not in the restart list, or not closed: `problem`).
 // noController: the change set the controller's volume, and it isn't connected (nothing undone).
@@ -258,6 +261,11 @@ export interface DesktopApi {
   boardHolders(): Promise<BoardHolder[]>;
   // error: SHOWN — desktop.usbAccess.result.* (keyed text, shownText) under Set up USB access
   setupUsbAccess(): Promise<{ ok: boolean; message: string }>;
+  // Linux: the files Set up USB access installed that are there now, and
+  // removing them (pkexec, the setup's undo).
+  usbAccessFiles(): Promise<string[]>;
+  // error: SHOWN — desktop.usbAccess.remove.* (keyed text, shownText) under Set up USB access
+  removeUsbAccess(): Promise<{ ok: boolean; message: string }>;
   // Windows: forget Windows' cached USB setup for the dongle's IDs (one UAC
   // prompt), so it sets up the WinUSB driver again on the next plug-in.
   // error: SHOWN — desktop.windowsUsb.result.* (keyed text, shownText) under the Windows USB repair
@@ -303,6 +311,7 @@ export interface DesktopApi {
   gamesBackups(): Promise<GameBackup[]>;
   gamesRunningLaunchers(): Promise<LauncherId[]>; // a fresh process check (the review asks when it opens)
   installProton(): Promise<ProtonInstallResult>;
+  removeProton(name: string): Promise<ProtonRemoveResult>; // one of our builds (PROTON_NAME), from every launcher folder
   onProtonProgress(listener: (progress: ProtonProgress) => void): () => void;
   // Games library (Linux scan; the library file works everywhere): details
   // and artwork from the last scan, the running game, and the player's own
@@ -376,6 +385,8 @@ export const IPC = {
   desktopPalette: "desktop:desktop-palette",
   windowVisible: "desktop:window-visible",
   setupUsbAccess: "desktop:setup-usb-access",
+  usbAccessFiles: "desktop:usb-access-files",
+  removeUsbAccess: "desktop:remove-usb-access",
   repairWindowsUsb: "desktop:repair-windows-usb",
   gamesScan: "desktop:games-scan",
   gamesApply: "desktop:games-apply",
@@ -383,6 +394,7 @@ export const IPC = {
   gamesBackups: "desktop:games-backups",
   gamesRunningLaunchers: "desktop:games-running-launchers",
   installProton: "desktop:install-proton",
+  removeProton: "desktop:remove-proton",
   protonProgress: "desktop:proton-progress",
   gamesDetails: "desktop:games-details",
   gamesRunning: "desktop:games-running",

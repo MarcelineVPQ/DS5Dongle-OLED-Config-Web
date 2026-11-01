@@ -445,6 +445,7 @@ describe("HDR requirement check (Linux)", () => {
 
 describe("privileged Linux setup", () => {
   const setupSource = readFileSync(new URL("../../electron/main/linuxSetup.ts", import.meta.url), "utf8");
+  const scriptSource = readFileSync(new URL("../../src/desktop/linuxRemoveScript.ts", import.meta.url), "utf8");
 
   it("runs pkexec through execFile with a fixed script and positional paths", () => {
     expect(setupSource).toMatch(/runPkexec\(\["\/bin\/sh", "-c", script, "ds5-setup", source, RULE_DEST, profile, withProfile \? PROFILE_DEST : ""\]\)/);
@@ -454,9 +455,18 @@ describe("privileged Linux setup", () => {
     expect(setupSource).toMatch(/'command -v udevadm >\/dev\/null \|\| exit 3; install -m 0644 "\$1" "\$2"/);
     // The sandbox profile: only fixed paths, positional ($3/$4), and only AppArmor's parser.
     expect(setupSource).toMatch(/' && \{ \[ -z "\$3" \] \|\| \{ install -m 0644 "\$3" "\$4" && apparmor_parser -r "\$4"; \}; \}'/);
-    expect(setupSource).toMatch(/const PROFILE_DEST = "\/etc\/apparmor\.d\/ds5-dongle-configurator";/);
+    expect(setupSource).toMatch(/const PROFILE_DEST = SANDBOX_PROFILE_PATH;/);
+    expect(scriptSource).toMatch(/export const SANDBOX_PROFILE_PATH = "\/etc\/apparmor\.d\/ds5-dongle-configurator";/);
     expect(setupSource).not.toMatch(/\bexec\(/);
     expect(setupSource).not.toMatch(/script\s*=\s*`/);
+  });
+
+  it("Remove USB access setup: the same pkexec path, a fixed script, only the setup's two fixed paths", () => {
+    expect(setupSource).toMatch(/await run\(\["\/bin\/sh", "-c", REMOVE_SCRIPT, "ds5-remove", files\.includes\(RULE_DEST\) \? RULE_DEST : "", profile \? PROFILE_DEST : ""\]\)/);
+    expect(setupSource).toMatch(/run: PkexecRunner = runPkexec/);
+    // The script names no path of its own: it deletes only its two arguments.
+    expect(scriptSource).toMatch(/export const USB_RULE_PATH = "\/etc\/udev\/rules\.d\/70-ds5-dongle\.rules";/);
+    expect(scriptSource).not.toMatch(/REMOVE_SCRIPT = `|\$\{/);
   });
 
   it("ships a sandbox profile that only names the app and allows user namespaces", () => {

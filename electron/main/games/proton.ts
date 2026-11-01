@@ -3,13 +3,16 @@
 // unpacked. Before unpacking, every archive path must sit inside the one folder
 // it creates; after unpacking (in an isolated staging folder), every symlink must
 // point inside that folder too. Only then does the folder appear in the
-// launcher's directory (rename). Existing builds are never replaced or removed:
-// a new version has a new folder name.
+// launcher's directory (rename). Existing builds are never replaced or removed
+// by an install: a new version has a new folder name. The Proton card's Remove
+// takes one of our builds away, only after the user confirmed it and only
+// while no game or launcher default uses it (removeBuild, buildUsers).
 import { execFile } from "node:child_process";
 import { existsSync, lstatSync, mkdirSync, mkdtempSync, readdirSync, readlinkSync, renameSync, rmSync, statfsSync, symlinkSync } from "node:fs";
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { promisify } from "node:util";
 import type { ProtonProgress } from "../../../src/desktop/api";
+import type { GamesReport, InstalledProton } from "../../../src/desktop/games/types";
 import { compareProtonNames, PROTON_NAME, type Download } from "../../../src/update/manifest";
 import { readParsed } from "./files";
 import { KeyedError, keyedText } from "../../../src/errorText";
@@ -251,4 +254,51 @@ export async function installProton(build: ProtonBuild, primary: string, copies:
     installed.push(join(target, build.name));
   }
   return installed;
+}
+
+// ---- Removing one of our builds (the Proton card's Remove) ----
+// Where the build `name` is: each launcher folder's entry of that name, a
+// real folder with a build in it, or a link (installProton's extra launchers;
+// a dangling one too). Only our own build names (PROTON_NAME, no "/" in it);
+// a folder of that name without a build in it isn't ours and is left alone.
+export function buildPlaces(name: string, dirs: string[]): Array<{ path: string; link: boolean }> {
+  if (!PROTON_NAME.test(name)) return [];
+  // loop: NOT-WORTH — 1-6 launcher folders, an lstat each
+  return [...new Set(dirs)].flatMap((dir) => {
+    const path = join(dir, name);
+    const st = lstatSync(path, { throwIfNoEntry: false });
+    if (st?.isSymbolicLink()) return [{ path, link: true }];
+    return st?.isDirectory() && hasBuild(dir, name) ? [{ path, link: false }] : [];
+  });
+}
+
+// Our builds in the launchers' folders, newest first, with where each one is
+// and what still selects it (from a scan of the same moment).
+export function installedBuilds(dirs: string[], report: Pick<GamesReport, "games" | "launchers">): InstalledProton[] {
+  // loop: NOT-WORTH — 1-6 launcher folders' entries, once per scan
+  const names = [...new Set(dirs.flatMap((dir) => protonBuilds(dir)))].filter((n) => PROTON_NAME.test(n)).sort((a, b) => compareProtonNames(b, a));
+  // loop: NOT-WORTH — a few builds, once per scan
+  return names.map((name) => ({ name, paths: buildPlaces(name, dirs).map((p) => p.path), usedBy: buildUsers(report, name) }));
+}
+
+// What still runs with the build `name`: games whose runner is it (their own
+// setting or the launcher's default) and launchers whose default it is.
+// Remove is refused while either list has anything in it.
+export function buildUsers(report: Pick<GamesReport, "games" | "launchers">, name: string): InstalledProton["usedBy"] {
+  return {
+    // loop: NOT-WORTH — N = games (hundreds), once per build on a scan or a Remove
+    games: report.games.filter((g) => g.runner === name).map((g) => g.title),
+    // loop: NOT-WORTH — N ≤ 5 launchers
+    launchers: report.launchers.filter((l) => l.defaultRunner === name).map((l) => l.id),
+  };
+}
+
+// Removes the build `name` from every launcher folder in `dirs`: the links
+// first, then the folders they point to. Returns what was removed.
+export function removeBuild(name: string, dirs: string[]): string[] {
+  // loop: NOT-WORTH — 2 entries per sort; the links go before the folders they point to
+  const places = buildPlaces(name, dirs).sort((a, b) => Number(b.link) - Number(a.link));
+  // loop: SERIAL-REQUIRED — data dependency: a link is removed before the folder it points to
+  for (const p of places) rmSync(p.path, p.link ? {} : { recursive: true, force: true });
+  return places.map((p) => p.path);
 }

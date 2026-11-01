@@ -327,6 +327,19 @@
         "noUdevadm": "udevadm n'est pas installé : la règle ne peut pas être chargée. Copie-la à la main (voir le README).",
         "cancelled": "Annulé. Rien n'a été modifié.",
         "failed": "La configuration a échoué : {{detail}}"
+      },
+      "remove": {
+        "button": "Retirer la configuration de l'accès USB…",
+        "confirm": "Supprime en root ce que « Configurer l'accès USB » a installé : ton système demande ton mot de passe, et si tu annules, rien ne change. Ces fichiers sont supprimés :",
+        "after": "Ensuite, l'appli et tes jeux ne peuvent plus ouvrir {{device}} ni la manette en USB. « Configurer l'accès USB » remet les mêmes fichiers.",
+        "afterSandbox": "Ensuite, l'appli et tes jeux ne peuvent plus ouvrir {{device}} ni la manette en USB, et l'appli démarre sans son bac à sable. « Configurer l'accès USB » remet les mêmes fichiers.",
+        "scriptTitle": "Le script exact qu'elle exécute :",
+        "run": "Retirer",
+        "nothing": "Rien à retirer : l'accès USB n'est pas configuré.",
+        "done": "Configuration de l'accès USB retirée. « Configurer l'accès USB » la remet.",
+        "doneSandbox": "Configuration de l'accès USB et profil du bac à sable retirés. L'appli démarre sans son bac à sable dès son prochain lancement ; « Configurer l'accès USB » remet les deux.",
+        "noPkexec": "pkexec n'est pas installé. Supprime les fichiers à la main, en root.",
+        "failed": "Le retrait a échoué : {{detail}}"
       }
     },
     "windowsUsb": {
@@ -619,7 +632,14 @@
       "historyStatus_one": "{{count}} changement · dernier le {{date}}",
       "historyStatus_other": "{{count}} changements · dernier le {{date}}",
       "historyNone": "Aucun changement pour l'instant",
-      "historyDamaged": "Cette modification ne peut pas être annulée ici : sa sauvegarde est illisible. Dossier de la sauvegarde :"
+      "historyDamaged": "Cette modification ne peut pas être annulée ici : sa sauvegarde est illisible. Dossier de la sauvegarde :",
+      "protonRemove": "Retirer…",
+      "protonRemoveConfirm": "Retirer {{name}} ? Les dossiers ci-dessus sont supprimés. Rien ne l'utilise en ce moment ; seule la build la plus récente peut être réinstallée d'ici.",
+      "protonRemoveGo": "Retirer",
+      "protonRemoving": "Retrait…",
+      "protonRemoved": "{{name}} est retiré.",
+      "protonInUse": "{{name}} n'a pas été retiré : {{users}} l'utilise encore. Choisis d'abord un autre Proton pour eux.",
+      "protonUsedBy": "Utilisé par {{users}}"
     },
     "setup": {
       "installing": "Installation du firmware…",
@@ -1833,7 +1853,8 @@
         "noPkexec": "pkexec n'est pas installé : l'appli ne peut pas demander le mot de passe administrateur.",
         "cancelled": "la demande de mot de passe a été annulée",
         "startFailed": "L'appli n'a pas pu démarrer : {{detail}}\n\nRelance-la. Si ça continue, réinstalle l'appli.",
-        "updateMissing": "La mise à jour téléchargée n'est plus sur ce PC (supprimée du dossier temporaire). Recherche les mises à jour pour la télécharger à nouveau."
+        "updateMissing": "La mise à jour téléchargée n'est plus sur ce PC (supprimée du dossier temporaire). Recherche les mises à jour pour la télécharger à nouveau.",
+        "protonGone": "{{name}} n'est plus installé."
       },
       "headsetUndo": "Le son de la manette n'a pas pu être rétabli : {{reason}}",
       "saveFailed": "Tout n'a pas été enregistré sur {{device}} : la section concernée dit ce qui n'a pas marché. Tes changements sont toujours là ; réessaie Enregistrer.",

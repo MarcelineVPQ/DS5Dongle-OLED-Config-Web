@@ -40,7 +40,7 @@ import UsbAccessSetup from "../UsbAccessSetup";
 import { GameLaunchersSetting } from "../library/GameLaunchersSetting";
 import { sayInPassing } from "../narrator";
 import type { GameBackup, ProtonProgress } from "../api";
-import type { ApplyResult, CloseProblem, Fix, GamesReport, LauncherId, Msg, RestartList } from "../games/types";
+import type { ApplyResult, CloseProblem, Fix, GamesReport, InstalledProton, LauncherId, Msg, RestartList } from "../games/types";
 import { allFixes } from "../games/types";
 import { msgText, NO_WAITING, waitingChanges, waitingSplit, waitingTotal, type Waiting } from "../library/waiting";
 import { forgetApplied, overwrittenBy, rememberApplied, restartFor, startedSinceCheck, useFreshRunning } from "../games/launcherCheck";
@@ -54,6 +54,9 @@ import type { SectionId } from "../accordion/sections";
 
 // Product names stay untranslated; "sideload" is translated where it's shown.
 const LAUNCHER_NAME: Record<LauncherId, string> = { steam: "Steam", heroic: "Heroic", lutris: "Lutris", gog: "GOG Galaxy", epic: "Epic Games" };
+// What still runs with a Proton build, in one line: the launchers (as their default) and the games.
+// loop: NOT-WORTH — N ≤ 5 launchers plus the games that use one build
+const protonUsers = (u: InstalledProton["usedBy"]) => [...u.launchers.map((l) => LAUNCHER_NAME[l]), ...u.games].join(", ");
 type Step = "pick" | "review" | "done";
 
 // Changes the user unticked stay unticked across rescans and visits until
@@ -203,6 +206,8 @@ function useGamesSetup({ onScanned, onDeclinedChange }: Pick<GamesPageProps, "on
   const [protonConfirm, setProtonConfirm] = useState(false);
   const [protonProgress, setProtonProgress] = useState<ProtonProgress | null>(null);
   const [protonMessage, setProtonMessage] = useState<string | null>(null);
+  // The build whose Remove is being confirmed (the Proton card).
+  const [protonRemove, setProtonRemove] = useState<string | null>(null);
 
   const receive = useCallback(
     async (r: GamesReport, keepSelection: boolean) => {
@@ -373,6 +378,24 @@ function useGamesSetup({ onScanned, onDeclinedChange }: Pick<GamesPageProps, "on
     }
   };
 
+  // Remove one of our builds (asked first on the card): the main process
+  // checks again that nothing runs with it, then the page scans again.
+  const removeProton = async (name: string) => {
+    setProtonRemove(null);
+    setBusy("proton-remove");
+    setProtonMessage(null);
+    try {
+      const r = await desktop.removeProton(name);
+      setProtonMessage(r.ok ? t("desktop.games.protonRemoved", { name: r.name }) : "inUse" in r ? t("desktop.games.protonInUse", { name, users: protonUsers(r.inUse) }) : shownText(r.message));
+      await rescan();
+    } catch (cause) {
+      // error: SHOWN — desktop.errors.main.protonLinuxOnly and the main process's other keyed errors (causeText), as DualSense Proton's message
+      setProtonMessage(causeText(cause));
+    } finally {
+      setBusy(null);
+    }
+  };
+
   return {
     report,
     error,
@@ -404,6 +427,9 @@ function useGamesSetup({ onScanned, onDeclinedChange }: Pick<GamesPageProps, "on
     protonProgress,
     protonMessage,
     installProton,
+    protonRemove,
+    setProtonRemove,
+    removeProton,
   };
 }
 type GamesSetup = ReturnType<typeof useGamesSetup>;
@@ -481,6 +507,7 @@ function HomeSections({ setup, report, status }: { setup: GamesSetup; report: Ga
   const { busy, step, fixes, selected, result, backups, error, closeNote } = setup;
   const linux = protonApplies();
   const ours = report.ourProton.name;
+  const builds = report.ourProton.builds ?? [];
   // loop: HOT-PATH-OK — N ≤ 4 launchers; Home render
   const found = report.launchers.filter((l) => l.found);
   const tookBack = overwrittenBy(fixes);
@@ -549,13 +576,16 @@ function HomeSections({ setup, report, status }: { setup: GamesSetup; report: Ga
           icon={Layers}
           title={t("desktop.games.protonTitle", "DualSense Proton build")}
           status={ours ?? t("desktop.games.protonNotInstalled")}
-          // Installed and current: nothing to do (page rule 6), the status says which.
-          idle={!!ours && !report.ourProton.updateAvailable && !setup.protonConfirm && busy !== "proton" && !setup.protonMessage}
+          // Installed and current: nothing to do (page rule 6), the status says which; a build nothing runs with can be removed.
+          // loop: HOT-PATH-OK — N = our builds on this PC (a few); Home render
+          idle={!!ours && !report.ourProton.updateAvailable && !setup.protonConfirm && busy !== "proton" && !setup.protonMessage && !builds.some((b) => !protonUsers(b.usedBy))}
           task={status.proton && (ours && report.ourProton.latest ? t("desktop.games.protonNewer", { name: report.ourProton.latest }) : t("desktop.games.protonNotInstalled"))}
         >
           {() => (
             <>
-              {ours ? (
+              {builds.length > 0 ? (
+                <ProtonBuilds builds={builds} setup={setup} />
+              ) : ours ? (
                 <p>
                   <span className="dk-mono">{ours}</span> {t("desktop.games.protonFound", "is installed.")}
                 </p>
@@ -585,6 +615,7 @@ function HomeSections({ setup, report, status }: { setup: GamesSetup; report: Ga
                 </div>
               )}
               {busy === "proton" && <ProtonProgressView progress={setup.protonProgress} />}
+              {busy === "proton-remove" && <p className="dk-hint">{t("desktop.games.protonRemoving")}</p>}
               {setup.protonMessage && <p className="dk-hint">{setup.protonMessage}</p>}
             </>
           )}
@@ -833,6 +864,55 @@ function SystemPart({ report, hdrBad, onRescan }: { report: GamesReport; hdrBad:
         <p className="dk-hint">{t("desktop.games.systemRule", "A system-wide audio rule forces pro-audio. It's outside your home folder, so this app won't change it.")}</p>
       )}
     </>
+  );
+}
+
+// Our builds on this PC (Linux), each with its launcher folders. Remove (asked
+// first, then the main process checks again) only for a build nothing runs
+// with; otherwise the card says what still uses it (no greyed-out button).
+function ProtonBuilds({ builds, setup }: { builds: InstalledProton[]; setup: GamesSetup }) {
+  const { t } = useTranslation();
+  return (
+    <ul className="dk-review">
+      {/* loop: HOT-PATH-OK — N = our builds on this PC (a few); card render */}
+      {builds.map((b) => {
+        const users = protonUsers(b.usedBy);
+        return (
+          <li key={b.name}>
+            <strong className="dk-mono">{b.name}</strong>
+            {/* loop: HOT-PATH-OK — N = 1-6 launcher folders per build; card render */}
+            {b.paths.map((path) => (
+              <div key={path} className="dk-mono dk-file">
+                {path}
+              </div>
+            ))}
+            {users ? (
+              <div className="dk-hint">{t("desktop.games.protonUsedBy", { users })}</div>
+            ) : setup.protonRemove === b.name ? (
+              <div className="dk-confirm">
+                <p>{t("desktop.games.protonRemoveConfirm", { name: b.name })}</p>
+                <div className="dk-row-btns">
+                  <button type="button" className="dk-btn danger" onClick={() => void setup.removeProton(b.name).catch(logged("removeProton (it shows its own errors)"))}>
+                    {t("desktop.games.protonRemoveGo")}
+                  </button>
+                  <button type="button" className="dk-btn" onClick={() => setup.setProtonRemove(null)}>
+                    {t("desktop.common.cancel")}
+                  </button>
+                </div>
+              </div>
+            ) : (
+              setup.busy === null && (
+                <div className="dk-row-btns">
+                  <button type="button" className="dk-btn" onClick={() => setup.setProtonRemove(b.name)}>
+                    {t("desktop.games.protonRemove")}
+                  </button>
+                </div>
+              )
+            )}
+          </li>
+        );
+      })}
+    </ul>
   );
 }
 

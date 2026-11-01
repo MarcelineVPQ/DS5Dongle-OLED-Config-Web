@@ -326,6 +326,19 @@
         "noUdevadm": "udevadm isn't installed, so the rule can't be loaded. Copy it by hand (see the README).",
         "cancelled": "Cancelled. Nothing was changed.",
         "failed": "Setup failed: {{detail}}"
+      },
+      "remove": {
+        "button": "Remove USB access setup…",
+        "confirm": "This deletes what Set up USB access installed, as root: your system asks for your password, and if you cancel, nothing changes. These files go:",
+        "after": "Afterwards this app and your games can no longer open {{device}} or the controller over USB. Set up USB access puts the same files back.",
+        "afterSandbox": "Afterwards this app and your games can no longer open {{device}} or the controller over USB, and the app starts without its sandbox. Set up USB access puts the same files back.",
+        "scriptTitle": "The exact script it runs:",
+        "run": "Remove",
+        "nothing": "Nothing to remove: USB access isn't set up.",
+        "done": "USB access setup removed. Set up USB access puts it back.",
+        "doneSandbox": "USB access setup and the sandbox profile removed. The app starts without its sandbox from its next start; Set up USB access puts both back.",
+        "noPkexec": "pkexec isn't installed. Delete the files by hand, as root.",
+        "failed": "Removing failed: {{detail}}"
       }
     },
     "windowsUsb": {
@@ -618,7 +631,14 @@
       "historyStatus_one": "{{count}} change · last {{date}}",
       "historyStatus_other": "{{count}} changes · last {{date}}",
       "historyNone": "No changes yet",
-      "historyDamaged": "This change can't be undone here: its backup can't be read. The backup's folder:"
+      "historyDamaged": "This change can't be undone here: its backup can't be read. The backup's folder:",
+      "protonRemove": "Remove…",
+      "protonRemoveConfirm": "Remove {{name}}? The folders above are deleted. Nothing runs with it now; only the newest build can be installed again from here.",
+      "protonRemoveGo": "Remove",
+      "protonRemoving": "Removing…",
+      "protonRemoved": "{{name}} is removed.",
+      "protonInUse": "{{name}} wasn't removed: {{users}} still use it. Pick another Proton for them first.",
+      "protonUsedBy": "In use by {{users}}"
     },
     "setup": {
       "installing": "Installing the firmware…",
@@ -1832,7 +1852,8 @@
         "noPkexec": "pkexec isn't installed, so the app can't ask for the administrator password.",
         "cancelled": "the password prompt was cancelled",
         "startFailed": "The app couldn't start: {{detail}}\n\nTry starting it again. If this keeps happening, reinstall the app.",
-        "updateMissing": "The downloaded update is gone from this PC (deleted from the temporary folder). Check for updates to download it again."
+        "updateMissing": "The downloaded update is gone from this PC (deleted from the temporary folder). Check for updates to download it again.",
+        "protonGone": "{{name}} isn't installed any more."
       },
       "headsetUndo": "The controller's sound couldn't be switched back: {{reason}}",
       "saveFailed": "Not everything was saved to {{device}}: the section with the problem says what went wrong. Your changes are still here; try Save again.",

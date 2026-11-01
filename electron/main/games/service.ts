@@ -1,6 +1,6 @@
 // Main-process side of the Games page (Linux and Windows): owns scanning, applying
 // confirmed fixes, undo (closing and reopening the launchers the page named),
-// and installing our
+// and installing (or removing) our
 // Proton build. The renderer only ever passes fix ids, a backup id or a
 // launcher name, all validated in ipc.ts. Nothing here runs until the user has
 // allowed the Games page to read launcher settings (the gamesScanAllowed setting).
@@ -16,7 +16,7 @@ import { gameDetails, type GameDetails } from "./details";
 import type { RunningCandidate } from "./running";
 import type { ArtKind, Fix, GameAction, GameEntry, GameInfo, LauncherId } from "../../../src/desktop/games/types";
 import { join } from "node:path";
-import type { ProtonInstallResult, ProtonProgress, UndoResult } from "../../../src/desktop/api";
+import type { ProtonInstallResult, ProtonProgress, ProtonRemoveResult, UndoResult } from "../../../src/desktop/api";
 import type { ApplyResult, GamesReport, HdrSystem, RestartList } from "../../../src/desktop/games/types";
 import type { Download, Manifest } from "../../../src/update/manifest";
 import { Backups, UndoConflictError, type BackupSummary } from "./backup";
@@ -27,7 +27,7 @@ import { findHeroicInstalls, heroicTools } from "./heroic";
 import { findLutrisInstalls, lutrisWineBuilds } from "./lutris";
 import { heroicExeIn, launcherControl, realLayer, steamExeIn, withLaunchersClosed, type LauncherControl, type ReopenPlan } from "./processes";
 import { schemeHandlerExec } from "./schemeHandler";
-import { installProton, type ExtraTarget } from "./proton";
+import { installedBuilds, installProton, removeBuild, type ExtraTarget } from "./proton";
 import { findSteamInstalls, installedTools, refreshWindowsSteamPath, windowsSteamRoots } from "./steam";
 import {
   amixerLayer,
@@ -114,6 +114,12 @@ export class GamesService {
     if (!this.deps.allowed()) throw new KeyedError("desktop.errors.main.gamesNotAllowed");
   }
 
+  // The launchers' Proton folders (Linux), where our builds go and are removed from.
+  private protonDirs(): string[] {
+    // loop: NOT-WORTH — 1-3 installs per launcher
+    return [...findSteamInstalls(this.home).map((s) => s.toolsDir), ...findHeroicInstalls(this.home).map((h) => h.toolsDir), ...findLutrisInstalls(this.home).map((l) => l.wineDir)];
+  }
+
   private localBuilds(): string[] {
     return [...findSteamInstalls(this.home).flatMap(installedTools), ...findHeroicInstalls(this.home).flatMap(heroicTools), ...findLutrisInstalls(this.home).flatMap(lutrisWineBuilds)];
   }
@@ -191,6 +197,9 @@ export class GamesService {
     return this.exclusive(async () => {
       const { scan: result, texts } = await this.fresh();
       const report = this.shown(result.report);
+      // Linux: our builds for the Proton card, where each is and what still runs with it.
+      // loop: NOT-WORTH — a few builds, 1-6 folders each, once per scan
+      if (process.platform === "linux") report.ourProton = { ...report.ourProton, builds: installedBuilds(this.protonDirs(), report).map((b) => ({ ...b, paths: b.paths.map((p) => this.tilde(p)) })) };
       this.lastGames = report.games;
       // The details read the same manifests and localconfig: one read each.
       this.lastDetails = withScanTexts(texts, () => gameDetails(this.home, this.lastStores ? [...this.lastStores.gog.games, ...this.lastStores.epic.games] : []));
@@ -430,6 +439,28 @@ export class GamesService {
         return { ok: true, name: build.name, installed: installed.map((p) => this.tilde(p)) };
       } catch (cause) {
         // error: SHOWN — desktop.errors.main.diskSpace and the other keyed install/download errors (shownText on the Proton card); an OS error's own text as it is
+        return { ok: false, message: errorText(cause) };
+      }
+    });
+  }
+
+  // The Proton card's Remove (Linux): one of our builds, from every launcher
+  // folder it's in, once a fresh scan says no game and no launcher default
+  // runs with it (the page offers Remove only then; this checks again).
+  removeProton(name: string): Promise<ProtonRemoveResult> {
+    return this.exclusive(async () => {
+      try {
+        const { scan: now } = await this.fresh();
+        const dirs = this.protonDirs();
+        // loop: NOT-WORTH — a few builds, once per Remove
+        const build = installedBuilds(dirs, now.report).find((b) => b.name === name);
+        if (build && (build.usedBy.games.length > 0 || build.usedBy.launchers.length > 0)) return { ok: false, inUse: build.usedBy };
+        const removed = build ? removeBuild(name, dirs) : [];
+        if (removed.length === 0) return { ok: false, message: keyedText("desktop.errors.main.protonGone", { name }) };
+        // loop: NOT-WORTH — 1-6 removed places
+        return { ok: true, name, removed: removed.map((p) => this.tilde(p)) };
+      } catch (cause) {
+        // error: SHOWN — desktop.errors.main.gamesNotAllowed and the other keyed errors (shownText on the Proton card); an OS error's own text as it is
         return { ok: false, message: errorText(cause) };
       }
     });

@@ -66,6 +66,8 @@ const api: DesktopApi = {
   usbAccessInstalled: () => ipcRenderer.invoke(IPC.usbAccessInstalled),
   boardHolders: () => ipcRenderer.invoke(IPC.boardHolders),
   setupUsbAccess: () => ipcRenderer.invoke(IPC.setupUsbAccess),
+  usbAccessFiles: () => ipcRenderer.invoke(IPC.usbAccessFiles),
+  removeUsbAccess: () => ipcRenderer.invoke(IPC.removeUsbAccess),
   repairWindowsUsb: () => ipcRenderer.invoke(IPC.repairWindowsUsb),
   appVersion: ipcRenderer.sendSync(IPC.appVersion) as string,
   checkForUpdates: () => ipcRenderer.invoke(IPC.checkForUpdates),
@@ -110,6 +112,7 @@ const api: DesktopApi = {
   gamesBackups: () => ipcRenderer.invoke(IPC.gamesBackups),
   gamesRunningLaunchers: () => ipcRenderer.invoke(IPC.gamesRunningLaunchers),
   installProton: () => ipcRenderer.invoke(IPC.installProton),
+  removeProton: (name) => ipcRenderer.invoke(IPC.removeProton, name),
   onProtonProgress: (listener) => {
     const handler = (_event: IpcRendererEvent, progress: ProtonProgress) => listener(progress);
     // lifetime: OK — removed by the unsubscribe it returns (the caller cleans up on unmount)

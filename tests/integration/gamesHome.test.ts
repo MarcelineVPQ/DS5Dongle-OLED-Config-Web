@@ -388,6 +388,32 @@ describe("Games → Home, needs attention", () => {
     await click(button(i18n.t("desktop.games.protonGo")));
     expect(calls).toContain("installProton");
   });
+
+  // 2026-10-31 app review S5: every installed build can be removed (undoable by installing again), never one still in use.
+  it("each of our builds says where it is; Remove only for one nothing runs with, and it confirms first", async () => {
+    const r = homeReport("healthy");
+    const OLD = "GE-Proton11-6-DualSense";
+    const builds = [
+      { name: OUR_PROTON, paths: [`~/.steam/root/compatibilitytools.d/${OUR_PROTON}`], usedBy: { games: ["Elden Ring"], launchers: ["steam" as const] } },
+      { name: OLD, paths: [`~/.steam/root/compatibilitytools.d/${OLD}`, `~/.config/heroic/tools/proton/${OLD}`], usedBy: { games: [], launchers: [] } },
+    ];
+    const removed: string[] = [];
+    const removeProton = (name: string) => (removed.push(name), Promise.resolve({ ok: true, name, removed: [] }));
+    await render("healthy", { ...r, ourProton: { ...r.ourProton, builds } }, { removeProton });
+    expect($('[data-section="proton"].idle')).toBeNull(); // a build to remove: something to do
+    const proton = await open("proton");
+    expect(proton.textContent).toContain(`~/.config/heroic/tools/proton/${OLD}`);
+    expect(proton.textContent).toContain(i18n.t("desktop.games.protonUsedBy", { users: "Steam, Elden Ring" }));
+    // loop: test — the card's buttons
+    const removes = [...proton.querySelectorAll("button")].filter((b) => b.textContent === i18n.t("desktop.games.protonRemove"));
+    expect(removes).toHaveLength(1); // the build in use has none
+    await click(removes[0]);
+    expect(removed).toEqual([]);
+    expect(proton.textContent).toContain(i18n.t("desktop.games.protonRemoveConfirm", { name: OLD }));
+    await click(button(i18n.t("desktop.games.protonRemoveGo"), proton));
+    expect(removed).toEqual([OLD]);
+    expect($(place("proton"))!.textContent).toContain(i18n.t("desktop.games.protonRemoved", { name: OLD }));
+  });
 });
 
 describe("Games → Home, Windows", () => {

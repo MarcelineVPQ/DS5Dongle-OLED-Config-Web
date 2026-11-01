@@ -8,17 +8,19 @@
 // --no-sandbox; docs/SECURITY_AUDIT.md O1). Needs root once, via pkexec
 // (graphical password prompt, runPkexec below). The script is fixed text
 // with no user input; the rule file is copied from the app's own resources
-// (through a temporary copy root can read).
+// (through a temporary copy root can read). "Remove USB access setup" undoes
+// it (removeUsbRule below, the same pkexec path).
 import { chmodSync, existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { errorText, keyedText } from "../../src/errorText";
 import { tmpdir } from "node:os";
 import { execFile } from "node:child_process";
 import { join } from "node:path";
+import { REMOVE_SCRIPT, SANDBOX_PROFILE_PATH, USB_RULE_PATH } from "../../src/desktop/linuxRemoveScript";
 
 const RULE_NAME = "70-ds5-dongle.rules";
-const RULE_DEST = `/etc/udev/rules.d/${RULE_NAME}`;
+const RULE_DEST = USB_RULE_PATH; // /etc/udev/rules.d/70-ds5-dongle.rules
 const PROFILE_NAME = "ds5-dongle-configurator.apparmor";
-const PROFILE_DEST = "/etc/apparmor.d/ds5-dongle-configurator";
+const PROFILE_DEST = SANDBOX_PROFILE_PATH;
 
 // The profile is needed (and possible) when the kernel restricts user
 // namespaces to profiled apps, AppArmor's parser is there, and this is the
@@ -101,8 +103,8 @@ export function installUsbRule(resourcesDir: string): Promise<SetupResult> {
 // The app's one way to run something as root (Linux): pkexec, which shows the
 // desktop's own password prompt. Callers pass a fixed argv (no shell unless the
 // caller's fixed script is the program, as above); every caller explains what
-// runs and why on the page before it asks. Used by the USB access setup (above)
-// and by the controller volume fix (games/system.ts: `alsactl store <card>`).
+// runs and why on the page before it asks. Used by the USB access setup and its
+// removal (above and below) and by the controller volume fix (games/system.ts: `alsactl store <card>`).
 // error: PASSES-ON — each caller shows the outcome (the USB setup message; the Games Done list / Undo note)
 export type PkexecResult = { ok: true } | { ok: false; reason: "missing" | "cancelled" | "failed"; code: number | null; message: string };
 export type PkexecRunner = (argv: string[]) => Promise<PkexecResult>;
@@ -119,3 +121,29 @@ export const runPkexec: PkexecRunner = (argv) =>
       else resolve({ ok: false, reason: "failed", code: typeof error.code === "number" ? error.code : null, message: error.message });
     });
   });
+
+// What "Remove USB access setup" deletes: the files the setup installs that
+// are there now (the rule, the sandbox profile), whatever their content (a
+// rule copied by hand from the README is the same file).
+export function usbAccessFiles(exists: (path: string) => boolean = existsSync): string[] {
+  if (process.platform !== "linux") return [];
+  // loop: NOT-WORTH — the 2 files the setup installs
+  return [RULE_DEST, PROFILE_DEST].filter((path) => exists(path));
+}
+
+// "Remove USB access setup" (Linux; the Pico 2 W page's USB section, after the
+// page showed the files and the exact script and the user pressed Remove): the
+// setup's undo, as root through the same pkexec path. Only the two fixed
+// paths, as positional arguments to the fixed REMOVE_SCRIPT, never anything
+// from the page. Set up USB access puts both back.
+export async function removeUsbRule(run: PkexecRunner = runPkexec, exists: (path: string) => boolean = existsSync): Promise<SetupResult> {
+  if (process.platform !== "linux") return { ok: true, message: keyedText("desktop.usbAccess.result.notNeeded") };
+  const files = usbAccessFiles(exists);
+  if (files.length === 0) return { ok: true, message: keyedText("desktop.usbAccess.remove.nothing") };
+  const profile = files.includes(PROFILE_DEST);
+  const result = await run(["/bin/sh", "-c", REMOVE_SCRIPT, "ds5-remove", files.includes(RULE_DEST) ? RULE_DEST : "", profile ? PROFILE_DEST : ""]);
+  if (result.ok) return { ok: true, message: keyedText(profile ? "desktop.usbAccess.remove.doneSandbox" : "desktop.usbAccess.remove.done") };
+  if (result.reason === "missing") return { ok: false, message: keyedText("desktop.usbAccess.remove.noPkexec") };
+  if (result.reason === "cancelled") return { ok: false, message: keyedText("desktop.usbAccess.result.cancelled") };
+  return { ok: false, message: keyedText("desktop.usbAccess.remove.failed", { detail: result.message }) };
+}

@@ -327,6 +327,19 @@
         "noUdevadm": "udevadm ist nicht installiert, darum kann die Regel nicht geladen werden. Kopiere sie von Hand (siehe README).",
         "cancelled": "Abgebrochen. Es wurde nichts geändert.",
         "failed": "Einrichtung fehlgeschlagen: {{detail}}"
+      },
+      "remove": {
+        "button": "USB-Zugriff entfernen…",
+        "confirm": "Entfernt als root, was „USB-Zugriff einrichten“ installiert hat: Dein System fragt nach deinem Passwort; brichst du ab, ändert sich nichts. Diese Dateien werden gelöscht:",
+        "after": "Danach können die App und deine Spiele {{device_akk}} und den Controller nicht mehr über USB öffnen. „USB-Zugriff einrichten“ legt dieselben Dateien wieder an.",
+        "afterSandbox": "Danach können die App und deine Spiele {{device_akk}} und den Controller nicht mehr über USB öffnen, und die App startet ohne ihre Sandbox. „USB-Zugriff einrichten“ legt dieselben Dateien wieder an.",
+        "scriptTitle": "Das genaue Skript, das ausgeführt wird:",
+        "run": "Entfernen",
+        "nothing": "Nichts zu entfernen: Der USB-Zugriff ist nicht eingerichtet.",
+        "done": "USB-Zugriff entfernt. „USB-Zugriff einrichten“ stellt ihn wieder her.",
+        "doneSandbox": "USB-Zugriff und Sandbox-Profil entfernt. Ab dem nächsten Start läuft die App ohne ihre Sandbox; „USB-Zugriff einrichten“ stellt beides wieder her.",
+        "noPkexec": "pkexec ist nicht installiert. Lösche die Dateien von Hand als root.",
+        "failed": "Entfernen fehlgeschlagen: {{detail}}"
       }
     },
     "windowsUsb": {
@@ -619,7 +632,14 @@
       "historyStatus_one": "{{count}} Änderung · zuletzt {{date}}",
       "historyStatus_other": "{{count}} Änderungen · zuletzt {{date}}",
       "historyNone": "Noch keine Änderungen",
-      "historyDamaged": "Diese Änderung lässt sich hier nicht rückgängig machen: Ihre Sicherung ist nicht lesbar. Ordner der Sicherung:"
+      "historyDamaged": "Diese Änderung lässt sich hier nicht rückgängig machen: Ihre Sicherung ist nicht lesbar. Ordner der Sicherung:",
+      "protonRemove": "Entfernen…",
+      "protonRemoveConfirm": "{{name}} entfernen? Die Ordner oben werden gelöscht. Gerade läuft nichts damit; von hier lässt sich nur der neueste Build wieder installieren.",
+      "protonRemoveGo": "Entfernen",
+      "protonRemoving": "Wird entfernt…",
+      "protonRemoved": "{{name}} ist entfernt.",
+      "protonInUse": "{{name}} wurde nicht entfernt: {{users}} nutzt es noch. Wähle dafür zuerst ein anderes Proton.",
+      "protonUsedBy": "Genutzt von {{users}}"
     },
     "setup": {
       "installing": "Firmware wird installiert…",
@@ -1833,7 +1853,8 @@
         "noPkexec": "pkexec ist nicht installiert, darum kann die App nicht nach dem Administrator-Passwort fragen.",
         "cancelled": "die Passwortabfrage wurde abgebrochen",
         "startFailed": "Die App konnte nicht starten: {{detail}}\n\nStarte sie noch einmal. Wenn das weiter passiert, installiere die App neu.",
-        "updateMissing": "Das heruntergeladene Update ist nicht mehr auf diesem PC (aus dem temporären Ordner gelöscht). Suche nach Updates, um es erneut herunterzuladen."
+        "updateMissing": "Das heruntergeladene Update ist nicht mehr auf diesem PC (aus dem temporären Ordner gelöscht). Suche nach Updates, um es erneut herunterzuladen.",
+        "protonGone": "{{name}} ist nicht mehr installiert."
       },
       "headsetUndo": "Der Ton des Controllers konnte nicht zurückgeschaltet werden: {{reason}}",
       "saveFailed": "Nicht alles wurde auf {{device_dat}} gespeichert: Der betroffene Abschnitt sagt, was schiefging. Deine Änderungen sind noch da; versuch Speichern noch einmal.",

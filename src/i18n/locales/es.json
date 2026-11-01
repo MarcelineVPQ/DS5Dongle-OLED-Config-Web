@@ -327,6 +327,19 @@
         "noUdevadm": "udevadm no está instalado, así que la regla no se puede cargar. Cópiala a mano (consulta el README).",
         "cancelled": "Cancelado. No se cambió nada.",
         "failed": "La configuración falló: {{detail}}"
+      },
+      "remove": {
+        "button": "Quitar la configuración del acceso USB…",
+        "confirm": "Borra como root lo que instaló «Configurar acceso USB»: tu sistema pide tu contraseña y, si cancelas, no cambia nada. Se borran estos archivos:",
+        "after": "Después, la app y tus juegos ya no pueden abrir {{device}} ni el mando por USB. «Configurar acceso USB» vuelve a poner los mismos archivos.",
+        "afterSandbox": "Después, la app y tus juegos ya no pueden abrir {{device}} ni el mando por USB, y la app arranca sin su sandbox. «Configurar acceso USB» vuelve a poner los mismos archivos.",
+        "scriptTitle": "El script exacto que ejecuta:",
+        "run": "Quitar",
+        "nothing": "Nada que quitar: el acceso USB no está configurado.",
+        "done": "Configuración del acceso USB quitada. «Configurar acceso USB» la vuelve a poner.",
+        "doneSandbox": "Configuración del acceso USB y perfil del sandbox quitados. La app arranca sin su sandbox desde el próximo inicio; «Configurar acceso USB» vuelve a poner ambos.",
+        "noPkexec": "pkexec no está instalado. Borra los archivos a mano, como root.",
+        "failed": "No se pudo quitar: {{detail}}"
       }
     },
     "windowsUsb": {
@@ -619,7 +632,14 @@
       "historyStatus_one": "{{count}} cambio · último el {{date}}",
       "historyStatus_other": "{{count}} cambios · último el {{date}}",
       "historyNone": "Aún no hay cambios",
-      "historyDamaged": "Este cambio no se puede deshacer aquí: su copia de seguridad no se puede leer. Carpeta de la copia:"
+      "historyDamaged": "Este cambio no se puede deshacer aquí: su copia de seguridad no se puede leer. Carpeta de la copia:",
+      "protonRemove": "Quitar…",
+      "protonRemoveConfirm": "¿Quitar {{name}}? Se borran las carpetas de arriba. Ahora nada lo usa; desde aquí solo se puede volver a instalar la build más reciente.",
+      "protonRemoveGo": "Quitar",
+      "protonRemoving": "Quitando…",
+      "protonRemoved": "{{name}} se ha quitado.",
+      "protonInUse": "{{name}} no se quitó: {{users}} aún lo usa. Elige antes otro Proton para ellos.",
+      "protonUsedBy": "En uso por {{users}}"
     },
     "setup": {
       "installing": "Instalando el firmware…",
@@ -1833,7 +1853,8 @@
         "noPkexec": "pkexec no está instalado, así que la app no puede pedir la contraseña de administrador.",
         "cancelled": "se canceló la ventana de la contraseña",
         "startFailed": "La app no pudo iniciarse: {{detail}}\n\nVuelve a abrirla. Si sigue pasando, reinstala la app.",
-        "updateMissing": "La actualización descargada ya no está en este PC (se borró de la carpeta temporal). Busca actualizaciones para descargarla de nuevo."
+        "updateMissing": "La actualización descargada ya no está en este PC (se borró de la carpeta temporal). Busca actualizaciones para descargarla de nuevo.",
+        "protonGone": "{{name}} ya no está instalado."
       },
       "headsetUndo": "No se pudo volver a cambiar el sonido del mando: {{reason}}",
       "saveFailed": "No se guardó todo en {{device}}: la sección con el problema dice qué falló. Tus cambios siguen aquí; vuelve a probar Guardar.",
