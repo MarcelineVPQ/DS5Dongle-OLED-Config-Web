@@ -15,11 +15,13 @@ asLinux();
 
 const OURS = "GE-Proton11-7-DualSense";
 let home: string;
-let realHome: string | undefined;
+// The service's home is os.homedir(): HOME on Linux and macOS, USERPROFILE on Windows.
+let realHome: { HOME?: string; USERPROFILE?: string };
 beforeEach(() => {
   home = realpathSync(mkdtempSync(join(tmpdir(), "ds5-proton-remove-")));
-  realHome = process.env.HOME;
+  realHome = { HOME: process.env.HOME, USERPROFILE: process.env.USERPROFILE };
   process.env.HOME = home;
+  process.env.USERPROFILE = home;
   // Heroic with our build in its Proton folder; no game and no default runs with it.
   const heroic = join(home, ".config/heroic");
   mkdirSync(join(heroic, "tools/proton", OURS), { recursive: true });
@@ -27,7 +29,11 @@ beforeEach(() => {
   writeFileSync(join(heroic, "tools/proton", OURS, "proton"), "#!/bin/sh\n");
 });
 afterEach(() => {
-  process.env.HOME = realHome;
+  // loop: NOT-WORTH — two variables
+  for (const [k, v] of Object.entries(realHome)) {
+    if (v === undefined) delete process.env[k];
+    else process.env[k] = v;
+  }
   rmSync(home, { recursive: true, force: true });
 });
 
