@@ -63,7 +63,9 @@ it("a slow Development-channel check that answers after Back to stable is droppe
   releaseDev();
   await first;
   expect(u.getState()).toMatchObject({ phase: "available", version: "0.9.5" });
-  expect(u.autoInstallable()).toBe(true);
+  // The offer is the stable channel's. (Not autoInstallable() here: the test feed needs a
+  // dev-tools build, and one never installs a regular release by itself, devToolsBuild.test.ts.)
+  expect((u as unknown as { manifestChannel: string }).manifestChannel).toBe("stable");
 });
 
 it("a check whose channel changed with no new check offers nothing (not the old channel's build)", async () => {
