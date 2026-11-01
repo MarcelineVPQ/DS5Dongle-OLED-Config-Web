@@ -389,7 +389,7 @@ describe("Games → Home, needs attention", () => {
     expect(calls).toContain("installProton");
   });
 
-  // 2026-10-31 app review S5: every installed build can be removed (undoable by installing again), never one still in use.
+  // 2026-10-31 app review S5: every installed build can be removed, never one still in use; only the newest can be installed again (owner, 2026-11-01: an older one can't, re-review S5).
   it("each of our builds says where it is; Remove only for one nothing runs with, and it confirms first", async () => {
     const r = homeReport("healthy");
     const OLD = "GE-Proton11-6-DualSense";
