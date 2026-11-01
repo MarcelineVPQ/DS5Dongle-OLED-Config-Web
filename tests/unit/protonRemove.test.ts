@@ -43,7 +43,10 @@ function report(games: Array<{ title: string; runner: string | null }>, defaults
 describe("where a build is", () => {
   it("its folder and every link to it", () => {
     const { steam, heroic, dirs } = launchers();
-    expect(buildPlaces(OURS, dirs)).toEqual([{ path: join(steam, OURS), link: false }, { path: join(heroic, OURS), link: true }]);
+    expect(buildPlaces(OURS, dirs)).toEqual([
+      { path: join(steam, OURS), link: false },
+      { path: join(heroic, OURS), link: true },
+    ]);
   });
 
   it("our builds only, newest first, with what still runs with each", () => {
@@ -55,7 +58,18 @@ describe("where a build is", () => {
   });
 
   it("nothing runs with a build no game and no launcher default names", () => {
-    expect(buildUsers(report([{ title: "Hades", runner: STOCK }, { title: "Balatro", runner: null }], { steam: STOCK, heroic: null }), OURS)).toEqual({ games: [], launchers: [] });
+    expect(
+      buildUsers(
+        report(
+          [
+            { title: "Hades", runner: STOCK },
+            { title: "Balatro", runner: null },
+          ],
+          { steam: STOCK, heroic: null },
+        ),
+        OURS,
+      ),
+    ).toEqual({ games: [], launchers: [] });
   });
 });
 

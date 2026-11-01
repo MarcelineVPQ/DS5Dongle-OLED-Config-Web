@@ -264,7 +264,7 @@ export async function installProton(build: ProtonBuild, primary: string, copies:
 export function buildPlaces(name: string, dirs: string[]): Array<{ path: string; link: boolean }> {
   if (!PROTON_NAME.test(name)) return [];
   // loop: NOT-WORTH — 1-6 launcher folders, an lstat each
-  return [...new Set(dirs)].flatMap((dir) => {
+  return [...new Set(dirs)].flatMap((dir): Array<{ path: string; link: boolean }> => {
     const path = join(dir, name);
     const st = lstatSync(path, { throwIfNoEntry: false });
     if (st?.isSymbolicLink()) return [{ path, link: true }];

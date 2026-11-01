@@ -18,7 +18,10 @@ function pkexec(result: PkexecResult = { ok: true }) {
   const calls: string[][] = [];
   return { calls, run: async (argv: string[]) => (calls.push(argv), result) };
 }
-const present = (...paths: string[]) => (path: string) => paths.includes(path);
+const present =
+  (...paths: string[]) =>
+  (path: string) =>
+    paths.includes(path);
 
 describe("which files Remove deletes", () => {
   it("only the setup's two files, and only those that are there", () => {

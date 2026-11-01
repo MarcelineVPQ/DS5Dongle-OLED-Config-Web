@@ -23,6 +23,7 @@
     "src/i18n/locales/*.json",
     "src/persisted.ts",
     "src/desktop/windowsRepairScript.ts",
+    "src/desktop/linuxRemoveScript.ts",
     "src/desktop/theme",
     "src/desktop/games",
     "src/update",
