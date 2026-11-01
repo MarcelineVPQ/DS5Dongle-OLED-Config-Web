@@ -499,6 +499,7 @@ export const ROADMAP: RoadmapItem[] = [
     text: "The everyday levels (haptic feedback, speaker, microphone, light bar) as sliders together in one place on the Controller page.",
     areas: ["controller"],
   },
+  { column: "planned", title: "Rotate display 180°", text: "Turn the dongle's screen and its two buttons around when the cable comes from the other side.", areas: ["dongle"] },
   { column: "planned", title: "Steam Gaming Mode panel", text: "Your board's battery, status and settings in Steam's Quick Access menu (Linux)", areas: ["games", "app"], platform: "linux" },
   { column: "planned", title: "Set up games in Gaming Mode", text: "Set up a game's controller settings right from Steam's Quick Access menu (Linux)", areas: ["games"], platform: "linux" },
   { column: "ideas", title: "Local co-op", text: "Play with two to four controllers on one board", areas: ["controller"] },
