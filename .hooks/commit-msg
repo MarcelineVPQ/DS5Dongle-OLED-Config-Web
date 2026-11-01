@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+# The commit message's checks, as it's written: no secret project's name in it
+# or the branch's name, and a Conventional Commit subject (docs/CONTRIBUTING.md).
+# core.hooksPath=.hooks (the pre-push hook's install) turns off the pre-commit
+# framework's own commit-msg hooks, so this runs the same two (2026-11-01
+# re-review N2). Install once per clone: git config core.hooksPath .hooks
+set -euo pipefail
+node tools/doc_gates.mjs privacy-msg "$1"
+node tools/doc_gates.mjs commit-msg "$1"

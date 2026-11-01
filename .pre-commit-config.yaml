@@ -36,7 +36,7 @@ repos:
         exclude: ^(src/flash/picoflash/|package-lock\.json)
       - id: eslint
         name: ESLint
-        entry: npx eslint --max-warnings=1
+        entry: npx eslint --max-warnings=0
         language: system
         files: \.(ts|tsx|js|mjs)$
       - id: typecheck

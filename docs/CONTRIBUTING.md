@@ -15,7 +15,7 @@
 git clone https://github.com/MarcelineVPQ/DS5Dongle-OLED-Config-Web.git
 cd DS5Dongle-OLED-Config-Web
 npx -y npm@11.6.2 ci
-pre-commit install
+git config core.hooksPath .hooks   # pre-push: every static check before a push; commit-msg: the message's checks
 ```
 
 ### Running
@@ -101,7 +101,7 @@ npx vitest run tests/integration   # one category
 <type>(<scope>): <description>
 ```
 
-Types: `feat`, `fix`, `perf`, `docs`, `style`, `refactor`, `test`, `build`, `ci`, `chore`, `revert` (dependency updates are `build(deps)`, as Dependabot writes them). Checked by the commit-msg hook (`pre-commit install`) and, for every commit since the last release tag, by `node tools/doc_gates.mjs --check commits` in CI. A `feat` commit that touches a shipped file updates its row in `docs/BACKLOG.md` in the same commit, or says `No backlog change: why` (the `backlog` gate). Common scopes: `desktop`, `games`, `ui`, `live`, `dongle`, `controller`, `protocol`, `i18n`, `updates`, `security`, `backlog`, `changelog`, `guide`, `gates`, `release`.
+Types: `feat`, `fix`, `perf`, `docs`, `style`, `refactor`, `test`, `build`, `ci`, `chore`, `revert` (dependency updates are `build(deps)`, as Dependabot writes them). Checked by the commit-msg hook (`.hooks/commit-msg`, installed with `git config core.hooksPath .hooks`) and, for every commit since the last release tag, by `node tools/doc_gates.mjs --check commits` in CI. A `feat` commit that touches a shipped file updates its row in `docs/BACKLOG.md` in the same commit, or says `No backlog change: why` (the `backlog` gate). Common scopes: `desktop`, `games`, `ui`, `live`, `dongle`, `controller`, `protocol`, `i18n`, `updates`, `security`, `backlog`, `changelog`, `guide`, `gates`, `release`.
 
 ## Versioning
 
