@@ -6,6 +6,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ## [Unreleased]
 
+## [0.9.5-dev.21] - 2026-11-01
+
 ### Added
 
 - **1000 Hz polling, disconnect when docked, and one-frame audio reports** (firmware protocol 1.22, upstream's batch adapted). Your board's page: Connection to the PC's polling rate gets 1000 Hz (the controller's latest state every millisecond) beside 250 Hz, 500 Hz and Real-time (each Bluetooth report as it arrives; it was labelled "1 kHz"); Power gets **Disconnect when docked** (off by default: the controller's Bluetooth turns off when you put it on a charging station or dock); and the Controller page's Haptic feedback section gets **Audio reports**, Two frames (the default) or One frame, to compare haptic feedback and delay. All three are saved by the save bar like any board setting, and the simulated board speaks 1.22.
