@@ -63,7 +63,11 @@
     "gainLabel": "振动强度",
     "audioBufferLabel": "音频缓冲区长度",
     "btMicLabel": "内置麦克风",
-    "audioBufferSub": "调低：音频延迟更小。调高：有爆音时音频更稳定。"
+    "audioBufferSub": "调低：音频延迟更小。调高：有爆音时音频更稳定。",
+    "packetMode": "音频报告",
+    "packetModeInfo": "扬声器和触觉反馈如何传到控制器：每个报告两帧（默认），或每个报告一帧、频率加倍（固件 0.7.2 的方式）。两种都试一下，保留触觉反馈和延迟感觉更好的那个。",
+    "packetDouble": "两帧",
+    "packetSingle": "一帧"
   },
   "behavior": {
     "inactiveTimeLabel": "闲置超时",
@@ -1557,11 +1561,7 @@
           "oled": "OLED",
           "speaker": "core1 扬声器帧",
           "mic": "core1 麦克风帧"
-        },
-        "packetMode": "音频报告",
-        "packetModeInfo": "扬声器和触觉反馈如何传到控制器：每个报告两帧（默认），或每个报告一帧、频率加倍（固件 0.7.2 的方式）。两种都试一下，保留触觉反馈和延迟感觉更好的那个。",
-        "packetDouble": "两帧",
-        "packetSingle": "一帧"
+        }
       },
       "specs": {
         "chip": "芯片",

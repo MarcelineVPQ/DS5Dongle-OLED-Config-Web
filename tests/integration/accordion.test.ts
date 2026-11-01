@@ -625,7 +625,7 @@ const live = async (view: "overview" | "dongle" | "app") => {
 const CONTROLLER_INVENTORY: Record<string, string[]> = {
   lightbar: ["desktop.lightbar.mode", "desktop.lightbar.modes.rainbow", "desktop.lightbar.favorites"],
   triggers: ["desktop.live.pull", "desktop.settings.triggerReduce", "desktop.calib.triggersTitle", "desktop.triggers.title", "desktop.triggers.presets.weapon"],
-  haptics: ["haptics.audioBufferLabel", "desktop.live.hapticLevel", "autoHaptics.sectionTitle", "autoHaptics.modeLabel"],
+  haptics: ["haptics.audioBufferLabel", "haptics.packetMode", "desktop.live.hapticLevel", "autoHaptics.sectionTitle", "autoHaptics.modeLabel"],
   speaker: [
     "desktop.settings.speakerLevel",
     "desktop.settings.speakerBoost",
@@ -846,6 +846,8 @@ describe("the Pico 2 W page on the accordion", () => {
     for (const key of ["desktop.dash.usb", "desktop.dash.audio", "desktop.dash.timing.title"]) expect(diagText, key).toContain(m.i18n.t(key));
     expect(diagText.indexOf(m.i18n.t("desktop.dash.usb"))).toBeLessThan(diagText.indexOf(m.i18n.t("desktop.dash.audio")));
     expect(diagText.indexOf(m.i18n.t("desktop.dash.audio"))).toBeLessThan(diagText.indexOf(m.i18n.t("desktop.dash.timing.title")));
+    // Audio reports is a setting: the Controller page's Haptic feedback section, not the Timing readout.
+    expect(diagText).not.toContain(m.i18n.t("haptics.packetMode"));
     // The board's specs: its zone's title line (name, then chip · cores · clock · SRAM · flash · wireless), not in Diagnostics.
     const zone = container.querySelector<HTMLElement>(".dk-split-main .pico-zone")!;
     expect(zone.querySelector("h3")?.textContent).toBe("Pico 2 W");

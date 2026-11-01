@@ -63,7 +63,11 @@
     "gainLabel": "Vibrationsintensität",
     "audioBufferLabel": "Audio-Pufferlänge",
     "btMicLabel": "Integriertes Mikrofon",
-    "audioBufferSub": "Niedriger: weniger Audioverzögerung. Höher: stabileres Audio, falls es knackt."
+    "audioBufferSub": "Niedriger: weniger Audioverzögerung. Höher: stabileres Audio, falls es knackt.",
+    "packetMode": "Audioberichte",
+    "packetModeInfo": "Wie Lautsprecher und haptisches Feedback zum Controller gelangen: zwei Frames pro Bericht (Standard) oder ein Frame pro Bericht, doppelt so oft, wie Firmware 0.7.2 sie sendete. Probiere beides und behalte, was sich bei haptischem Feedback und Verzögerung besser anfühlt.",
+    "packetDouble": "Zwei Frames",
+    "packetSingle": "Ein Frame"
   },
   "behavior": {
     "inactiveTimeLabel": "Inaktivitäts-Timeout",
@@ -1572,11 +1576,7 @@
           "oled": "OLED",
           "speaker": "Core1-Lautsprecherframe",
           "mic": "Core1-Mikrofonframe"
-        },
-        "packetMode": "Audioberichte",
-        "packetModeInfo": "Wie Lautsprecher und haptisches Feedback zum Controller gelangen: zwei Frames pro Bericht (Standard) oder ein Frame pro Bericht, doppelt so oft, wie Firmware 0.7.2 sie sendete. Probiere beides und behalte, was sich bei haptischem Feedback und Verzögerung besser anfühlt.",
-        "packetDouble": "Zwei Frames",
-        "packetSingle": "Ein Frame"
+        }
       },
       "specs": {
         "chip": "Chip",

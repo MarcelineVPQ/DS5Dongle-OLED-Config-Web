@@ -63,7 +63,11 @@
     "gainLabel": "Intensité des vibrations",
     "audioBufferLabel": "Longueur du tampon audio",
     "btMicLabel": "Microphone intégré",
-    "audioBufferSub": "Plus bas : moins de latence audio. Plus haut : audio plus stable s'il grésille."
+    "audioBufferSub": "Plus bas : moins de latence audio. Plus haut : audio plus stable s'il grésille.",
+    "packetMode": "Rapports audio",
+    "packetModeInfo": "Comment le haut-parleur et le retour haptique arrivent à la manette : deux trames par rapport (par défaut), ou une trame par rapport, deux fois plus souvent, comme le faisait le firmware 0.7.2. Essayez les deux et gardez celui dont le retour haptique et la latence vous conviennent le mieux.",
+    "packetDouble": "Deux trames",
+    "packetSingle": "Une trame"
   },
   "behavior": {
     "inactiveTimeLabel": "Délai d'inactivité",
@@ -1572,11 +1576,7 @@
           "oled": "OLED",
           "speaker": "Trame haut-parleur core1",
           "mic": "Trame micro core1"
-        },
-        "packetMode": "Rapports audio",
-        "packetModeInfo": "Comment le haut-parleur et le retour haptique arrivent à la manette : deux trames par rapport (par défaut), ou une trame par rapport, deux fois plus souvent, comme le faisait le firmware 0.7.2. Essayez les deux et gardez celui dont le retour haptique et la latence vous conviennent le mieux.",
-        "packetDouble": "Deux trames",
-        "packetSingle": "Une trame"
+        }
       },
       "specs": {
         "chip": "Puce",

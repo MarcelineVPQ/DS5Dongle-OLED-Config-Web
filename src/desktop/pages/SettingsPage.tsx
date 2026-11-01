@@ -12,6 +12,7 @@ import {
   type AutoHapticsMode,
   type ControllerMode,
   type MicSelect,
+  type PacketMode,
   type PollingRateMode,
   type SpeakerSelect,
   type StatusGpioMode,
@@ -141,6 +142,19 @@ export function HapticsSection(props: SectionProps) {
         invalid={issue("audioBufferLength")}
         onChange={(v) => set("audioBufferLength", v)}
       />
+      {/* Protocol 1.22: the audio report A/B (two frames per 0x39 report, or one per 0x36 as firmware 0.7.2 sent them), compared by how the haptic feedback feels. */}
+      {hasPacketMode(bridge) && (
+        <Segmented
+          label={t("haptics.packetMode")}
+          info={t("haptics.packetModeInfo")}
+          value={d.packetMode}
+          options={[
+            { value: 0 as PacketMode, label: t("haptics.packetDouble") },
+            { value: 1 as PacketMode, label: t("haptics.packetSingle") },
+          ]}
+          onChange={(v) => set("packetMode", v)}
+        />
+      )}
     </>
   );
 }
@@ -356,9 +370,9 @@ export function StatusPinSection(props: SectionProps) {
 }
 
 // Protocol 1.22 (upstream's 2026-10-17/18 batch): 1000 Hz polling, the
-// audio report choice (DongleDashboard's Timing card) and the dock disconnect.
+// audio report choice (the Haptic feedback section) and the dock disconnect.
 export const hasPoll1000 = (bridge: UseDs5BridgeResult) => supportsFeature4(bridge.identity, 22, FEATURES4.poll1000);
-export const hasPacketMode = (bridge: UseDs5BridgeResult) => supportsFeature4(bridge.identity, 22, FEATURES4.packetMode);
+const hasPacketMode = (bridge: UseDs5BridgeResult) => supportsFeature4(bridge.identity, 22, FEATURES4.packetMode);
 const hasDockDisconnect = (bridge: UseDs5BridgeResult) => supportsFeature4(bridge.identity, 22, FEATURES4.dockDisconnect);
 
 export function PowerSection(props: SectionProps) {

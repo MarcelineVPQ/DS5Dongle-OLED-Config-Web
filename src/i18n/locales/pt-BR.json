@@ -63,7 +63,11 @@
     "gainLabel": "Intensidade da vibração",
     "audioBufferLabel": "Comprimento do buffer de áudio",
     "btMicLabel": "Microfone embutido",
-    "audioBufferSub": "Menor: menos atraso no áudio. Maior: áudio mais estável se estalar."
+    "audioBufferSub": "Menor: menos atraso no áudio. Maior: áudio mais estável se estalar.",
+    "packetMode": "Relatórios de áudio",
+    "packetModeInfo": "Como o alto-falante e a resposta tátil chegam ao controle: dois quadros por relatório (o padrão) ou um quadro por relatório, com o dobro da frequência, como o firmware 0.7.2 enviava. Experimente os dois e fique com o que tiver a melhor resposta tátil e o menor atraso.",
+    "packetDouble": "Dois quadros",
+    "packetSingle": "Um quadro"
   },
   "behavior": {
     "inactiveTimeLabel": "Tempo de inatividade",
@@ -1572,11 +1576,7 @@
           "oled": "OLED",
           "speaker": "Quadro do alto-falante (core1)",
           "mic": "Quadro do microfone (core1)"
-        },
-        "packetMode": "Relatórios de áudio",
-        "packetModeInfo": "Como o alto-falante e a resposta tátil chegam ao controle: dois quadros por relatório (o padrão) ou um quadro por relatório, com o dobro da frequência, como o firmware 0.7.2 enviava. Experimente os dois e fique com o que tiver a melhor resposta tátil e o menor atraso.",
-        "packetDouble": "Dois quadros",
-        "packetSingle": "Um quadro"
+        }
       },
       "specs": {
         "chip": "Chip",

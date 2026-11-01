@@ -62,7 +62,11 @@
     "gainLabel": "Vibration intensity",
     "audioBufferLabel": "Audio buffer length",
     "btMicLabel": "Built-in microphone",
-    "audioBufferSub": "Lower: less audio delay. Higher: steadier audio if it crackles."
+    "audioBufferSub": "Lower: less audio delay. Higher: steadier audio if it crackles.",
+    "packetMode": "Audio reports",
+    "packetModeInfo": "How the speaker and haptic feedback travel to the controller: two frames per report (the default), or one frame per report, twice as often, as firmware 0.7.2 sent them. Try both and keep the one whose haptic feedback and delay feel better.",
+    "packetDouble": "Two frames",
+    "packetSingle": "One frame"
   },
   "behavior": {
     "inactiveTimeLabel": "Inactive timeout",
@@ -1571,11 +1575,7 @@
           "oled": "OLED",
           "speaker": "Core1 speaker frame",
           "mic": "Core1 mic frame"
-        },
-        "packetMode": "Audio reports",
-        "packetModeInfo": "How the speaker and haptic feedback travel to the controller: two frames per report (the default), or one frame per report, twice as often, as firmware 0.7.2 sent them. Try both and keep the one whose haptic feedback and delay feel better.",
-        "packetDouble": "Two frames",
-        "packetSingle": "One frame"
+        }
       },
       "specs": {
         "chip": "Chip",

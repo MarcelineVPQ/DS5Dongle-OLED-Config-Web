@@ -63,7 +63,11 @@
     "gainLabel": "Intensidad de la vibración",
     "audioBufferLabel": "Longitud del búfer de audio",
     "btMicLabel": "Micrófono integrado",
-    "audioBufferSub": "Más bajo: menos retardo de audio. Más alto: audio más estable si cruje."
+    "audioBufferSub": "Más bajo: menos retardo de audio. Más alto: audio más estable si cruje.",
+    "packetMode": "Informes de audio",
+    "packetModeInfo": "Cómo llegan al mando el altavoz y la retroalimentación háptica: dos tramas por informe (predeterminado) o una trama por informe, el doble de seguido, como los enviaba el firmware 0.7.2. Prueba ambos y quédate con el que mejor se sienta en retroalimentación háptica y retardo.",
+    "packetDouble": "Dos tramas",
+    "packetSingle": "Una trama"
   },
   "behavior": {
     "inactiveTimeLabel": "Tiempo de inactividad",
@@ -1572,11 +1576,7 @@
           "oled": "OLED",
           "speaker": "Trama del altavoz (core1)",
           "mic": "Trama del micrófono (core1)"
-        },
-        "packetMode": "Informes de audio",
-        "packetModeInfo": "Cómo llegan al mando el altavoz y la retroalimentación háptica: dos tramas por informe (predeterminado) o una trama por informe, el doble de seguido, como los enviaba el firmware 0.7.2. Prueba ambos y quédate con el que mejor se sienta en retroalimentación háptica y retardo.",
-        "packetDouble": "Dos tramas",
-        "packetSingle": "Una trama"
+        }
       },
       "specs": {
         "chip": "Chip",

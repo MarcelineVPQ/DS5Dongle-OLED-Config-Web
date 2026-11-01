@@ -17,10 +17,7 @@ import type { UseDs5BridgeResult } from "../../hooks/useDs5Bridge";
 import { AUDIO_COUNTER_NAMES, FEATURES2, supportsFeature2, TIMING_MAX_SATURATED, TIMING_STAGES, type AudioCounters, type CpuTimings, type OledFrame } from "../../protocol/bridgeClient";
 import { boardSpecs, OLED_MODULE } from "./boardSpecs";
 import { causeText } from "../shownError";
-import { BusyButton, InfoTip, Segmented } from "../controls";
-import type { PacketMode } from "../../protocol/config";
-import { hasPacketMode } from "../pages/SettingsPage";
-import { useFields } from "../pages/sectionFields";
+import { BusyButton, InfoTip } from "../controls";
 import { boardProblems } from "./core1Status";
 import Notice from "../Notice";
 import { SectionGroup } from "../accordion/Section";
@@ -242,7 +239,7 @@ export function DiagnosticsBody({ bridge, telemetry }: { bridge: UseDs5BridgeRes
         </div>
       </SectionGroup>
 
-      {s?.timings && <TimingCard bridge={bridge} client={bridge.client} timings={s.timings} history={longHistory} />}
+      {s?.timings && <TimingCard client={bridge.client} timings={s.timings} history={longHistory} />}
     </div>
   );
 }
@@ -256,13 +253,8 @@ export const SPEAKER_FRAME_US = Math.round((512 / 48000) * 1e6); // 10 667
 // case since the reset), the averages over time, and a Reset. The trend column
 // takes the card's spare width; the line keeps one sample per few pixels of it
 // (trendCapacity), so it fills the column from left to right over time.
-// Protocol 1.22: the audio report A/B switch (two frames per 0x39 report, or
-// one per 0x36 as firmware 0.7.2 sent them), a board setting like any other:
-// it applies at once and the save bar saves it. Here because the timings and
-// the haptics are what it is compared by.
-function TimingCard({ bridge, client, timings, history }: { bridge: UseDs5BridgeResult; client: NonNullable<UseDs5BridgeResult["client"]>; timings: CpuTimings; history: Sample[] }) {
+function TimingCard({ client, timings, history }: { client: NonNullable<UseDs5BridgeResult["client"]>; timings: CpuTimings; history: Sample[] }) {
   const { t } = useTranslation();
-  const { d, set } = useFields({ bridge });
   const td = (k: string, o?: Record<string, unknown>) => t(`desktop.dash.timing.${k}`, o);
   // The graphs start over at a reset, like the numbers.
   const [resetAt, setResetAt] = useState(0);
@@ -300,18 +292,6 @@ function TimingCard({ bridge, client, timings, history }: { bridge: UseDs5Bridge
         <Notice error onDismiss={() => setError(null)}>
           {error}
         </Notice>
-      )}
-      {hasPacketMode(bridge) && (
-        <Segmented
-          label={td("packetMode")}
-          info={td("packetModeInfo")}
-          value={d.packetMode}
-          options={[
-            { value: 0 as PacketMode, label: td("packetDouble") },
-            { value: 1 as PacketMode, label: td("packetSingle") },
-          ]}
-          onChange={(v) => set("packetMode", v)}
-        />
       )}
       <div className="dash-timings">
         <span />
