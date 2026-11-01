@@ -1,3 +1,5 @@
+// First, before any other module runs: a released build refuses Chromium's remote debugging (debugSwitches.ts).
+import "./refuseDebugSwitches";
 import { dirname, join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { existsSync, statSync, writeFileSync } from "node:fs";

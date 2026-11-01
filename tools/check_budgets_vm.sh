@@ -79,7 +79,7 @@ if [ "$BUILD" = 1 ]; then
   fi
   rm -rf "$BUILT/release"
   DS5_DEV_TOOLS=1 nice -n 19 npx electron-vite build > "$BUILT/build.log" 2>&1
-  nice -n 19 npx electron-builder --win -c.directories.output="$BUILT/release" >> "$BUILT/build.log" 2>&1 || { echo "The build failed; see $BUILT/build.log" >&2; exit 1; }
+  DS5_DEV_TOOLS=1 nice -n 19 npx electron-builder --win -c.directories.output="$BUILT/release" >> "$BUILT/build.log" 2>&1 || { echo "The build failed; see $BUILT/build.log" >&2; exit 1; }
   INSTALLER="$(ls "$BUILT"/release/*-setup.exe | head -n 1)"
 fi
 

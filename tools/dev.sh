@@ -39,7 +39,7 @@ cd "$APP"
 echo "== Building (dev tools on)"
 DS5_DEV_TOOLS=1 npx electron-vite build > "$DEV/build.log" 2>&1 || { tail -20 "$DEV/build.log"; exit 1; }
 if [ "$MODE" = package ]; then
-  npx electron-builder --linux AppImage -c.directories.output="$DEV/app" >> "$DEV/build.log" 2>&1 || { tail -20 "$DEV/build.log"; exit 1; }
+  DS5_DEV_TOOLS=1 npx electron-builder --linux AppImage -c.directories.output="$DEV/app" >> "$DEV/build.log" 2>&1 || { tail -20 "$DEV/build.log"; exit 1; }
   BIN="$DEV/app/DS5Dongle-OLED-Edition-Configurator-$(node -p 'require("./package.json").version')-linux-x86_64.AppImage"
   (HOME="$DEV/home" "$BIN" --remote-debugging-port="$PORT" > "$DEV/app.log" 2>&1 &)
 else

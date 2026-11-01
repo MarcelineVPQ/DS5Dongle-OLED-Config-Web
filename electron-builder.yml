@@ -24,9 +24,12 @@ asar: true
 # as a plain Node runtime (ELECTRON_RUN_AS_NODE), ignores NODE_OPTIONS, loads
 # the app only from its app.asar and, on Windows and macOS, checks that
 # app.asar wasn't edited. The Mac build isn't signed with an identity, so
-# flipping the fuses resets its ad-hoc signature. --inspect stays allowed for
-# now: the release gates (mac-smoke, the budget and UI checkers) drive the
-# packaged app through it (docs/SECURITY_AUDIT.md).
+# flipping the fuses resets its ad-hoc signature. --inspect (the
+# EnableNodeCliInspectArguments fuse) is decided per build by the afterPack
+# hook: off in released builds, on in dev-tools builds, which the test tools
+# drive through it (tools/inspect_fuse.mjs, docs/SECURITY_AUDIT.md). It stays
+# out of this list: this list is flipped after the hook and would undo it.
+afterPack: ./tools/inspect_fuse.mjs
 electronFuses:
   runAsNode: false
   enableNodeOptionsEnvironmentVariable: false

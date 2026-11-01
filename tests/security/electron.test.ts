@@ -2,8 +2,10 @@
 // directly; the window/session baseline is checked in the source so a change
 // to it has to come with a change here (and a SECURITY_AUDIT.md note).
 import { readFileSync, readdirSync } from "node:fs";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { parse as parseYaml } from "yaml";
+import afterPack, { devToolsBuild } from "../../tools/inspect_fuse.mjs";
+import { refusedDebugSwitch } from "../../electron/main/debugSwitches";
 import { isAllowedUsbDevice } from "../../electron/main/devices";
 import { artRequestTarget } from "../../electron/main/games/artRequest";
 import { ART_WIDTHS } from "../../src/desktop/games/types";
@@ -611,5 +613,67 @@ describe("Electron fuses (electron-builder.yml)", () => {
       onlyLoadAppFromAsar: true,
       enableEmbeddedAsarIntegrityValidation: true,
     });
+  });
+});
+
+// 2026-10-31 app review S1, the owner's choice (b): released builds refuse both
+// debug entry points; dev-tools builds keep them for the test tools.
+describe("debug entry points: off in released builds", () => {
+  afterEach(() => vi.unstubAllEnvs());
+  const builderConfig = () => parseYaml(readFileSync(new URL("../../electron-builder.yml", import.meta.url), "utf8")) as { afterPack?: string; electronFuses?: Record<string, boolean> };
+
+  it("the inspect fuse is decided by the afterPack hook, never by the fixed list (flipped after it)", () => {
+    const config = builderConfig();
+    expect(config.afterPack).toBe("./tools/inspect_fuse.mjs");
+    expect(config.electronFuses).not.toHaveProperty("enableNodeCliInspectArguments");
+  });
+
+  it("--inspect: off in a release build, on in a dev-tools build", async () => {
+    const flipped: Array<Record<string, unknown>> = [];
+    const context = (version: string, electronPlatformName = "linux") => ({
+      electronPlatformName,
+      packager: {
+        appInfo: { version },
+        addElectronFuses: async (_context: unknown, fuses: Record<string, unknown>) => {
+          flipped.push(fuses);
+          return 1;
+        },
+      },
+    });
+    // EnableNodeCliInspectArguments is fuse 3 of @electron/fuses' FuseV1Options.
+    vi.stubEnv("DS5_DEV_TOOLS", "");
+    await afterPack(context("0.9.5"));
+    await afterPack(context("0.9.5-dev.20", "darwin"));
+    vi.stubEnv("DS5_DEV_TOOLS", "1");
+    await afterPack(context("0.9.5", "win32"));
+    expect(flipped).toEqual([
+      { version: "1", resetAdHocDarwinSignature: false, 3: false },
+      { version: "1", resetAdHocDarwinSignature: true, 3: true },
+      { version: "1", resetAdHocDarwinSignature: false, 3: true },
+    ]);
+  });
+
+  it("a dev-tools build is the same rule as the bundle's DEV_TOOLS (electron.vite.config.ts)", () => {
+    expect(viteSource).toContain('const DEV_TOOLS = process.env.DS5_DEV_TOOLS === "1" || /-dev\\.\\d+$/.test(version);');
+    expect(devToolsBuild("0.9.5", {})).toBe(false);
+    expect(devToolsBuild("0.9.5-rc.1", {})).toBe(false);
+    expect(devToolsBuild("0.9.5-dev.20", {})).toBe(true);
+    expect(devToolsBuild("0.9.5", { DS5_DEV_TOOLS: "1" })).toBe(true);
+  });
+
+  it("--remote-debugging-port / -pipe: refused by a packaged build without the dev tools only", () => {
+    const has = (...names: string[]) => (name: string) => names.includes(name);
+    expect(refusedDebugSwitch(has("remote-debugging-port"), true, false)).toBe("remote-debugging-port");
+    expect(refusedDebugSwitch(has("remote-debugging-pipe"), true, false)).toBe("remote-debugging-pipe");
+    expect(refusedDebugSwitch(has("no-sandbox", "hidden"), true, false)).toBeNull();
+    expect(refusedDebugSwitch(has("remote-debugging-port"), true, true)).toBeNull(); // dev-tools build: the test tools
+    expect(refusedDebugSwitch(has("remote-debugging-port"), false, false)).toBeNull(); // the unpackaged dev copy
+  });
+
+  it("is checked by index.ts's first import, before any other module runs", () => {
+    expect(mainSource.split("\n").find((line) => line.startsWith("import "))).toBe('import "./refuseDebugSwitches";');
+    const guard = readFileSync(new URL("../../electron/main/refuseDebugSwitches.ts", import.meta.url), "utf8");
+    expect(guard).toContain("const refused = refusedDebugSwitch((name) => app.commandLine.hasSwitch(name), app.isPackaged, DEV_TOOLS_BUILT);");
+    expect(guard).toMatch(/\nif \(refused\) \{\n[\s\S]*?\n {2}app\.exit\(1\);\n\}\n$/);
   });
 });
