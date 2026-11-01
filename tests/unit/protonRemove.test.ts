@@ -99,10 +99,15 @@ describe("removing a build", () => {
     expect(existsSync(join(heroic, NEWER, "notes.txt"))).toBe(true);
   });
 
-  it("a link left dangling by an earlier removal goes too", () => {
+  // The card lists only builds with a proton script somewhere (installedBuilds), so a
+  // dangling link is reached next to a real copy of the same build (2026-11-01 re-review N7).
+  it("a dangling link of the build's name goes with the build", () => {
     const { steam, heroic, dirs } = launchers();
-    rmSync(join(steam, OURS), { recursive: true });
-    expect(removeBuild(OURS, dirs)).toEqual([join(heroic, OURS)]);
+    rmSync(join(heroic, OURS));
+    symlinkSync(join(root!, "moved", OURS), join(heroic, OURS), "dir"); // points at a copy that's gone
+    expect(installedBuilds(dirs, report([])).find((b) => b.name === OURS)?.paths).toEqual([join(steam, OURS), join(heroic, OURS)]);
+    expect(removeBuild(OURS, dirs)).toEqual([join(heroic, OURS), join(steam, OURS)]);
     expect(gone(join(heroic, OURS))).toBe(true);
+    expect(gone(join(steam, OURS))).toBe(true);
   });
 });
