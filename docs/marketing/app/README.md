@@ -20,7 +20,7 @@ show the Developer card's Fake games library, never a real one.
 
 Not included on purpose: the Pairing slots section and the Games page (the
 guide has both, with the simulated board and the fake library). The guided
-tour's picture is gone while the tour is off (`TOUR_ENABLED` in
-`src/desktop/tour/Tour.tsx`).
+tour's picture is gone: the tour was removed from the app (2026-11-01) until
+it is rebuilt.
 
 Colorway renders and the animation are in `../colorways/`.

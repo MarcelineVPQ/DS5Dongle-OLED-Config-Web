@@ -1,14 +1,14 @@
-// The narrator: short voice lines for app events and the guided tour.
+// The narrator: short voice lines for app events.
 //
 // Rules (agreed with the user, 2026-10-10):
 // - She speaks only through the controller's speaker, never the PC's: the
 //   line goes to the audio output named like the DualSense, and without one
 //   she stays silent.
-// - Silent until the user says yes ("ask"): the tour's first step asks, with
-//   the question itself as the sample; App settings can change it any time.
+// - Silent until the user says yes ("ask"): App settings turns it on or off
+//   any time.
 // - Only while the window is on screen, so an app that autostarts in the tray
 //   never speaks unprompted.
-// - One line at a time; a newer tour line cuts the previous one off.
+// - One line at a time; a line said with `cut` cuts the previous one off.
 // - Captions (on by default): her words show while she speaks, for anyone
 //   who can't hear her; with the voice turned off, the short confirmations
 //   still show as text. Nothing shows while the narrator is still "ask".
@@ -175,16 +175,16 @@ export function narratorIdle(): Promise<void> {
   return chain;
 }
 
-// Say a line if the narrator is on (or `ask` is allowed, for the tour's
-// question). `cut` stops whatever is playing first (tour steps).
+// Say a line if the narrator is on. `cut` stops whatever is playing first
+// (the Speaker test's sample).
 // A line said in passing (an event, not the Speaker test): one that can't
 // play is decoration, its caption still shows, so a failure is only logged.
-export function sayInPassing(key: string, opts: { allowAsk?: boolean; cut?: boolean } = {}): void {
+export function sayInPassing(key: string, opts: { cut?: boolean } = {}): void {
   say(key, opts).catch(logged("a narrator line that couldn't play (decoration: its caption still shows)"));
 }
 
-export function say(key: string, opts: { allowAsk?: boolean; cut?: boolean } = {}): Promise<void> {
-  const voice = setting === "on" || (opts.allowAsk === true && setting === "ask");
+export function say(key: string, opts: { cut?: boolean } = {}): Promise<void> {
+  const voice = setting === "on";
   // Captions follow the voice; with the voice turned off they still show the
   // words (captions-only). Never while the narrator hasn't been answered.
   const withCaption = captionsOn && (voice || setting === "off");

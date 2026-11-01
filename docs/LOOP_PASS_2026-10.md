@@ -1171,7 +1171,7 @@ Trigger: `await` / `hot:<root>` / `nested`. "Runs" is N and how often (`-`: the 
 |---|---|---|---|---|---|---|---|
 | 76 | `Toasts` | .map | hot:render | **NOT-WORTH** | - | N ≤ TOAST_MAX (3) toasts; per toast change | - |
 
-#### src/desktop/tour/Tour.tsx
+#### src/desktop/tour/Tour.tsx (removed 2026-11-01: the tour left the shipped code)
 
 | Line | Function | Kind | Trigger | Verdict | Runs | Why | Change |
 |---|---|---|---|---|---|---|---|

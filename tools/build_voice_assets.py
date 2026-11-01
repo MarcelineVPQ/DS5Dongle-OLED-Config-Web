@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Encode the narrator's app lines (app_*, tour_*) from the speaker masters
+"""Encode the narrator's app lines (app_*) from the speaker masters
 into small Ogg Opus files bundled with the app: src/assets/voice/<lang>/,
 plus captions.json (the words of every line in every language).
 The controller's own lines (fw_*) go into the firmware instead.
@@ -16,7 +16,8 @@ OUT = ROOT / "src/assets/voice"
 
 def main() -> None:
     spec = json.load(open(VOICE / "lines.json"))
-    keys = [l["key"] for l in spec["lines"] if not l["key"].startswith("fw_")]
+    # The tour's lines (tour_*) stay in the masters for its rebuild; the app ships none while it's removed.
+    keys = [l["key"] for l in spec["lines"] if not l["key"].startswith(("fw_", "tour_"))]
     total = 0
     for lang in spec["languages"]:
         (OUT / lang).mkdir(parents=True, exist_ok=True)

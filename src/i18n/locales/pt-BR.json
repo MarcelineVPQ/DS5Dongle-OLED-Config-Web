@@ -744,68 +744,6 @@
       "playerIndicator": "Indicador de jogador",
       "headsetMicIn": "Headset com microfone conectado"
     },
-    "tour": {
-      "stepOf": "Passo {{n}} de {{total}}",
-      "skip": "Pular o tour",
-      "skipStep": "Pular este passo",
-      "back": "Voltar",
-      "next": "Próximo",
-      "finishButton": "Vamos lá",
-      "waiting": "Esperando você…",
-      "helpHint": "O tour guiado rápido do primeiro uso.",
-      "replay": "Mostrar o tour de novo",
-      "welcome": {
-        "title": "Bem-vindo!",
-        "body": "Um tour de um minuto, com o controle na mão. Aperte ✕ para continuar e ○ para voltar. Esc ou “Pular o tour” encerra quando quiser.",
-        "bodyAsk": "Um tour de um minuto, com o controle na mão. Esc ou “Pular o tour” encerra quando quiser."
-      },
-      "press": {
-        "title": "Este é seu controle, ao vivo",
-        "body": "Aperte alguns botões diferentes do controle e veja eles acenderem aqui.",
-        "done": "Boa! Tudo o que você aperta aparece aqui."
-      },
-      "trigger": {
-        "title": "Agora os gatilhos",
-        "body": "Agora puxe um gatilho, L2 ou R2, até o fim. Sentiu alguma coisa?",
-        "done": "Sentiu? Isso é um gatilho adaptável: ele resiste e depois cede de uma vez. Os jogos usam isso em armas, arcos e freios."
-      },
-      "click": {
-        "title": "Configure com o mouse",
-        "body": "Clique com o mouse na barra de luz ao lado do touch pad. Cada parte do desenho abre as próprias configurações.",
-        "done": "Você abriu as configurações da barra de luz."
-      },
-      "panel": {
-        "title": "As configurações abrem aqui",
-        "body": "As mudanças vão na hora para {{device}}: você vê, ouve e sente. ✕ fecha o painel."
-      },
-      "list": {
-        "title": "Ou escolha na lista",
-        "body": "Não sabe onde algo fica no controle? Todas as configurações também estão aqui, a um clique. » esconde este painel para o controle ficar maior."
-      },
-      "save": {
-        "title": "Guarde o que gostar",
-        "body": "As mudanças valem na hora, mas são temporárias. “Salvar {{device_em}}” mantém depois de desligar; “Reverter” volta ao que está salvo."
-      },
-      "top": {
-        "title": "{{deviceName}}, seus jogos e a ajuda",
-        "body": "{{deviceName}}: atualizações de firmware, OLED, energia e USB. Jogos: prepare o Steam e outros launchers para gatilhos e resposta tátil (Linux). Sobre: novidades e o guia. ⚙: as configurações do app."
-      },
-      "finish": {
-        "title": "Tudo pronto",
-        "body": "Divirta-se! Você pode repetir este tour quando quiser em ⚙ Configurações do app."
-      },
-      "voiceAsk": "Quer que ela te guie? Ela fala só pelo alto-falante do seu controle; dá para mudar quando quiser em ⚙ Configurações do app.",
-      "voiceYes": "Sim, me guie",
-      "voiceNo": "Não, obrigado",
-      "data": {
-        "title": "Tudo, ao vivo",
-        "body": "Aqui embaixo: analógicos, gatilhos, movimento, bateria e conexão, em números e gráficos, enquanto o seu controle se move."
-      },
-      "pressGoal": "Faltam {{n}} botões diferentes…",
-      "pressedLabel": "Botões apertados até agora",
-      "keepPlaying": "Continue o quanto quiser; segure ✕ quando estiver pronto.",
-      "holdHint": "Segure ✕ para pular este passo, ou ○ para voltar."
-    },
     "liveData": {
       "title": "Dados ao vivo",
       "effect": "Efeito",
@@ -830,7 +768,7 @@
     },
     "narrator": {
       "voice": "Voz da narradora",
-      "voiceSub": "Frases curtas para o tour e os eventos do app, só pelo alto-falante do seu controle",
+      "voiceSub": "Frases curtas para os eventos do app, só pelo alto-falante do seu controle",
       "captions": "Legendas",
       "captionsSub": "Mostra as palavras dela enquanto fala (e as confirmações curtas como texto quando a voz está desligada)",
       "test": "Testar a voz"

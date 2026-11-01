@@ -1,9 +1,7 @@
-// Asked once, on first run: install app updates automatically? Shown after
-// the tour (or a minute in, if there's no tour, e.g. no controller yet), never
-// over it. Either answer is final; App settings can change it any time.
+// Asked once, on first run: install app updates automatically? Shown a
+// minute in. Either answer is final; App settings can change it any time.
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { tourDone } from "./tour/Tour";
 import { logged } from "../errorText";
 import { shown } from "./shownError";
 import { useWindowShown } from "./useWindowShown";
@@ -35,10 +33,7 @@ export default function AutoUpdateAsk() {
   useEffect(() => {
     if (asked || due || !onScreen) return;
     // lifetime: OK — cleared in the effect cleanup once answered, due or hidden
-    const timer = setInterval(() => {
-      const tourOpen = Boolean(document.querySelector(".tour-card"));
-      setDue(!tourOpen && (tourDone() || Date.now() - started > ASK_AFTER_MS));
-    }, 1000);
+    const timer = setInterval(() => setDue(Date.now() - started > ASK_AFTER_MS), 1000);
     return () => clearInterval(timer);
   }, [asked, due, onScreen, started]);
   if (asked || !due || !window.desktop) return null;

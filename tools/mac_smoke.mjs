@@ -283,7 +283,7 @@ await step("system", async () => {
 
 // 1. The Developer card's switches, clicked as a developer would
 await step("dev switches", async () => {
-  await ev(`localStorage.setItem("ds5.tourDone", "1"); window.desktop.setSetting("updatesAsked", true).then(() => 1)`);
+  await ev(`window.desktop.setSetting("updatesAsked", true).then(() => 1)`);
   // Each switch (the first two reload the page), from the Developer section.
   // loop: SERIAL-REQUIRED — one page: each switch is clicked after the previous reload
   for (const [label, reloads] of [

@@ -15,7 +15,7 @@ import { REGULAR_GLASS } from "../glass/variants";
 import { useGlass } from "../glass/useGlass";
 import { GLASS_KEY } from "../glass/glassPref";
 import { useFlagPref } from "../storage";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { UseDs5BridgeResult } from "../../hooks/useDs5Bridge";
 import { playerNumber } from "../../protocol/bridgeClient";
@@ -34,11 +34,10 @@ import { MainBlock, useMainBlock } from "../accordion/MainBlock";
 import { Info } from "lucide-react";
 import LiveStrip from "./LiveStrip";
 import ControllerSections from "./PartPanel";
-import Tour, { TOUR_EVENT } from "../tour/Tour";
 import { REMAP_INDEX, type PartId, REMAP_ONLY, partForRemapIndex, EDGE_REMAP_ROWS } from "./parts";
 import { PANEL_HIDDEN_KEY, SplitView } from "../accordion/Section";
 import { pinScope, revealSection, useAccordion } from "../accordion/useAccordion";
-import { SECTIONS, type SectionId } from "../accordion/sections";
+import type { SectionId } from "../accordion/sections";
 import AppSettingsPage from "../pages/AppSettingsPage";
 import Notice from "../Notice";
 import { useBoardDrafts } from "./boardDrafts";
@@ -175,7 +174,7 @@ export default function ControllerView({ bridge, fw, view, onView }: Props) {
   };
 
   // The settings panel can be hidden, so the controller gets the whole width.
-  const [panelHidden, hidePanel] = useFlagPref(PANEL_HIDDEN_KEY("controller"));
+  const [panelHidden] = useFlagPref(PANEL_HIDDEN_KEY("controller"));
   // The model title fits the gap between the drawing's triggers (~46% of its
   // width; a bold cap is ~0.6 em), measured from the drawing as drawn.
   const heroRef = useRef<HTMLDivElement>(null);
@@ -213,24 +212,6 @@ export default function ControllerView({ bridge, fw, view, onView }: Props) {
   const [glass] = useFlagPref(GLASS_KEY);
   const panelGlass = useGlass(glass && !(panelHidden && view === "overview"), REGULAR_GLASS);
 
-  // The tour points at the settings list, so it brings the panel back.
-  // lifetime: OK — cleanup: removes the tour listener
-  useEffect(() => {
-    const show = () => hidePanel(false);
-    // lifetime: OK — removed in the effect cleanup
-    window.addEventListener(TOUR_EVENT, show);
-    return () => window.removeEventListener(TOUR_EVENT, show);
-  }, [hidePanel]);
-  // The Tour's view: the open section.
-  // loop: NOT-WORTH — N = 9 sections; per render (a Set lookup each)
-  const openSection = SECTIONS.controller.find((x) => acc.isOpen(x)) ?? null;
-  const reveal = acc.reveal;
-  const tourView = useCallback(
-    (section: string | null) => {
-      if (section) reveal(section);
-    },
-    [reveal],
-  );
   const target = useProfileTarget();
 
   if (view === "dongle") return <DonglePage bridge={bridge} fw={fw} identity={id ?? bridge.identity} controllerOn={on} oled={oled} rssi={status?.rssi ?? null} panelRef={panelGlass} />;
@@ -372,7 +353,6 @@ export default function ControllerView({ bridge, fw, view, onView }: Props) {
           trigger={picked === "l2" ? "l2" : "r2"}
         />
       </SplitView>
-      <Tour client={client} input={input} view={openSection} onView={tourView} ready={on && liveCapable} />
     </>
   );
 }

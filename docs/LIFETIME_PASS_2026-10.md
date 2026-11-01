@@ -71,7 +71,7 @@ Where the app rows run: 152 in a render (mostly the effects themselves), 67 insi
 
 - `src/desktop/AutoUpdateAsk.tsx:15, 19` `AutoUpdateAsk`: a 1 Hz interval runs a `document.querySelector(".tour-card")` and a state update for the app's whole life: after the question is answered (the component renders nothing then) and while the window is hidden or in the tray. Fix: run it only while unanswered, not yet due and shown (`useWindowShown`), and stop once due.
 - `src/desktop/live/StickTestCards.tsx:40` `StickTests`: the circularity sampler (`setInterval`, 33 ms) keeps ticking while the window is hidden, as long as the Calibration view is mounted; the input is frozen then, so each tick only re-serializes the calibration (`JSON.stringify`). Fix: gate it on `useWindowShown()`.
-- `src/desktop/tour/Tour.tsx:330` `tick`: the hold-to-continue ring's animation frame loop re-arms every frame for the whole of a controller step of the tour, even with no button held. It already stops when hidden. Fix: start it on a press, stop on release or when the ring fills.
+- `src/desktop/tour/Tour.tsx:330` `tick`: the hold-to-continue ring's animation frame loop re-arms every frame for the whole of a controller step of the tour, even with no button held. It already stops when hidden. Fix: start it on a press, stop on release or when the ring fills. (The tour was removed 2026-11-01.)
 
 **Allocations on a hot path (HOT-ALLOC):**
 
@@ -938,7 +938,7 @@ _Re-listed 2026-10-15 against firmware branch `fw-bt-idle-mic` (52aebf9 + f2727b
 | 69 | `useTopLayer > useLayoutEffect(cb)` | listener | window "resize" | effect | **OK** | removed in the layout effect cleanup (closed / unmount) |
 | 71 | `useTopLayer > useLayoutEffect(cb)` | listener | window "scroll" | effect | **OK** | removed in the layout effect cleanup (closed / unmount) |
 
-#### src/desktop/tour/Tour.tsx
+#### src/desktop/tour/Tour.tsx (removed 2026-11-01: the tour left the shipped code)
 
 | Line | Function | Kind | What | Runs in | Verdict | Release point / reason |
 |---|---|---|---|---|---|---|

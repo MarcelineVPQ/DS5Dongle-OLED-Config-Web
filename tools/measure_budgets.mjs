@@ -108,7 +108,6 @@ await ev(`(async () => {
   // The swirl animates only on a real graphics card (a still frame on software
   // renderers); keep its shader animated on SwiftShader so the gate measures the GPU path.
   set("ds5.dev.swirlGpu", "1");
-  set("ds5.tour.done", "1"); set("ds5.tourDone", "1");
   ${process.env.DS5_BUDGET_BACKGROUND ? `set("ds5.background", ${JSON.stringify(process.env.DS5_BUDGET_BACKGROUND)});` : ""}
   if (typeof window.desktop.devFakeGames !== "function") throw new Error("this build has no Developer card: measure a dev build (X.Y.Z-dev.N, or DS5_DEV_TOOLS=1)");
   await window.desktop.setSetting("gamesScanAllowed", true);

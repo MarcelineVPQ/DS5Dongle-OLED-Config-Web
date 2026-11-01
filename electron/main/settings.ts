@@ -13,12 +13,12 @@ export const DEFAULT_SETTINGS: DesktopSettings = {
   startMinimized: false,
   launchAtLogin: false,
   checkForUpdates: true,
-  // Off until the user says yes (the app asks once, after the tour).
+  // Off until the user says yes (the app asks once, a minute after the first start).
   autoInstallUpdates: false,
   updatesAsked: false,
   // Games page (Linux and Windows): off until the user agrees to let the app read launcher settings.
   gamesScanAllowed: false,
-  // Silent until the user says yes (the tour asks once).
+  // Silent until the user turns it on in App settings.
   narratorVoice: "ask",
   narratorCaptions: true,
   hardwareAcceleration: true,

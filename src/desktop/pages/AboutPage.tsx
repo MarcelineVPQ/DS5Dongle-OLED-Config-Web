@@ -18,7 +18,6 @@ import { ISSUES_URL, ROADMAP_COLUMNS } from "../about/roadmap";
 import { Section, SplitView } from "../accordion/Section";
 import { pinScope, useAccordion } from "../accordion/useAccordion";
 import type { SectionId } from "../accordion/sections";
-import { TOUR_ENABLED, startTour } from "../tour/Tour";
 import { protonApplies } from "../games/platform";
 
 export type AboutTab = SectionId<"about">;
@@ -199,26 +198,14 @@ export default function AboutPage({ whatsNew = null, onSeen }: { whatsNew?: stri
       {ids.map((id) => (
         <Section key={id} id={id} icon={TEXTS[id].icon} title={t(TEXTS[id].title)} status={statuses[id]} task={id === "changes" && whatsNew ? t("desktop.about.updated", { version: whatsNew }) : null}>
           {() => (
-            <>
-              <nav className="dk-chapters" aria-label={t(TEXTS[id].title)}>
-                {/* loop: NOT-WORTH — N = one text's chapters (≤ ~100); only while its section is open */}
-                {chapters(id).map((c) => (
-                  <button type="button" key={c} className={`dk-chapter${doc === id && at === c ? " on" : ""}`} aria-current={doc === id && at === c ? "location" : undefined} onClick={() => go(id, c)}>
-                    {c}
-                  </button>
-                ))}
-              </nav>
-              {id === "guide" && TOUR_ENABLED && (
-                <>
-                  <p className="dk-hint">{t("desktop.tour.helpHint")}</p>
-                  <div className="dk-row-btns">
-                    <button type="button" className="dk-btn" onClick={startTour}>
-                      {t("desktop.tour.replay")}
-                    </button>
-                  </div>
-                </>
-              )}
-            </>
+            <nav className="dk-chapters" aria-label={t(TEXTS[id].title)}>
+              {/* loop: NOT-WORTH — N = one text's chapters (≤ ~100); only while its section is open */}
+              {chapters(id).map((c) => (
+                <button type="button" key={c} className={`dk-chapter${doc === id && at === c ? " on" : ""}`} aria-current={doc === id && at === c ? "location" : undefined} onClick={() => go(id, c)}>
+                  {c}
+                </button>
+              ))}
+            </nav>
           )}
         </Section>
       ))}

@@ -156,7 +156,7 @@ const saved = await evaluate(`JSON.stringify({ lang: localStorage.getItem("i18ne
 await send("Emulation.setDeviceMetricsOverride", { width: W, height: H, deviceScaleFactor: 1, mobile: false });
 
 const STYLE = `
-  .dk-notice, .narrator-caption, .tour-card, .tour-dim, [class*="tour-spot"] { display: none !important; }
+  .dk-notice, .narrator-caption { display: none !important; }
   #ad-overlay { position: fixed; left: 0; top: 0; width: ${W}px; height: ${H}px; transform-origin: 0 0; z-index: 99999; pointer-events: none; display: grid; }
   #ad-overlay .line { align-self: end; justify-self: center; margin-bottom: 110px; max-width: 1500px; text-align: center;
     color: #fff; font: 700 64px/1.18 "Space Grotesk", "Noto Sans CJK JP", "Noto Sans CJK SC", sans-serif; letter-spacing: -0.01em;

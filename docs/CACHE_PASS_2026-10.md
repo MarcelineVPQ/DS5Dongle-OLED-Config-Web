@@ -748,11 +748,11 @@ Kinds and verdicts as above. "Found" is what the lister saw: the type and how it
 | 55 | `useFlagPref` | useCallback | `(inline)` | deps [set] | **OK** | returned by a hook: callers put it in deps / effects |
 | 69 | `useRawPref` | useCallback | `set` | deps [key] | **OK** | returned by a hook: callers put it in deps / effects |
 
-#### src/desktop/tour/Tour.tsx
+#### src/desktop/tour/Tour.tsx (removed 2026-11-01: the tour left the shipped code)
 
 | Line | Function | Kind | Name | Found | Verdict | Why |
 |---|---|---|---|---|---|---|
-| 25 | `tourDone` | storage | `"ds5.tourDone"` | 2 site(s): src/desktop/tour/Tour.tsx:25 readPref, src/desktop/tour/Tour.tsx:29 writePref | **OK** | a user preference, not a cache: one value, written when the user changes it (usePref keeps every reader in sync) |
+| 25 | `tourDone` | storage | `"ds5.tourDone"` | 2 site(s): src/desktop/tour/Tour.tsx:25 readPref, src/desktop/tour/Tour.tsx:29 writePref | **OK** | a user preference, not a cache: one value, written when the user changes it (usePref keeps every reader in sync) (the tour was removed 2026-11-01) |
 | 123 | `Tour` | useCallback | `go` | deps [onView] | **OK** | used in another hook's deps or passed to a child that depends on it |
 | 175 | `Tour` | effect-io | `previewTrigger` | deps [onTriggerStep, client]; reaches hid | **NOT-WORTH** | reads the board when the client or the view changes; the answer must be the board's current one |
 | 181 | `Tour` | useCallback | `answer` | deps [go] | **OK** | used in another hook's deps or passed to a child that depends on it |

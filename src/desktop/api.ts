@@ -82,8 +82,8 @@ export interface DesktopSettings {
   autoInstallUpdates: boolean;
   updatesAsked: boolean;
   gamesScanAllowed: boolean; // the user agreed to let the Games page read launcher settings
-  // The narrator: "ask" until the user answers the tour's question (silent
-  // until then), then on or off; changeable in App settings.
+  // The narrator: "ask" (silent) until the user turns it on or off in App
+  // settings.
   narratorVoice: "ask" | "on" | "off";
   // Show her words as a caption while she speaks (and, with the voice off,
   // the short confirmations as text only).

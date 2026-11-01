@@ -1141,7 +1141,7 @@ The verdict, then why. _(italic)_ is how a derived verdict was reached: `via cat
 |---|---|---|---|---|---|
 | 28 | `inTopLayer` | catch | `fallback` | **NOT-WORTH** | no Popover API (jsdom): the popup stays in the page flow, nothing to hide |
 
-#### src/desktop/tour/Tour.tsx
+#### src/desktop/tour/Tour.tsx (removed 2026-11-01: the tour left the shipped code)
 
 | Line | Function | Kind | Detail | Verdict | Why |
 |---|---|---|---|---|---|

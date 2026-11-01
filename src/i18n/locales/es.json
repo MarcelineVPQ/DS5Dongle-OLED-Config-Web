@@ -744,68 +744,6 @@
       "playerIndicator": "Indicador de jugador",
       "headsetMicIn": "Auriculares con micro conectados"
     },
-    "tour": {
-      "stepOf": "Paso {{n}} de {{total}}",
-      "skip": "Saltar el recorrido",
-      "skipStep": "Saltar este paso",
-      "back": "Atrás",
-      "next": "Siguiente",
-      "finishButton": "¡Vamos!",
-      "waiting": "Esperándote…",
-      "helpHint": "El recorrido guiado del primer inicio.",
-      "replay": "Ver el recorrido otra vez",
-      "welcome": {
-        "title": "¡Bienvenido!",
-        "body": "Un recorrido de un minuto, con el mando en la mano. Pulsa ✕ para continuar y ○ para volver. Esc o «Saltar el recorrido» lo detiene cuando quieras.",
-        "bodyAsk": "Un recorrido de un minuto, con el mando en la mano. Esc o «Saltar el recorrido» lo detiene cuando quieras."
-      },
-      "press": {
-        "title": "Este es tu mando, en directo",
-        "body": "Pulsa varios botones distintos del mando y mira cómo se iluminan aquí.",
-        "done": "¡Genial! Todo lo que pulsas aparece aquí."
-      },
-      "trigger": {
-        "title": "Ahora los gatillos",
-        "body": "Ahora aprieta un gatillo, L2 o R2, hasta el fondo. ¿Notas algo?",
-        "done": "¿Lo notas? Es un gatillo adaptativo: hace fuerza y luego cede de golpe. Los juegos lo usan para armas, arcos y frenos."
-      },
-      "click": {
-        "title": "Configura con el ratón",
-        "body": "Haz clic con el ratón en la barra luminosa junto al panel táctil. Cada parte del dibujo abre sus propios ajustes.",
-        "done": "Has abierto los ajustes de la barra luminosa."
-      },
-      "panel": {
-        "title": "Los ajustes se abren aquí",
-        "body": "Los cambios llegan {{device_a}} al instante: los ves, los oyes y los sientes. ✕ cierra el panel."
-      },
-      "list": {
-        "title": "O elige de la lista",
-        "body": "¿No sabes dónde está algo en el mando? Todos los ajustes están también aquí, a un clic. » oculta este panel para agrandar el mando."
-      },
-      "save": {
-        "title": "Quédate con lo que te guste",
-        "body": "Los cambios son inmediatos pero temporales. «Guardar en {{device}}» los conserva al apagarse; «Revertir» vuelve a lo guardado."
-      },
-      "top": {
-        "title": "{{deviceName}}, tus juegos y la ayuda",
-        "body": "{{deviceName}}: actualizaciones de firmware, OLED, energía y USB. Juegos: prepara Steam y otros lanzadores para gatillos y retroalimentación háptica (Linux). Acerca de: novedades y guía. ⚙: los ajustes de la app."
-      },
-      "finish": {
-        "title": "Todo listo",
-        "body": "¡Diviértete! Puedes repetir este recorrido cuando quieras desde ⚙ Ajustes de la app."
-      },
-      "voiceAsk": "¿Quieres que te guíe? Solo habla por el altavoz de tu mando; puedes cambiarlo cuando quieras en ⚙ Ajustes de la app.",
-      "voiceYes": "Sí, guíame",
-      "voiceNo": "No, gracias",
-      "data": {
-        "title": "Todo, en directo",
-        "body": "Aquí abajo: joysticks, gatillos, movimiento, batería y conexión, en números y gráficas, mientras se mueve tu mando."
-      },
-      "pressGoal": "Faltan {{n}} botones distintos…",
-      "pressedLabel": "Botones pulsados hasta ahora",
-      "keepPlaying": "Sigue todo lo que quieras; mantén ✕ cuando estés listo.",
-      "holdHint": "Mantén ✕ para saltar este paso, o ○ para volver."
-    },
     "liveData": {
       "title": "Datos en directo",
       "effect": "Efecto",
@@ -830,7 +768,7 @@
     },
     "narrator": {
       "voice": "Voz de la narradora",
-      "voiceSub": "Frases cortas para el recorrido y los eventos de la app, solo por el altavoz de tu mando",
+      "voiceSub": "Frases cortas para los eventos de la app, solo por el altavoz de tu mando",
       "captions": "Subtítulos",
       "captionsSub": "Muestra sus palabras mientras habla (y las confirmaciones cortas como texto cuando la voz está apagada)",
       "test": "Probar la voz"

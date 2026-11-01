@@ -744,68 +744,6 @@
       "playerIndicator": "Spieler-Kontrollleuchte",
       "headsetMicIn": "Headset mit Mikrofon eingesteckt"
     },
-    "tour": {
-      "stepOf": "Schritt {{n}} von {{total}}",
-      "skip": "Tour überspringen",
-      "skipStep": "Schritt überspringen",
-      "back": "Zurück",
-      "next": "Weiter",
-      "finishButton": "Los geht's",
-      "waiting": "Wartet auf dich…",
-      "helpHint": "Die kurze Tour vom ersten Start.",
-      "replay": "Tour erneut zeigen",
-      "welcome": {
-        "title": "Willkommen!",
-        "body": "Eine Tour von einer Minute, mit dem Controller in der Hand. Drück ✕ zum Weitermachen und ○ für zurück. Esc oder „Tour überspringen“ beendet sie jederzeit.",
-        "bodyAsk": "Eine Tour von einer Minute, mit dem Controller in der Hand. Esc oder „Tour überspringen“ beendet sie jederzeit."
-      },
-      "press": {
-        "title": "Das ist dein Controller, live",
-        "body": "Drück ein paar verschiedene Tasten am Controller und sieh zu, wie sie hier aufleuchten.",
-        "done": "Super! Alles, was du drückst, erscheint hier."
-      },
-      "trigger": {
-        "title": "Jetzt die Trigger",
-        "body": "Jetzt zieh einen Trigger, L2 oder R2, ganz durch. Spürst du was?",
-        "done": "Gespürt? Das ist ein adaptiver Trigger: Er drückt zurück und rastet dann durch. Spiele nutzen das für Waffen, Bögen und Bremsen."
-      },
-      "click": {
-        "title": "Einrichten mit der Maus",
-        "body": "Klicke mit der Maus auf die leuchtende Leuchtleiste neben dem Touchpad. Jeder Teil der Abbildung öffnet seine eigenen Einstellungen.",
-        "done": "Damit hast du die Leuchtleiste-Einstellungen geöffnet."
-      },
-      "panel": {
-        "title": "Hier öffnen sich Einstellungen",
-        "body": "Änderungen gehen sofort an {{device_akk}}, du siehst, hörst und spürst sie direkt. ✕ schließt das Feld."
-      },
-      "list": {
-        "title": "Oder aus der Liste wählen",
-        "body": "Nicht sicher, wo etwas am Controller sitzt? Jede Einstellung ist auch hier, nur einen Klick entfernt. » blendet das Feld aus, dann wird der Controller größer."
-      },
-      "save": {
-        "title": "Behalte, was dir gefällt",
-        "body": "Änderungen wirken sofort, sind aber vorläufig. „Auf {{device_dat}} speichern“ behält sie nach dem Ausschalten; „Zurücksetzen“ kehrt zum Gespeicherten zurück."
-      },
-      "top": {
-        "title": "{{deviceName}}, Spiele und Hilfe",
-        "body": "{{deviceName}}: Firmware-Updates, OLED, Energie und USB. Spiele: Steam und andere Launcher für Trigger und haptisches Feedback vorbereiten (Linux). Info: Neuigkeiten und Anleitung. ⚙: die Einstellungen der App."
-      },
-      "finish": {
-        "title": "Alles bereit",
-        "body": "Viel Spaß! Du kannst die Tour jederzeit unter ⚙ App-Einstellungen wiederholen."
-      },
-      "voiceAsk": "Soll sie dich durchführen? Sie spricht nur über den Lautsprecher deines Controllers; ändern kannst du das jederzeit unter ⚙ App-Einstellungen.",
-      "voiceYes": "Ja, führ mich durch",
-      "voiceNo": "Nein danke",
-      "data": {
-        "title": "Alles, live",
-        "body": "Hier unten: Sticks, Trigger, Bewegung, Akku und Verbindung, als Zahlen und Kurven, während sich dein Controller bewegt."
-      },
-      "pressGoal": "Noch {{n}} verschiedene Tasten…",
-      "pressedLabel": "Bisher gedrückte Tasten",
-      "keepPlaying": "Spiel ruhig weiter; halte ✕ gedrückt, wenn du bereit bist.",
-      "holdHint": "Halte ✕ gedrückt, um den Schritt zu überspringen, oder ○, um zurückzugehen."
-    },
     "liveData": {
       "title": "Live-Daten",
       "effect": "Effekt",
@@ -830,7 +768,7 @@
     },
     "narrator": {
       "voice": "Erzählstimme",
-      "voiceSub": "Kurze gesprochene Sätze für die Tour und App-Ereignisse, nur über den Lautsprecher deines Controllers",
+      "voiceSub": "Kurze gesprochene Sätze für App-Ereignisse, nur über den Lautsprecher deines Controllers",
       "captions": "Untertitel",
       "captionsSub": "Zeigt ihre Worte, während sie spricht (und die kurzen Bestätigungen als Text, wenn die Stimme aus ist)",
       "test": "Stimme testen"
