@@ -446,7 +446,8 @@ export class GamesService {
 
   // The Proton card's Remove (Linux): one of our builds, from every launcher
   // folder it's in, once a fresh scan says no game and no launcher default
-  // runs with it (the page offers Remove only then; this checks again).
+  // runs with it (the page offers Remove only then; this checks again) and
+  // Steam and Heroic are closed.
   removeProton(name: string): Promise<ProtonRemoveResult> {
     return this.exclusive(async () => {
       try {
@@ -455,6 +456,12 @@ export class GamesService {
         // loop: NOT-WORTH — a few builds, once per Remove
         const build = installedBuilds(dirs, now.report).find((b) => b.name === name);
         if (build && (build.usedBy.games.length > 0 || build.usedBy.launchers.length > 0)) return { ok: false, inUse: build.usedBy };
+        // Steam and Heroic list their Proton builds while they run (a game may be running with one): close them first.
+        const running = await this.launchers.running();
+        // loop: NOT-WORTH — N = 2 launchers, once per Remove
+        const open = build ? (["steam", "heroic"] as const).filter((l) => running.has(l)) : [];
+        if (open.length === 2) return { ok: false, message: keyedText("desktop.errors.main.protonLaunchersRunning", { name }) };
+        if (open.length === 1) return { ok: false, message: keyedText("desktop.errors.main.protonLauncherRunning", { name, launcher: open[0] === "steam" ? "Steam" : "Heroic" }) };
         const removed = build ? removeBuild(name, dirs) : [];
         if (removed.length === 0) return { ok: false, message: keyedText("desktop.errors.main.protonGone", { name }) };
         // loop: NOT-WORTH — 1-6 removed places

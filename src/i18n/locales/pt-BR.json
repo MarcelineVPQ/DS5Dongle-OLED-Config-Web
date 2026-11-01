@@ -1854,7 +1854,9 @@
         "cancelled": "a janela da senha foi cancelada",
         "startFailed": "O app não conseguiu iniciar: {{detail}}\n\nAbra de novo. Se continuar acontecendo, reinstale o app.",
         "updateMissing": "A atualização baixada não está mais neste PC (foi apagada da pasta temporária). Procure atualizações para baixá-la de novo.",
-        "protonGone": "{{name}} não está mais instalado."
+        "protonGone": "{{name}} não está mais instalado.",
+        "protonLauncherRunning": "{{name}} não foi removido: {{launcher}} está aberto. Feche {{launcher}} primeiro e clique em Remover de novo.",
+        "protonLaunchersRunning": "{{name}} não foi removido: Steam e Heroic estão abertos. Feche os dois primeiro e clique em Remover de novo."
       },
       "headsetUndo": "Não foi possível voltar o som do controle: {{reason}}",
       "saveFailed": "Nem tudo foi salvo {{device_em}}: a seção com o problema diz o que deu errado. Suas mudanças continuam aqui; tente Salvar de novo.",

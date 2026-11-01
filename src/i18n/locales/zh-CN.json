@@ -1839,7 +1839,9 @@
         "cancelled": "密码窗口已取消",
         "startFailed": "应用无法启动：{{detail}}\n\n请再次启动。如果仍然发生，请重新安装应用。",
         "updateMissing": "下载的更新已不在这台电脑上（已从临时文件夹中删除）。请检查更新以重新下载。",
-        "protonGone": "{{name}} 已不再安装。"
+        "protonGone": "{{name}} 已不再安装。",
+        "protonLauncherRunning": "未移除 {{name}}：{{launcher}} 正在运行。请先关闭 {{launcher}}，然后再次点击“移除”。",
+        "protonLaunchersRunning": "未移除 {{name}}：Steam 和 Heroic 正在运行。请先关闭它们，然后再次点击“移除”。"
       },
       "headsetUndo": "无法切回控制器的声音：{{reason}}",
       "saveFailed": "未能全部保存到 {{device}}：出问题的部分会说明原因。你的更改仍在，请再次点击保存。",

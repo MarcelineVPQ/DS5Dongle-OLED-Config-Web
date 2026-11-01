@@ -1854,7 +1854,9 @@
         "cancelled": "die Passwortabfrage wurde abgebrochen",
         "startFailed": "Die App konnte nicht starten: {{detail}}\n\nStarte sie noch einmal. Wenn das weiter passiert, installiere die App neu.",
         "updateMissing": "Das heruntergeladene Update ist nicht mehr auf diesem PC (aus dem temporären Ordner gelöscht). Suche nach Updates, um es erneut herunterzuladen.",
-        "protonGone": "{{name}} ist nicht mehr installiert."
+        "protonGone": "{{name}} ist nicht mehr installiert.",
+        "protonLauncherRunning": "{{name}} wurde nicht entfernt: {{launcher}} läuft. Schließe zuerst {{launcher}} und drücke dann erneut Entfernen.",
+        "protonLaunchersRunning": "{{name}} wurde nicht entfernt: Steam und Heroic laufen. Schließe zuerst beide und drücke dann erneut Entfernen."
       },
       "headsetUndo": "Der Ton des Controllers konnte nicht zurückgeschaltet werden: {{reason}}",
       "saveFailed": "Nicht alles wurde auf {{device_dat}} gespeichert: Der betroffene Abschnitt sagt, was schiefging. Deine Änderungen sind noch da; versuch Speichern noch einmal.",

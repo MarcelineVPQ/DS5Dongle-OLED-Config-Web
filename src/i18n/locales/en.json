@@ -1853,7 +1853,9 @@
         "cancelled": "the password prompt was cancelled",
         "startFailed": "The app couldn't start: {{detail}}\n\nTry starting it again. If this keeps happening, reinstall the app.",
         "updateMissing": "The downloaded update is gone from this PC (deleted from the temporary folder). Check for updates to download it again.",
-        "protonGone": "{{name}} isn't installed any more."
+        "protonGone": "{{name}} isn't installed any more.",
+        "protonLauncherRunning": "{{name}} wasn't removed: {{launcher}} is running. Close {{launcher}} first, then press Remove again.",
+        "protonLaunchersRunning": "{{name}} wasn't removed: Steam and Heroic are running. Close both first, then press Remove again."
       },
       "headsetUndo": "The controller's sound couldn't be switched back: {{reason}}",
       "saveFailed": "Not everything was saved to {{device}}: the section with the problem says what went wrong. Your changes are still here; try Save again.",

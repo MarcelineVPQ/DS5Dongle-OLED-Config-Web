@@ -1854,7 +1854,9 @@
         "cancelled": "se canceló la ventana de la contraseña",
         "startFailed": "La app no pudo iniciarse: {{detail}}\n\nVuelve a abrirla. Si sigue pasando, reinstala la app.",
         "updateMissing": "La actualización descargada ya no está en este PC (se borró de la carpeta temporal). Busca actualizaciones para descargarla de nuevo.",
-        "protonGone": "{{name}} ya no está instalado."
+        "protonGone": "{{name}} ya no está instalado.",
+        "protonLauncherRunning": "{{name}} no se quitó: {{launcher}} está abierto. Cierra antes {{launcher}} y vuelve a pulsar Quitar.",
+        "protonLaunchersRunning": "{{name}} no se quitó: Steam y Heroic están abiertos. Ciérralos antes y vuelve a pulsar Quitar."
       },
       "headsetUndo": "No se pudo volver a cambiar el sonido del mando: {{reason}}",
       "saveFailed": "No se guardó todo en {{device}}: la sección con el problema dice qué falló. Tus cambios siguen aquí; vuelve a probar Guardar.",
