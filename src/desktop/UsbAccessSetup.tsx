@@ -91,6 +91,7 @@ export default function UsbAccessSetup({ variant = "row", onDone }: { variant?: 
 // go and what stops working, and shows the exact script; only Remove runs it
 // (pkexec asks for the password; cancelled, nothing changes). The result shows
 // under the row above; Set up USB access puts the same files back.
+// error: SHOWN — desktop.usbAccess.remove.failed and the other remove results (keyed text from the main process, shownText) under the row
 function RemoveUsbAccess({ files, onResult }: { files: string[]; onResult: (result: { ok: boolean; message: string }) => void }) {
   const { t } = useTranslation();
   const [confirming, setConfirming] = useState(false);
