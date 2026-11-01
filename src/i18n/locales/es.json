@@ -166,7 +166,11 @@
         "headset": "Auriculares",
         "off": "Desactivado",
         "builtIn": "Integrado"
-      }
+      },
+      "pollRealTime": "Tiempo real",
+      "pollRateInfo": "1000 Hz envía el último estado del mando cada milisegundo. Tiempo real envía cada informe Bluetooth en cuanto llega.",
+      "dockDisconnect": "Desconectar en la base de carga",
+      "dockDisconnectInfo": "Corta la conexión Bluetooth del mando cuando lo pones en una base de carga o dock. Pulsa el botón PS para volver a conectarlo."
     },
     "lightbar": {
       "mode": "Modo",
@@ -1568,7 +1572,11 @@
           "oled": "OLED",
           "speaker": "Trama del altavoz (core1)",
           "mic": "Trama del micrófono (core1)"
-        }
+        },
+        "packetMode": "Informes de audio",
+        "packetModeInfo": "Cómo llegan al mando el altavoz y la retroalimentación háptica: dos tramas por informe (predeterminado) o una trama por informe, el doble de seguido, como los enviaba el firmware 0.7.2. Prueba ambos y quédate con el que mejor se sienta en retroalimentación háptica y retardo.",
+        "packetDouble": "Dos tramas",
+        "packetSingle": "Una trama"
       },
       "specs": {
         "chip": "Chip",

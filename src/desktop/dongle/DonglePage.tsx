@@ -30,7 +30,7 @@ import Notice from "../Notice";
 import { useNoticeTasks } from "../notices";
 import { BOARD_PROBLEM_BLOCK, FIRMWARE_UPDATE_SECTION } from "../openTasks";
 import FirmwareSection, { DeviceSection } from "../pages/FirmwarePage";
-import { DisplaySection, PcSleepSection, PicoLedToggle, PowerSection, StatusPinSection, UsbSection } from "../pages/SettingsPage";
+import { DisplaySection, hasPoll1000, PcSleepSection, PicoLedToggle, PowerSection, StatusPinSection, UsbSection } from "../pages/SettingsPage";
 import type { FirmwareUpdate } from "../useUpdates";
 import DongleConsole, { supportsOledMirror, type OledFrameState } from "./DongleConsole";
 import OledHero from "./OledHero";
@@ -63,6 +63,8 @@ export default function DonglePage({ bridge, fw, identity, controllerOn, oled, r
   const target = useProfileTarget();
   const s = telemetry.sample;
   const d = bridge.draft;
+  // The USB section's status: protocol 1.22 adds 1000 Hz (3) and names 2 Real-time.
+  const pollNames = ["250 Hz", "500 Hz", hasPoll1000(bridge) ? t("desktop.settings.pollRealTime") : "1 kHz", "1000 Hz"];
   const v13 = supportsFeature3(bridge.identity, 13, FEATURES3.configTail);
   const installed = bridge.firmwareVersion;
   // A refused press: the app's error notice says why (useDs5Bridge); the key's outline too.
@@ -141,7 +143,7 @@ export default function DonglePage({ bridge, fw, identity, controllerOn, oled, r
         icon={Usb}
         title={t("desktop.sections.usb")}
         // loop: NOT-WORTH — N = 2 parts of one status line
-        status={[["250 Hz", "500 Hz", "1 kHz"][d.pollingRateMode] ?? "", named(t, t("behavior.controllerModeLabel"), ["DS5", "Edge", "Auto"][d.controllerMode] ?? "")].filter(Boolean).join(" · ")}
+        status={[pollNames[d.pollingRateMode] ?? "", named(t, t("behavior.controllerModeLabel"), ["DS5", "Edge", "Auto"][d.controllerMode] ?? "")].filter(Boolean).join(" · ")}
       >
         {() => (
           <>

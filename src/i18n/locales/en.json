@@ -165,7 +165,11 @@
         "headset": "Headset",
         "off": "Off",
         "builtIn": "Built-in"
-      }
+      },
+      "pollRealTime": "Real-time",
+      "pollRateInfo": "1000 Hz sends the controller's latest state every millisecond. Real-time sends each Bluetooth report the moment it arrives.",
+      "dockDisconnect": "Disconnect when docked",
+      "dockDisconnectInfo": "Turns the controller's Bluetooth connection off when you put it on a charging station or dock. Press the PS button to connect again."
     },
     "lightbar": {
       "mode": "Mode",
@@ -1567,7 +1571,11 @@
           "oled": "OLED",
           "speaker": "Core1 speaker frame",
           "mic": "Core1 mic frame"
-        }
+        },
+        "packetMode": "Audio reports",
+        "packetModeInfo": "How the speaker and haptic feedback travel to the controller: two frames per report (the default), or one frame per report, twice as often, as firmware 0.7.2 sent them. Try both and keep the one whose haptic feedback and delay feel better.",
+        "packetDouble": "Two frames",
+        "packetSingle": "One frame"
       },
       "specs": {
         "chip": "Chip",

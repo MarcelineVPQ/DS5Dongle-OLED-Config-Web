@@ -166,7 +166,11 @@
         "headset": "Casque",
         "off": "Désactivé",
         "builtIn": "Intégré"
-      }
+      },
+      "pollRealTime": "Temps réel",
+      "pollRateInfo": "1000 Hz envoie le dernier état de la manette chaque milliseconde. Temps réel envoie chaque rapport Bluetooth dès qu'il arrive.",
+      "dockDisconnect": "Déconnecter sur la station de charge",
+      "dockDisconnectInfo": "Coupe la connexion Bluetooth de la manette quand vous la posez sur une station de charge ou un dock. Appuyez sur la touche PS pour la reconnecter."
     },
     "lightbar": {
       "mode": "Mode",
@@ -1568,7 +1572,11 @@
           "oled": "OLED",
           "speaker": "Trame haut-parleur core1",
           "mic": "Trame micro core1"
-        }
+        },
+        "packetMode": "Rapports audio",
+        "packetModeInfo": "Comment le haut-parleur et le retour haptique arrivent à la manette : deux trames par rapport (par défaut), ou une trame par rapport, deux fois plus souvent, comme le faisait le firmware 0.7.2. Essayez les deux et gardez celui dont le retour haptique et la latence vous conviennent le mieux.",
+        "packetDouble": "Deux trames",
+        "packetSingle": "Une trame"
       },
       "specs": {
         "chip": "Puce",

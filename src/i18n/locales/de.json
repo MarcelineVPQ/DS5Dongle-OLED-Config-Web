@@ -166,7 +166,11 @@
         "headset": "Headset",
         "off": "Aus",
         "builtIn": "Integriert"
-      }
+      },
+      "pollRealTime": "Echtzeit",
+      "pollRateInfo": "1000 Hz sendet jede Millisekunde den neuesten Zustand des Controllers. Echtzeit sendet jeden Bluetooth-Bericht, sobald er ankommt.",
+      "dockDisconnect": "Beim Laden in der Station trennen",
+      "dockDisconnectInfo": "Trennt die Bluetooth-Verbindung des Controllers, wenn du ihn auf eine Ladestation oder ein Dock legst. Drücke die PS-Taste, um ihn wieder zu verbinden."
     },
     "lightbar": {
       "mode": "Modus",
@@ -1568,7 +1572,11 @@
           "oled": "OLED",
           "speaker": "Core1-Lautsprecherframe",
           "mic": "Core1-Mikrofonframe"
-        }
+        },
+        "packetMode": "Audioberichte",
+        "packetModeInfo": "Wie Lautsprecher und haptisches Feedback zum Controller gelangen: zwei Frames pro Bericht (Standard) oder ein Frame pro Bericht, doppelt so oft, wie Firmware 0.7.2 sie sendete. Probiere beides und behalte, was sich bei haptischem Feedback und Verzögerung besser anfühlt.",
+        "packetDouble": "Zwei Frames",
+        "packetSingle": "Ein Frame"
       },
       "specs": {
         "chip": "Chip",

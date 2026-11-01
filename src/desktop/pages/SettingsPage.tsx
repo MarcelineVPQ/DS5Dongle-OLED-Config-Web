@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { FEATURES2, FEATURES3, POWER_FLAGS, supportsFeature2, supportsFeature3 } from "../../protocol/bridgeClient";
+import { FEATURES2, FEATURES3, FEATURES4, POWER_FLAGS, supportsFeature2, supportsFeature3, supportsFeature4 } from "../../protocol/bridgeClient";
 import type { UseDs5BridgeResult } from "../../hooks/useDs5Bridge";
 import {
   AUDIO_BUFFER_MAX,
@@ -355,6 +355,12 @@ export function StatusPinSection(props: SectionProps) {
   );
 }
 
+// Protocol 1.22 (upstream's 2026-10-17/18 batch): 1000 Hz polling, the
+// audio report choice (DongleDashboard's Timing card) and the dock disconnect.
+export const hasPoll1000 = (bridge: UseDs5BridgeResult) => supportsFeature4(bridge.identity, 22, FEATURES4.poll1000);
+export const hasPacketMode = (bridge: UseDs5BridgeResult) => supportsFeature4(bridge.identity, 22, FEATURES4.packetMode);
+const hasDockDisconnect = (bridge: UseDs5BridgeResult) => supportsFeature4(bridge.identity, 22, FEATURES4.dockDisconnect);
+
 export function PowerSection(props: SectionProps) {
   const { t } = useTranslation();
   const { d, set } = useFields(props);
@@ -362,6 +368,9 @@ export function PowerSection(props: SectionProps) {
     <>
       <Toggle label={t("desktop.settings.idleDisconnect", "Disconnect when idle")} value={!d.disableInactiveDisconnect} onChange={(v) => set("disableInactiveDisconnect", !v)} />
       <Slider label={t("behavior.inactiveTimeLabel")} value={d.inactiveTime} min={5} max={60} step={5} unit="min" disabled={d.disableInactiveDisconnect} onChange={(v) => set("inactiveTime", v)} />
+      {hasDockDisconnect(props.bridge) && (
+        <Toggle label={t("desktop.settings.dockDisconnect")} info={t("desktop.settings.dockDisconnectInfo")} value={d.disconnectOnDock} onChange={(v) => set("disconnectOnDock", v)} />
+      )}
     </>
   );
 }
@@ -457,12 +466,22 @@ export function UsbSection(props: SectionProps) {
     <>
       <Segmented
         label={t("behavior.pollingRateLabel")}
+        info={hasPoll1000(bridge) ? t("desktop.settings.pollRateInfo") : undefined}
         value={d.pollingRateMode}
-        options={[
-          { value: 0 as PollingRateMode, label: "250 Hz" },
-          { value: 1 as PollingRateMode, label: "500 Hz" },
-          { value: 2 as PollingRateMode, label: "1 kHz" },
-        ]}
+        options={
+          hasPoll1000(bridge)
+            ? [
+                { value: 0 as PollingRateMode, label: "250 Hz" },
+                { value: 1 as PollingRateMode, label: "500 Hz" },
+                { value: 3 as PollingRateMode, label: "1000 Hz" },
+                { value: 2 as PollingRateMode, label: t("desktop.settings.pollRealTime") },
+              ]
+            : [
+                { value: 0 as PollingRateMode, label: "250 Hz" },
+                { value: 1 as PollingRateMode, label: "500 Hz" },
+                { value: 2 as PollingRateMode, label: "1 kHz" },
+              ]
+        }
         onChange={(v) => set("pollingRateMode", v)}
       />
       <Segmented

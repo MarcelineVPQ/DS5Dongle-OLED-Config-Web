@@ -166,7 +166,11 @@
         "headset": "耳机",
         "off": "关",
         "builtIn": "内置"
-      }
+      },
+      "pollRealTime": "实时",
+      "pollRateInfo": "1000 Hz：每毫秒发送一次控制器的最新状态。实时：每个蓝牙报告一到就发送。",
+      "dockDisconnect": "放上底座时断开",
+      "dockDisconnectInfo": "把控制器放到充电座或底座上时，断开它的蓝牙连接。按 PS 按钮即可重新连接。"
     },
     "lightbar": {
       "mode": "模式",
@@ -1553,7 +1557,11 @@
           "oled": "OLED",
           "speaker": "core1 扬声器帧",
           "mic": "core1 麦克风帧"
-        }
+        },
+        "packetMode": "音频报告",
+        "packetModeInfo": "扬声器和触觉反馈如何传到控制器：每个报告两帧（默认），或每个报告一帧、频率加倍（固件 0.7.2 的方式）。两种都试一下，保留触觉反馈和延迟感觉更好的那个。",
+        "packetDouble": "两帧",
+        "packetSingle": "一帧"
       },
       "specs": {
         "chip": "芯片",

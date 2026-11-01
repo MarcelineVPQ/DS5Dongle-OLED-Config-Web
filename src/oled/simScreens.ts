@@ -24,7 +24,7 @@ type Item =
   | { label: string; power: number }
   | { label: string; action: "reset" | "wipe"; hint: string };
 const DISABLED = ["on", "off"] as const;
-// Group by group (firmware kGroups), most used first in each; labels as on the panel (firmware 0.9.5-dev.19).
+// Group by group (firmware kGroups), most used first in each; labels as on the panel (firmware 0.9.5-dev.19, protocol 1.22's three).
 export const SETTINGS_ITEMS: readonly Item[] = [
   // Haptics/trigger
   { label: "Vibration L", num: "hapticsGain", lo: 1, hi: 6, step: 0.5, fmt: "gain" },
@@ -43,11 +43,13 @@ export const SETTINGS_ITEMS: readonly Item[] = [
   { label: "Mic level", num: "micLevel", lo: 0, hi: 64, step: 4, fmt: "pc0" },
   { label: "Echo cancel", bool: "micEchoCancel" },
   { label: "Audio buffer", num: "audioBufferLength", lo: 32, hi: 128, step: 4 },
+  { label: "Audio pkt", num: "packetMode", lo: 0, hi: 1, step: 1, wrap: true, names: ["double", "single"] },
   // Connection
   { label: "Controller", num: "controllerMode", lo: 0, hi: 2, step: 1, wrap: true, names: ["DS5", "DSE", "Auto"] },
-  { label: "Poll rate", num: "pollingRateMode", lo: 0, hi: 2, step: 1, wrap: true, names: ["250Hz", "500Hz", "RT"] },
+  { label: "Poll rate", num: "pollingRateMode", lo: 0, hi: 3, step: 1, wrap: true, names: ["250Hz", "500Hz", "RT", "1000Hz"] },
   { label: "Disconnect", bool: "disableInactiveDisconnect", names: DISABLED },
   { label: "Idle time", num: "inactiveTime", lo: 10, hi: 60, step: 5, unit: "min" },
+  { label: "Drop on dock", bool: "disconnectOnDock" },
   // Screen & lights
   { label: "Screen dim", num: "screenDimTimeout", lo: 0, hi: 250, step: 1, unit: "min", fmt: "off0" },
   { label: "Screen off", num: "screenOffTimeout", lo: 0, hi: 250, step: 1, unit: "min", fmt: "off0" },
@@ -63,11 +65,11 @@ export const SETTINGS_ITEMS: readonly Item[] = [
 // The category menu (firmware kGroups): each group's first item and count, in order.
 export const SETTINGS_GROUPS: readonly { name: string; first: number; count: number }[] = [
   { name: "Haptics/trigger", first: 0, count: 6 },
-  { name: "Audio", first: 6, count: 9 },
-  { name: "Connection", first: 15, count: 4 },
-  { name: "Screen & lights", first: 19, count: 4 },
-  { name: "PC sleep", first: 23, count: 2 },
-  { name: "Reset", first: 25, count: 2 },
+  { name: "Audio", first: 6, count: 10 },
+  { name: "Connection", first: 16, count: 5 },
+  { name: "Screen & lights", first: 21, count: 4 },
+  { name: "PC sleep", first: 25, count: 2 },
+  { name: "Reset", first: 27, count: 2 },
 ];
 const MENU_FOOTER = "X=open  Tri=save";
 const PAGE_FOOTER = "O=back  Tri=save";

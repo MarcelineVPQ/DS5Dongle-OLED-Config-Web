@@ -32,6 +32,16 @@ export const ROADMAP_COLUMNS: RoadmapColumn[] = ["next", "progress", "planned", 
 
 export const ROADMAP: RoadmapItem[] = [
   // In the next build (shipped in a Development build, or merged for the next one)
+  { column: "next", title: "1000 Hz polling", text: "The controller's latest state every millisecond, beside 250 Hz, 500 Hz and Real-time.", areas: ["dongle"] },
+  { column: "next", title: "Disconnect when docked", text: "Optionally turn the controller's Bluetooth off when you put it on a charging station or dock.", areas: ["dongle", "controller"] },
+  { column: "next", title: "One-frame audio reports", text: "Compare how the speaker and haptic feedback reach the controller: two frames per report, or one, twice as often.", areas: ["audio"] },
+  { column: "next", title: "Pairing takes only a DualSense", text: "Pairing takes a DualSense or DualSense Edge only, never a PS4 controller or another gamepad nearby.", areas: ["dongle"] },
+  {
+    column: "next",
+    title: "Edge profiles never read stale",
+    text: "After PlayStation Accessories saves a profile, it reads back the controller's new one, never the one from before.",
+    areas: ["controller"],
+  },
   {
     column: "next",
     title: "Your report as a test sheet",

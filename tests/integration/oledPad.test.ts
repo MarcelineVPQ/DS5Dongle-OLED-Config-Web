@@ -73,9 +73,9 @@ describe("controller buttons for the OLED (protocol 1.19)", () => {
     await goTo(client, dongle, SCREEN.settings);
     const board = { body: () => savedBody(dongle), powerFlags: () => 0 } as unknown as SimBoard;
     const screen = () => dongle.oledScreens.lines(SCREEN.settings, board)!;
-    // The menu: the six groups with their sizes, as firmware 0.9.5-dev.19 draws them.
+    // The menu: the six groups with their sizes, as the firmware draws them (protocol 1.22: Audio pkt, Drop on dock).
     expect(screen().title).toBe("Settings");
-    expect(screen().rows).toEqual(["> Haptics/trigger 6", "  Audio 9", "  Connection 4", "  Screen & lights 4", "  PC sleep 2"]);
+    expect(screen().rows).toEqual(["> Haptics/trigger 6", "  Audio 10", "  Connection 5", "  Screen & lights 4", "  PC sleep 2"]);
     expect(screen().footer).toBe("X=open  Tri=save");
     expect(SETTINGS_GROUPS.reduce((n, g) => (g.first === n ? n + g.count : NaN), 0)).toBe(SETTINGS_ITEMS.length); // the groups tile the items, in order
     // Connection → Idle time.

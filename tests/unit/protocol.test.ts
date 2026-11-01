@@ -6,6 +6,7 @@ import {
   CONFIG_BODY_SIZE_V13,
   CONFIG_BODY_SIZE_V16,
   CONFIG_BODY_SIZE_V17,
+  CONFIG_BODY_SIZE_V22,
   DEFAULT_CONFIG,
   MIC_LEVEL_MAX,
   decodeConfigBody,
@@ -80,6 +81,22 @@ describe("config codec (firmware Config_body, 37 bytes)", () => {
     // 1.16 firmware's body (50 bytes): echo cancellation reads as on, and isn't sent to it.
     expect(decodeConfigBody(bytes.subarray(0, 50)).micEchoCancel).toBe(true);
     expect(encodeConfigBody(cfg, true, true, true).length).toBe(CONFIG_BODY_SIZE_V16);
+  });
+
+  it("carries protocol 1.22's audio report choice and dock disconnect after the echo cancellation (53 bytes)", () => {
+    const cfg = normalizeConfig({ ...DEFAULT_CONFIG, packetMode: 1, disconnectOnDock: true, pollingRateMode: 3 });
+    const bytes = encodeConfigBody(cfg, true, true, true, true, true);
+    expect(bytes.length).toBe(CONFIG_BODY_SIZE_V22);
+    expect([bytes[12], bytes[51], bytes[52]]).toEqual([3, 1, 1]);
+    expect(decodeConfigBody(bytes)).toEqual(cfg);
+    expect([...encodeConfigBody(DEFAULT_CONFIG, false, false, false, false, true).subarray(51)]).toEqual([0, 0]); // two frames, off by default
+    // 1.17..1.21 firmware's body (51 bytes): the defaults, and they aren't sent to it.
+    const old = decodeConfigBody(bytes.subarray(0, 51));
+    expect([old.packetMode, old.disconnectOnDock]).toEqual([0, false]);
+    expect(encodeConfigBody(cfg, true, true, true, true).length).toBe(CONFIG_BODY_SIZE_V17);
+    expect(validateConfig({ ...DEFAULT_CONFIG, pollingRateMode: 3 })).toEqual([]);
+    expect(validateConfig({ ...DEFAULT_CONFIG, pollingRateMode: 4 as 3 }).map((i) => i.field)).toEqual(["pollingRateMode"]);
+    expect(validateConfig({ ...DEFAULT_CONFIG, packetMode: 2 as 1 }).map((i) => i.field)).toEqual(["packetMode"]);
   });
 
   it("checks the mic level's range", () => {

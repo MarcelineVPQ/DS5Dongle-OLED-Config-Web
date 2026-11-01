@@ -166,7 +166,11 @@
         "headset": "Headset",
         "off": "Desligado",
         "builtIn": "Embutido"
-      }
+      },
+      "pollRealTime": "Tempo real",
+      "pollRateInfo": "1000 Hz envia o estado mais recente do controle a cada milissegundo. Tempo real envia cada relatório Bluetooth assim que ele chega.",
+      "dockDisconnect": "Desconectar na base de carga",
+      "dockDisconnectInfo": "Desliga a conexão Bluetooth do controle quando você o coloca numa base de carga ou dock. Pressione o botão PS para conectar de novo."
     },
     "lightbar": {
       "mode": "Modo",
@@ -1568,7 +1572,11 @@
           "oled": "OLED",
           "speaker": "Quadro do alto-falante (core1)",
           "mic": "Quadro do microfone (core1)"
-        }
+        },
+        "packetMode": "Relatórios de áudio",
+        "packetModeInfo": "Como o alto-falante e a resposta tátil chegam ao controle: dois quadros por relatório (o padrão) ou um quadro por relatório, com o dobro da frequência, como o firmware 0.7.2 enviava. Experimente os dois e fique com o que tiver a melhor resposta tátil e o menor atraso.",
+        "packetDouble": "Dois quadros",
+        "packetSingle": "Um quadro"
       },
       "specs": {
         "chip": "Chip",

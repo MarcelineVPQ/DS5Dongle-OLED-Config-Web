@@ -1,6 +1,6 @@
 // High-level client for the dongle's configurator protocol (firmware src/cmd.cpp),
 // over any Ds5Transport. Report payloads here never include the report-id byte.
-import { CONFIG_BODY_SIZE, CONFIG_BODY_SIZE_V17, type ConfigBody, decodeConfigBody, encodeConfigBody } from "./config";
+import { CONFIG_BODY_SIZE, CONFIG_BODY_SIZE_V22, type ConfigBody, decodeConfigBody, encodeConfigBody } from "./config";
 import { CALIB_BODY_SIZE, CALIB_PROTO_VER, decodeCalibration, encodeCalibration, type Calibration } from "./calibration";
 import { CURVE_PROTO_VER, CURVE_REPORT_BYTES, type CurvesReport, decodeCurvesReport, encodeCurve, isValidCurve, type StickCurve } from "./stickCurve";
 import { REMAP_EXTRA_COUNT, type RemapState, decodeRemapFromConfigReport, encodeRemapSet, isValidExtra } from "./remap";
@@ -82,7 +82,7 @@ export const SUPPORTED_PROTO_MAJOR = 1;
 // under it): the firmware's PICO_PROTO_MINOR (src/cmd.h), checked against the
 // firmware repo by tests/unit/protocolLockstep.test.ts. The simulated board
 // (the tests' fake) speaks it unless told otherwise.
-export const PROTOCOL_MINOR_KNOWN = 21;
+export const PROTOCOL_MINOR_KNOWN = 22;
 
 export const IDENTITY_FEATURES = {
   remap: 0x01,
@@ -123,6 +123,9 @@ export const FEATURES4 = {
   identify: 0x02, // 0xF6 0x1A [tenths]: the board shows "THIS ONE" on its OLED and blinks its LED
   firmwareIdentity: 0x04, // protocol 1.21: 0xEA, what the board and its firmware are (FirmwareIdentity)
   displayChoice: 0x08, // protocol 1.21: 0xF6 0x1B [display] saves the display the board drives from its next start
+  poll1000: 0x10, // protocol 1.22: polling_rate_mode 3 = 1000 Hz (2 stays real-time)
+  packetMode: 0x20, // protocol 1.22: config byte 51, the audio report choice (two frames per 0x39, or one per 0x36)
+  dockDisconnect: 0x40, // protocol 1.22: config byte 52, drop the controller's link when it is docked (body 53 bytes)
 } as const;
 
 // 0xEA (protocol 1.21, firmware src/fw_identity.h): what this board and its
@@ -505,6 +508,12 @@ export class Ds5BridgeClient {
     return !!p && (p.major > 1 || p.minor >= 17) && (p.features3 & FEATURES3.echoCancel) !== 0;
   }
 
+  // Protocol 1.22+: the audio report choice and the dock disconnect (53 bytes).
+  get configV22(): boolean {
+    const p = this.protocol;
+    return !!p && (p.major > 1 || p.minor >= 22) && (p.features4 & (FEATURES4.packetMode | FEATURES4.dockDisconnect)) !== 0;
+  }
+
   // Protocol 1.18+: KEY0 / KEY1 can be pressed from the app (0xF6 0x18).
   get oledKeys(): boolean {
     const p = this.protocol;
@@ -590,12 +599,12 @@ export class Ds5BridgeClient {
 
   async readConfig(): Promise<ConfigBody> {
     // The whole body: older firmware answers its own (shorter) body to this.
-    return decodeConfigBody(await this.transport.getReport(REPORT.config, CONFIG_BODY_SIZE_V17));
+    return decodeConfigBody(await this.transport.getReport(REPORT.config, CONFIG_BODY_SIZE_V22));
   }
 
   // Applies to the dongle's RAM; takes effect immediately. saveToFlash() persists.
   async applyConfig(config: ConfigBody): Promise<void> {
-    const body = encodeConfigBody(config, this.splitHaptics, this.configTail, this.micLevel, this.echoCancel);
+    const body = encodeConfigBody(config, this.splitHaptics, this.configTail, this.micLevel, this.echoCancel, this.configV22);
     await this.command(FUNC.applyConfig, [...body]);
   }
 

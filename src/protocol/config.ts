@@ -1,5 +1,5 @@
 // Config_body wire layout for DS5Dongle OLED Edition firmware.
-// 37 bytes (42 from protocol 1.6, 49 from 1.13, 50 from 1.16, 51 from 1.17), little-endian, packed
+// 37 bytes (42 from protocol 1.6, 49 from 1.13, 50 from 1.16, 51 from 1.17, 53 from 1.22), little-endian, packed
 // (matches src/config.h in the firmware).
 //
 //   offset 0   uint8   config_version              (firmware-set; read-only)
@@ -8,7 +8,7 @@
 //   offset 9   uint8   inactive_time               minutes [5, 60]
 //   offset 10  uint8   disable_inactive_disconnect 0 = auto-disconnect on idle, 1 = stay paired forever
 //   offset 11  uint8   disable_pico_led            0 = LED on, 1 = LED off
-//   offset 12  uint8   polling_rate_mode           0 = 250Hz, 1 = 500Hz, 2 = real-time
+//   offset 12  uint8   polling_rate_mode           0 = 250Hz, 1 = 500Hz, 2 = real-time, 3 = 1000Hz (protocol 1.22, identity [49] bit 4)
 //   offset 13  uint8   audio_buffer_length         [32, 128] (16 before firmware fw-speaker-095; upstream #252: below 28 garbles)
 //   offset 14  uint8   controller_mode             0 = DS5, 1 = DSE, 2 = Auto
 //   offset 15  uint8   current_slot                [0, 3]  (OLED Edition multi-slot pairing)
@@ -38,10 +38,13 @@
 //   offset 49  uint8   mic_level                   0 = follow the PC's mic level, 1..64 the controller's VolumeMic
 //   protocol 1.17 (identity [46] bit 5):
 //   offset 50  uint8   mic_echo_cancel             1 = the controller's echo cancellation on (default), 0 = the game's own
+//   protocol 1.22 (upstream's 2026-10-17/18 batch):
+//   offset 51  uint8   packet_mode                 0 = two frames per 0x39 audio report (default), 1 = one per 0x36 (identity [49] bit 5)
+//   offset 52  uint8   disconnect_on_dock          1 = drop the controller's link when it is docked, 0 = off (default; identity [49] bit 6)
 //
 // The config GET (0xF7) is capped at 63 bytes: from 1.13 a 63-byte GET still
 // answers the 42-byte body with the remap block at 42 (remap.ts), and a
-// shorter one the whole body, so readConfig asks for CONFIG_BODY_SIZE_V17
+// shorter one the whole body, so readConfig asks for CONFIG_BODY_SIZE_V22
 // (older firmware answers its own, shorter body).
 //
 // NOTE: lightbar_mode / lb_fav_* are edited on the OLED and in the desktop app's
@@ -76,6 +79,11 @@ export const AUDIO_BUFFER_MAX = 128;
 // sent to 1.17+ firmware: a 50-byte write leaves it as it is on the board.
 export const CONFIG_BODY_SIZE_V17 = 51;
 const ECHO_CANCEL_AT = CONFIG_BODY_SIZE_V16;
+// Protocol 1.22 appends the audio report choice and the dock disconnect (53
+// in all). Only sent to 1.22+ firmware: a 51-byte write leaves them as they are.
+export const CONFIG_BODY_SIZE_V22 = 53;
+const PACKET_MODE_AT = CONFIG_BODY_SIZE_V17;
+const DOCK_AT = CONFIG_BODY_SIZE_V17 + 1;
 // The status pin: the GPIOs the firmware accepts (status_gpio.h), the ones
 // nothing else on the dongle uses (not the UART, the OLED add-on or the radio).
 export const STATUS_GPIO_OFF = 0xff;
@@ -86,7 +94,8 @@ export const STATUS_GPIO_PINS = [2, 3, 4, 5, 6, 7, 13, 14, 16, 18, 19, 20, 21, 2
 export const CONFIG_BODY_MIN_SIZE = 19;
 export const FEATURE_REPORT_PAYLOAD_SIZE = 63;
 
-export type PollingRateMode = 0 | 1 | 2;
+export type PollingRateMode = 0 | 1 | 2 | 3; // 250 Hz, 500 Hz, real-time, 1000 Hz (3: protocol 1.22)
+export type PacketMode = 0 | 1; // two frames per audio report (0x39), one (0x36)
 export type ControllerMode = 0 | 1 | 2;
 export type SlotIndex = 0 | 1 | 2 | 3;
 export type AutoHapticsMode = 0 | 1 | 2 | 3;
@@ -136,6 +145,9 @@ export interface ConfigBody {
   micLevel: number; // 0 = the PC's level, 1..MIC_LEVEL_MAX the controller's own
   // Protocol 1.17 (on with older firmware, which has no switch, and not sent to it).
   micEchoCancel: boolean; // the controller's own echo cancellation for its mic
+  // Protocol 1.22 (defaults on older firmware, and not sent to it).
+  packetMode: PacketMode;
+  disconnectOnDock: boolean;
 }
 
 export interface ConfigValidationIssue {
@@ -176,12 +188,15 @@ export const DEFAULT_CONFIG: ConfigBody = {
   statusGpioMode: 0,
   micLevel: 0,
   micEchoCancel: true,
+  packetMode: 0,
+  disconnectOnDock: false,
 };
 
 export const POLLING_RATE_OPTIONS: Array<{ value: PollingRateMode; label: string }> = [
   { value: 0, label: "250 Hz" },
   { value: 1, label: "500 Hz" },
-  { value: 2, label: "Real-time (1 kHz)" },
+  { value: 3, label: "1000 Hz" },
+  { value: 2, label: "Real-time" },
 ];
 
 export const CONTROLLER_MODE_OPTIONS: Array<{ value: ControllerMode; label: string }> = [
@@ -243,18 +258,21 @@ export function decodeConfigBody(source: ArrayBuffer | DataView | Uint8Array): C
 }
 
 // split: protocol 1.6+ (the right grip); tail: protocol 1.13+ (implies split);
-// micLevel: protocol 1.16+ (implies tail); echoCancel: protocol 1.17+ (implies micLevel).
-export function encodeConfigBody(config: ConfigBody, split = false, tail = false, micLevel = false, echoCancel = false): Uint8Array<ArrayBuffer> {
+// micLevel: protocol 1.16+ (implies tail); echoCancel: protocol 1.17+ (implies micLevel);
+// v22: protocol 1.22+, the audio report choice and the dock disconnect (implies echoCancel).
+export function encodeConfigBody(config: ConfigBody, split = false, tail = false, micLevel = false, echoCancel = false, v22 = false): Uint8Array<ArrayBuffer> {
   const issues = validateConfig(config);
   if (issues.length > 0) {
     // loop: NOT-WORTH — error path only (invalid draft)
     console.warn("not sending settings that don't check out:", issues.map((i) => i.message).join("; "));
     throw new KeyedError("desktop.errors.badRequest"); // the page blocks an invalid draft first (an app bug if it gets here)
   }
+  echoCancel ||= v22;
   micLevel ||= echoCancel;
   tail ||= micLevel;
   split ||= tail;
-  const bytes = new Uint8Array(new ArrayBuffer(echoCancel ? CONFIG_BODY_SIZE_V17 : micLevel ? CONFIG_BODY_SIZE_V16 : tail ? CONFIG_BODY_SIZE_V13 : split ? CONFIG_BODY_SIZE_SPLIT : CONFIG_BODY_SIZE));
+  const size = v22 ? CONFIG_BODY_SIZE_V22 : echoCancel ? CONFIG_BODY_SIZE_V17 : micLevel ? CONFIG_BODY_SIZE_V16 : tail ? CONFIG_BODY_SIZE_V13 : split ? CONFIG_BODY_SIZE_SPLIT : CONFIG_BODY_SIZE;
+  const bytes = new Uint8Array(new ArrayBuffer(size));
   const view = new DataView(bytes.buffer);
   view.setUint8(0, config.configVersion & 0xff);
   view.setFloat32(1, config.hapticsGain, true);
@@ -296,6 +314,10 @@ export function encodeConfigBody(config: ConfigBody, split = false, tail = false
   }
   if (micLevel) view.setUint8(MIC_LEVEL_AT, config.micLevel);
   if (echoCancel) view.setUint8(ECHO_CANCEL_AT, config.micEchoCancel ? 1 : 0);
+  if (v22) {
+    view.setUint8(PACKET_MODE_AT, config.packetMode);
+    view.setUint8(DOCK_AT, config.disconnectOnDock ? 1 : 0);
+  }
   return bytes;
 }
 
@@ -313,8 +335,8 @@ export function validateConfig(config: ConfigBody): ConfigValidationIssue[] {
   if (!Number.isInteger(config.inactiveTime) || config.inactiveTime < 5 || config.inactiveTime > 60) {
     issues.push({ field: "inactiveTime", message: "Inactive time must be between 5 and 60 minutes" });
   }
-  if (!Number.isInteger(config.pollingRateMode) || config.pollingRateMode < 0 || config.pollingRateMode > 2) {
-    issues.push({ field: "pollingRateMode", message: "Polling rate mode must be 0, 1, or 2" });
+  if (!Number.isInteger(config.pollingRateMode) || config.pollingRateMode < 0 || config.pollingRateMode > 3) {
+    issues.push({ field: "pollingRateMode", message: "Polling rate mode must be 0, 1, 2 or 3" });
   }
   if (!Number.isInteger(config.audioBufferLength) || config.audioBufferLength < AUDIO_BUFFER_MIN || config.audioBufferLength > AUDIO_BUFFER_MAX) {
     issues.push({ field: "audioBufferLength", message: `Audio buffer length must be between ${AUDIO_BUFFER_MIN} and ${AUDIO_BUFFER_MAX}` });
@@ -358,6 +380,9 @@ export function validateConfig(config: ConfigBody): ConfigValidationIssue[] {
   if (!Number.isInteger(config.micLevel) || config.micLevel < 0 || config.micLevel > MIC_LEVEL_MAX) {
     issues.push({ field: "micLevel", message: `Mic level must be 0 (follow the PC) to ${MIC_LEVEL_MAX}` });
   }
+  if (config.packetMode !== 0 && config.packetMode !== 1) {
+    issues.push({ field: "packetMode", message: "Audio reports must be 0 (two frames) or 1 (one frame)" });
+  }
   if (config.statusGpioMode !== 0 && config.statusGpioMode !== 1) {
     issues.push({ field: "statusGpioMode", message: "Status pin mode must be 0 or 1" });
   }
@@ -375,7 +400,7 @@ export function normalizeConfig(config: ConfigBody): ConfigBody {
     inactiveTime: clampInteger(config.inactiveTime, 5, 60),
     disableInactiveDisconnect: Boolean(config.disableInactiveDisconnect),
     disablePicoLed: Boolean(config.disablePicoLed),
-    pollingRateMode: clampInteger(config.pollingRateMode, 0, 2) as PollingRateMode,
+    pollingRateMode: clampInteger(config.pollingRateMode, 0, 3) as PollingRateMode,
     audioBufferLength: clampInteger(config.audioBufferLength, AUDIO_BUFFER_MIN, AUDIO_BUFFER_MAX),
     controllerMode: clampInteger(config.controllerMode, 0, 2) as ControllerMode,
     currentSlot: clampInteger(config.currentSlot, 0, 3) as SlotIndex,
@@ -403,6 +428,8 @@ export function normalizeConfig(config: ConfigBody): ConfigBody {
     statusGpioMode: config.statusGpioMode === 1 ? 1 : 0,
     micLevel: clampInteger(config.micLevel, 0, MIC_LEVEL_MAX),
     micEchoCancel: Boolean(config.micEchoCancel),
+    packetMode: config.packetMode === 1 ? 1 : 0,
+    disconnectOnDock: Boolean(config.disconnectOnDock),
   };
 }
 
@@ -440,7 +467,9 @@ export function configsEqual(left: ConfigBody | null, right: ConfigBody | null):
     left.statusGpioPin === right.statusGpioPin &&
     left.statusGpioMode === right.statusGpioMode &&
     left.micLevel === right.micLevel &&
-    left.micEchoCancel === right.micEchoCancel
+    left.micEchoCancel === right.micEchoCancel &&
+    left.packetMode === right.packetMode &&
+    left.disconnectOnDock === right.disconnectOnDock
   );
 }
 
@@ -460,7 +489,7 @@ function decodeAt(bytes: Uint8Array, offset: number): ConfigBody | null {
   // A 63-byte read of 1.13+ firmware has the remap block ('RM') at 42, not
   // the 1.13 fields.
   const remapAt42 = avail > TAIL_AT + 1 && bytes[offset + TAIL_AT] === 0x52 && bytes[offset + TAIL_AT + 1] === 0x4d;
-  const len = Math.min(avail, remapAt42 ? CONFIG_BODY_SIZE_SPLIT : CONFIG_BODY_SIZE_V17);
+  const len = Math.min(avail, remapAt42 ? CONFIG_BODY_SIZE_SPLIT : CONFIG_BODY_SIZE_V22);
   const tail = len >= CONFIG_BODY_SIZE_V13;
   const view = new DataView(bytes.buffer, bytes.byteOffset + offset, len);
   // Read tail fields (offset >= 19) only when the firmware actually sent them;
@@ -502,6 +531,8 @@ function decodeAt(bytes: Uint8Array, offset: number): ConfigBody | null {
     statusGpioMode: (tail ? view.getUint8(TAIL_AT + 6) : DEFAULT_CONFIG.statusGpioMode) as StatusGpioMode,
     micLevel: len >= CONFIG_BODY_SIZE_V16 ? view.getUint8(MIC_LEVEL_AT) : DEFAULT_CONFIG.micLevel,
     micEchoCancel: len >= CONFIG_BODY_SIZE_V17 ? view.getUint8(ECHO_CANCEL_AT) !== 0 : DEFAULT_CONFIG.micEchoCancel,
+    packetMode: (len >= CONFIG_BODY_SIZE_V22 ? view.getUint8(PACKET_MODE_AT) : DEFAULT_CONFIG.packetMode) as PacketMode,
+    disconnectOnDock: len >= CONFIG_BODY_SIZE_V22 ? view.getUint8(DOCK_AT) === 1 : DEFAULT_CONFIG.disconnectOnDock,
   };
 }
 

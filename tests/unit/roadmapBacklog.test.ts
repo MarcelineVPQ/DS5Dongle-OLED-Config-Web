@@ -16,6 +16,11 @@ import { ROADMAP, type RoadmapColumn } from "../../src/desktop/about/roadmap";
 
 /** Roadmap title → the start of its BACKLOG row's Item cell. */
 const BACKLOG_ROW: Record<string, string> = {
+  "1000 Hz polling": "Polling rate: 1000 Hz",
+  "Disconnect when docked": "Disconnect the controller when docked",
+  "One-frame audio reports": "Audio reports: one frame or two",
+  "Pairing takes only a DualSense": "Pairing takes only a DualSense",
+  "Edge profiles never read stale": "Edge profiles and test results read live",
   "Your report as a test sheet": "Game page: Your report as a test sheet",
   "Lighter on your PC": "App runs lean when hidden",
   "Full pairing slots say so": "Pairing slots says when all slots are taken",

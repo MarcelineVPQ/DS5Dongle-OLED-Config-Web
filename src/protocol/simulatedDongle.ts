@@ -13,6 +13,7 @@ import {
   CONFIG_BODY_SIZE_V13,
   CONFIG_BODY_SIZE_V16,
   CONFIG_BODY_SIZE_V17,
+  CONFIG_BODY_SIZE_V22,
   DEFAULT_CONFIG,
   decodeConfigBody,
   encodeConfigBody,
@@ -223,9 +224,9 @@ export class SimulatedDongle implements Ds5Transport {
   rightGain = new Uint8Array(new Float32Array([1]).buffer);
   // The bytes after the right grip, as the firmware's defaults: the seven of
   // protocol 1.13 (trigger reduction ... status pin mode), 1.16's mic level
-  // and 1.17's echo cancellation (a body only as long as the simulated
-  // protocol's is read or written).
-  tail = encodeConfigBody(DEFAULT_CONFIG, true, true, true, true).slice(CONFIG_BODY_SIZE_SPLIT);
+  // and 1.17's echo cancellation, 1.22's audio report choice and dock
+  // disconnect (a body only as long as the simulated protocol's is read or written).
+  tail = encodeConfigBody(DEFAULT_CONFIG, true, true, true, true, true).slice(CONFIG_BODY_SIZE_SPLIT);
   flashTail = this.tail.slice();
   private get v13() {
     return this.minor >= 13;
@@ -236,8 +237,12 @@ export class SimulatedDongle implements Ds5Transport {
   private get v17() {
     return this.minor >= 17;
   }
+  private get v22() {
+    return this.minor >= 22;
+  }
   // Config_body's size at this protocol (identity [6]).
   private get bodySize() {
+    if (this.v22) return CONFIG_BODY_SIZE_V22;
     return this.v17 ? CONFIG_BODY_SIZE_V17 : this.v16 ? CONFIG_BODY_SIZE_V16 : this.v13 ? CONFIG_BODY_SIZE_V13 : this.split ? CONFIG_BODY_SIZE_SPLIT : CONFIG_BODY_SIZE + 1;
   }
   said: [number, number][] = [];
@@ -427,7 +432,7 @@ export class SimulatedDongle implements Ds5Transport {
         // Like the firmware: the whole Config_body (38 bytes before 1.6, 42
         // from 1.6), then the remap block only when the request has room for
         // it. From 1.13 (49 bytes) a 63-byte GET keeps the 42-byte body + the
-        // block at 42, and a shorter one gets the whole body (50 bytes from 1.16, 51 from 1.17).
+        // block at 42, and a shorter one gets the whole body (50 bytes from 1.16, 51 from 1.17, 53 from 1.22).
         const body = this.split ? CONFIG_BODY_SIZE_SPLIT : CONFIG_BODY_SIZE + 1;
         const out = new Uint8Array(body + 21);
         out.set(this.config, 0);
@@ -539,7 +544,7 @@ export class SimulatedDongle implements Ds5Transport {
       // Older firmware copies whatever reaches byte 37 into the narrator.
       if (!this.split && payload.length > 1 + CONFIG_BODY_SIZE) this.narrator = payload[1 + CONFIG_BODY_SIZE];
       // 1.13: the seven bytes after the right grip, 1.16: and the mic level,
-      // 1.17: and the echo cancellation; a
+      // 1.17: and the echo cancellation, 1.22: and the audio report choice and dock disconnect; a
       // shorter body leaves the rest (the firmware copies what it was sent).
       if (this.v13 && payload.length >= 1 + CONFIG_BODY_SIZE_V13) {
         const end = Math.min(payload.length, 1 + this.bodySize);
@@ -723,7 +728,7 @@ export class SimulatedDongle implements Ds5Transport {
     } else if (func === 0x09) {
       this.config = encodeConfigBody(DEFAULT_CONFIG);
       this.flashConfig = this.config.slice();
-      this.tail = encodeConfigBody(DEFAULT_CONFIG, true, true, true, true).slice(CONFIG_BODY_SIZE_SPLIT);
+      this.tail = encodeConfigBody(DEFAULT_CONFIG, true, true, true, true, true).slice(CONFIG_BODY_SIZE_SPLIT);
       this.flashTail = this.tail.slice();
       this.powerFlags = 0x01;
       this.hostGen++;
@@ -751,7 +756,7 @@ export class SimulatedDongle implements Ds5Transport {
 
   // The whole config body in RAM (config + narrator + right grip + tail).
   private body(): ConfigBody {
-    const whole = new Uint8Array(CONFIG_BODY_SIZE_V17);
+    const whole = new Uint8Array(CONFIG_BODY_SIZE_V22);
     whole.set(this.config, 0);
     whole[CONFIG_BODY_SIZE] = this.narrator;
     whole.set(this.rightGain, CONFIG_BODY_SIZE + 1);
@@ -766,7 +771,7 @@ export class SimulatedDongle implements Ds5Transport {
     powerFlags: () => this.powerFlags,
     save: (body, power) => {
       if (this.opts.saveFails) return false;
-      const e = encodeConfigBody(body, true, true, true, true);
+      const e = encodeConfigBody(body, true, true, true, true, true);
       this.config = e.slice(0, CONFIG_BODY_SIZE);
       this.rightGain = e.slice(CONFIG_BODY_SIZE + 1, CONFIG_BODY_SIZE_SPLIT);
       this.tail = e.slice(CONFIG_BODY_SIZE_SPLIT);
@@ -858,6 +863,7 @@ export class SimulatedDongle implements Ds5Transport {
     if (minor >= 20) {
       out[49] = 0x01 | 0x02; // FEATURES4: board id, identify (1.20)
       if (minor >= 21) out[49] |= 0x04 | 0x08; // FEATURES4: firmware identity 0xEA, display choice 0xF6 0x1B (1.21)
+      if (minor >= 22) out[49] |= 0x10 | 0x20 | 0x40; // FEATURES4: 1000 Hz polling, audio report choice, dock disconnect (1.22)
       // loop: HOT-PATH-OK — dev/test fake only; N = 8 id bytes
       for (let i = 0; i < 8; i++) out[50 + i] = parseInt(this.boardId.slice(i * 2, i * 2 + 2), 16) || 0;
     }

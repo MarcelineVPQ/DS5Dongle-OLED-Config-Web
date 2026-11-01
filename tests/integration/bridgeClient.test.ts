@@ -8,6 +8,7 @@ import {
   decodeAudioCounters,
   FEATURES2,
   FEATURES3,
+  FEATURES4,
   IDENTITY_FEATURES,
   NARRATOR_LANGS,
   NARRATOR_LINES,
@@ -303,6 +304,37 @@ describe("left / right grip haptics (protocol 1.6)", () => {
     await client.applyConfig({ ...cfg, hapticsGain: 3 });
     expect(dongle.narrator).toBe(3);
     expect(await client.readRemap()).not.toBeNull();
+  });
+});
+
+describe("upstream's 2026-10-17/18 settings (protocol 1.22)", () => {
+  it("writes and reads the audio report choice, the dock disconnect and 1000 Hz with the 53-byte body", async () => {
+    const dongle = new FakeDongle({ protoMinor: 22 });
+    const client = new Ds5BridgeClient(dongle);
+    const id = await client.identity();
+    expect(id.configBodyLength).toBe(53);
+    expect(id.features4 & (FEATURES4.poll1000 | FEATURES4.packetMode | FEATURES4.dockDisconnect)).toBe(0x70);
+    expect(client.configV22).toBe(true);
+    const cfg = await client.readConfig();
+    expect([cfg.packetMode, cfg.disconnectOnDock]).toEqual([0, false]);
+    const sets = dongle.sets.length;
+    await client.applyConfig({ ...cfg, packetMode: 1, disconnectOnDock: true, pollingRateMode: 3 });
+    expect(dongle.sets.slice(sets).find((p) => p[0] === 0x01)?.length).toBe(1 + 53);
+    const back = await client.readConfig();
+    expect([back.packetMode, back.disconnectOnDock, back.pollingRateMode]).toEqual([1, true, 3]);
+  });
+
+  it("sends 1.21 firmware the 51-byte body", async () => {
+    const dongle = new FakeDongle({ protoMinor: 21 });
+    const client = new Ds5BridgeClient(dongle);
+    const id = await client.identity();
+    expect(id.configBodyLength).toBe(51);
+    expect(id.features4 & 0x70).toBe(0);
+    expect(client.configV22).toBe(false);
+    const sets = dongle.sets.length;
+    await client.applyConfig({ ...(await client.readConfig()), disconnectOnDock: true });
+    expect(dongle.sets.slice(sets).find((p) => p[0] === 0x01)?.length).toBe(1 + 51);
+    expect((await client.readConfig()).disconnectOnDock).toBe(false);
   });
 });
 
