@@ -2,5 +2,6 @@
 export function devToolsBuild(version: string, env?: Record<string, string | undefined>): boolean;
 export default function afterPack(context: {
   electronPlatformName: string;
+  arch: number;
   packager: { appInfo: { version: string }; addElectronFuses(context: unknown, fuses: Record<string, unknown>): Promise<number> };
 }): Promise<void>;

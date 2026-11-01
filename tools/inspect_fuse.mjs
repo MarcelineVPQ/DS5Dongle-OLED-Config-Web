@@ -18,7 +18,15 @@ import { FuseV1Options, FuseVersion } from "@electron/fuses";
 
 export const devToolsBuild = (version, env = process.env) => env.DS5_DEV_TOOLS === "1" || /-dev\.\d+$/.test(version);
 
+// builder-util's Arch.universal. A universal Mac build packs an x64 and an
+// arm64 temp app first (with its own fuses off) and merges them; flipping
+// (and re-signing) those would make the two differ beyond their binaries,
+// which the merge refuses (2026-11-01 app re-review S1). The hook runs again
+// on the merged app, and that one gets the fuse.
+const UNIVERSAL = 4;
+
 export default async function afterPack(context) {
+  if (context.electronPlatformName === "darwin" && context.arch !== UNIVERSAL) return;
   const inspect = devToolsBuild(context.packager.appInfo.version);
   console.log(`  • inspect fuse: ${inspect ? "on (dev-tools build)" : "off (release build)"}`);
   await context.packager.addElectronFuses(context, {

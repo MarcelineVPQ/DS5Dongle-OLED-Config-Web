@@ -630,8 +630,9 @@ describe("debug entry points: off in released builds", () => {
 
   it("--inspect: off in a release build, on in a dev-tools build", async () => {
     const flipped: Array<Record<string, unknown>> = [];
-    const context = (version: string, electronPlatformName = "linux") => ({
+    const context = (version: string, electronPlatformName = "linux", arch = 1 /* builder-util Arch.x64 */) => ({
       electronPlatformName,
+      arch,
       packager: {
         appInfo: { version },
         addElectronFuses: async (_context: unknown, fuses: Record<string, unknown>) => {
@@ -643,7 +644,10 @@ describe("debug entry points: off in released builds", () => {
     // EnableNodeCliInspectArguments is fuse 3 of @electron/fuses' FuseV1Options.
     vi.stubEnv("DS5_DEV_TOOLS", "");
     await afterPack(context("0.9.5"));
-    await afterPack(context("0.9.5-dev.20", "darwin"));
+    await afterPack(context("0.9.5-dev.20", "darwin", 4 /* universal: the merged app */));
+    // The universal build's per-arch temp apps are left alone (re-review S1).
+    await afterPack(context("0.9.5-dev.20", "darwin", 1 /* x64 */));
+    await afterPack(context("0.9.5-dev.20", "darwin", 3 /* arm64 */));
     vi.stubEnv("DS5_DEV_TOOLS", "1");
     await afterPack(context("0.9.5", "win32"));
     expect(flipped).toEqual([
