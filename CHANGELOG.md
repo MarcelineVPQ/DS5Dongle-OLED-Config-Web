@@ -6,6 +6,10 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ## [Unreleased]
 
+### Added
+
+- **The Waveshare RP2350B-Plus-W is a known board.** A board running the firmware built for it (firmware PR #27, built by hand for now) shows as RP2350B-Plus-W with its specs on your board's page (RP2350B, 2× Cortex-M33, 520 KB SRAM, 16 MB flash, CYW43439, Bluetooth 5.2). No firmware update is offered for it yet, and the app still refuses to write another board's firmware to it.
+
 ### Fixed
 
 - **macOS: ⌘W closes the window again.** The app's own menu (dev.21) kept the App, Edit and Window menus but left out File, where Close lives, so ⌘W stopped closing the window. The File menu is back with Close (⌘W).

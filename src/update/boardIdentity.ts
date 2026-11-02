@@ -22,6 +22,7 @@ const MB = 1024 * 1024;
 export const BOARDS = [
   { id: "pico2_w", name: "Pico 2 W", type_id: 1, chip: "rp2350a", flash_bytes: 4 * MB, personas: ["ds5"], displays: ["none", "pico_oled_1_3"] },
   { id: "pico_w", name: "Pico W", type_id: 2, chip: "rp2040", flash_bytes: 2 * MB, personas: ["ds5"], displays: ["none", "pico_oled_1_3"] },
+  { id: "waveshare_rp2350b_plus_w", name: "RP2350B-Plus-W", type_id: 3, chip: "rp2350b", flash_bytes: 16 * MB, personas: ["ds5"], displays: ["none", "pico_oled_1_3"] },
 ] as const;
 export type BoardRow = (typeof BOARDS)[number];
 export const boardRow = (id: string): BoardRow | undefined => BOARDS.find((b) => b.id === id);

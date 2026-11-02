@@ -6,6 +6,9 @@
 // (Pico 2 W: RP2350, dual-core Arm Cortex-M33, 520 kB SRAM, 4 MB flash,
 // Infineon CYW43439, Bluetooth 5.2, 802.11n 2.4 GHz; Pico W: RP2040, dual-core
 // Cortex-M0+, 264 kB SRAM, 2 MB flash, same CYW43439). Checked 2026-10-13.
+// Waveshare RP2350B-Plus-W: https://www.waveshare.com/wiki/RP2350B-Plus-W
+// (RP2350B, dual-core Cortex-M33, 520 KB SRAM, 16 MB flash, Raspberry Pi
+// Radio Module 2 = Infineon CYW43439, Bluetooth 5.2). Checked 2026-11-02.
 // The name and flash size are the board table's (src/update/boardIdentity.ts, boards.json).
 import { boardRow } from "../../update/boardIdentity";
 
@@ -19,6 +22,7 @@ const specRow = (id: string, s: Omit<BoardSpecs, "flashMb">): [string, BoardSpec
 const BOARD_SPECS: Record<string, BoardSpecs> = Object.fromEntries([
   specRow("pico2_w", { chip: "RP2350", core: "Cortex-M33", coreMaker: "Arm", sramKb: 520, wireless: "CYW43439", wirelessMaker: "Infineon", bluetooth: "5.2" }),
   specRow("pico_w", { chip: "RP2040", core: "Cortex-M0+", coreMaker: "Arm", sramKb: 264, wireless: "CYW43439", wirelessMaker: "Infineon", bluetooth: "5.2" }),
+  specRow("waveshare_rp2350b_plus_w", { chip: "RP2350B", core: "Cortex-M33", coreMaker: "Arm", sramKb: 520, wireless: "CYW43439", wirelessMaker: "Infineon", bluetooth: "5.2" }),
 ]);
 
 /** The board's specs, or null for a board we have no table row for (its zone's title has no spec line). */
