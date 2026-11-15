@@ -7,7 +7,7 @@
 // Disable, and the drawing gets badges for changed buttons only.
 import { act, createElement, useEffect, useState } from "react";
 import { createRoot, type Root } from "react-dom/client";
-import { afterEach, beforeAll, describe, expect, it } from "vitest";
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import i18n from "../../src/i18n";
 import { Ds5BridgeClient, type BridgeIdentity } from "../../src/protocol/bridgeClient";
 import { buttonTarget, DISABLE, emptyButtonPart, SOURCE, withBasePress } from "../../src/protocol/buttons";
@@ -86,7 +86,18 @@ function Editor({ start, onSet }: { start: TensionSet; onSet: (next: TensionSet)
   return createElement(SetButtonsEditor, { set, onChange, pick, onPick: setPick, edge: false });
 }
 
+// jsdom can't focus inside a popover="manual" element (as tests/integration/popups.test.ts):
+// leave the attribute off, since the keyboard focus is what these tests check.
+const noPopover = () => {
+  const set = Element.prototype.setAttribute;
+  vi.spyOn(Element.prototype, "setAttribute").mockImplementation(function (this: Element, name: string, value: string) {
+    if (name !== "popover") set.call(this, name, value);
+  });
+};
+
 describe("the set's button editor (§7.3, §7.5, §7.6)", () => {
+  beforeEach(noPopover);
+  afterEach(() => vi.restoreAllMocks());
   const base = { ...STARTERS.empty, buttons: emptyButtonPart() };
 
   it("starts with the Changed list; a picked button reads as sentences, its Press set from the controller grid", () => {
