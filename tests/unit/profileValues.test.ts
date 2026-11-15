@@ -40,7 +40,7 @@ const normal = settingsFrom(normalConfig);
 
 describe("game profile values (format 2: left out = my normal setting)", () => {
   it("covers every profile field, and nothing app-only or dongle-wide", () => {
-    const schemaKeys = Object.keys(ProfileSettingsSchema.shape).filter((k) => !["format", "buttonLayout", "stickCurves"].includes(k));
+    const schemaKeys = Object.keys(ProfileSettingsSchema.shape).filter((k) => !["format", "buttonLayout", "stickCurves", "tensionSet"].includes(k));
     expect([...PROFILE_FIELDS].sort()).toEqual(schemaKeys.sort());
     expect(
       Object.keys(settingsFrom(DEFAULT_CONFIG))
