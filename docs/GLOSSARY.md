@@ -105,7 +105,7 @@ zh-CN is Sony's mainland China site (`zh-hans-cn`; playstation.com.cn redirects 
 
 ## Our settings with no Sony name
 
-Sony's menus have no counterpart for these (they are upstream awalol's settings and ours), so the wording is our own, in the same style. From the app's locales (`desktop.settings.*`):
+Sony's menus have no counterpart for these (they are upstream awalol's settings and ours), so the wording is our own, in the same style. **Tension** (your own adaptive trigger effects, under Sony's **Adaptive triggers**) keeps its name in every language, like Audio Auto Haptics; its effect names follow the Adaptive trigger test's (Feedback, Weapon, Vibration; Sony's API gives them in English only), with Bow, Galloping and Machine marked unofficial. From the app's locales (`desktop.settings.*`):
 
 | Term | en | de | fr | es | pt-BR | zh-CN | ja |
 |---|---|---|---|---|---|---|---|

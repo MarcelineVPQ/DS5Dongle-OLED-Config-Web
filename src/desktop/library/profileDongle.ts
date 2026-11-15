@@ -2,10 +2,13 @@
 // the config is applied without saving (0xF6 0x01, never 0x02), the button
 // layout as a temporary remap (0x11) with the Edge's extras temporary (0x13),
 // the stick curves temporary (0x14); 0x12 ends the layout, extras and curves
-// together, back to what's in flash. Each part only goes to firmware that
+// together, back to what's in flash; a Tension set (1.23) is chosen for now
+// (0x20 temporary) and the board's saved choice comes back after (0x20 0xFE).
+// Each part only goes to firmware that
 // reports it (feature bits); older firmware gets the rest of the profile.
 import type { Ds5BridgeClient, BridgeIdentity } from "../../protocol/bridgeClient";
-import { FEATURES2, supportsFeature2 } from "../../protocol/bridgeClient";
+import { CommandError, FEATURES2, supportsFeature2, supportsTension } from "../../protocol/bridgeClient";
+import { KeyedError } from "../../errorText";
 import type { ConfigBody } from "../../protocol/config";
 import type { LibraryFile, ProfileSettings } from "../games/library";
 import { profileConfig, profileCurves, withSettings, type GameCurves } from "./profileValues";
@@ -14,6 +17,7 @@ export interface ProfileCaps {
   layouts: boolean; // temporary remaps (protocol 1.8)
   edgeExtras: boolean; // the Edge's Fn buttons and paddles (1.9)
   curves: boolean; // stick curves (1.10)
+  tension: boolean; // a Tension set for the game (1.23)
   slot: number; // the pairing slot in use (curves are per slot)
 }
 
@@ -22,6 +26,7 @@ export function profileCaps(identity: BridgeIdentity | null): ProfileCaps {
     layouts: supportsFeature2(identity, 8, FEATURES2.temporaryRemap),
     edgeExtras: supportsFeature2(identity, 9, FEATURES2.remapExtra),
     curves: supportsFeature2(identity, 10, FEATURES2.stickCurves),
+    tension: supportsTension(identity),
     slot: identity?.currentSlot ?? 0,
   };
 }
@@ -29,20 +34,22 @@ export function profileCaps(identity: BridgeIdentity | null): ProfileCaps {
 export interface GameParts {
   layout: { table: number[]; extra?: number[] } | null;
   curves: GameCurves | null;
+  tension: number | null; // the board's set slot
 }
 
 // The profile's button layout (if it still exists) and stick curves.
 export function gamePartsOf(library: LibraryFile, s: ProfileSettings): GameParts {
   const layout = s.buttonLayout ? (library.layouts?.[s.buttonLayout] ?? null) : null;
   const curves = profileCurves(s); // 4 points each (ProfileCurveSchema)
-  return { layout, curves: curves[0] || curves[1] ? curves : null };
+  return { layout, curves: curves[0] || curves[1] ? curves : null, tension: s.tensionSet ?? null };
 }
 
 // The game's layout and curves (null: the saved ones). Whatever a previous
 // game left on goes first (0x12, RAM only), then only what this profile has.
 export async function putGameParts(client: Ds5BridgeClient, caps: ProfileCaps, parts: GameParts | null): Promise<void> {
-  if (!caps.layouts && !caps.curves) return;
-  await client.revertRemap();
+  if (!caps.layouts && !caps.curves && !caps.tension) return;
+  if (caps.layouts || caps.curves) await client.revertRemap();
+  if (caps.tension) await chooseGameSet(client, parts?.tension ?? null);
   if (!parts) return;
   if (parts.layout && caps.layouts) {
     await client.applyRemapTemporary(parts.layout.table);
@@ -54,6 +61,19 @@ export async function putGameParts(client: Ds5BridgeClient, caps: ProfileCaps, p
     const left = parts.curves[0] ?? saved?.[0];
     const right = parts.curves[1] ?? saved?.[1];
     if (left && right) await client.applyStickCurves(caps.slot, left, right, true);
+  }
+}
+
+// The game's set for now only, or (null) back to the board's saved choice.
+// A set deleted since the profile picked it: the board answers INVALID, said
+// in plain words (the profile's notice names the fix: pick another set).
+async function chooseGameSet(client: Ds5BridgeClient, slot: number | null): Promise<void> {
+  try {
+    await client.chooseTension(slot ?? "saved", slot !== null);
+  } catch (cause) {
+    // error: SHOWN — desktop.tension.errors.setGone, in the profile's notice (desktop.profile.applyFailed / partlyOn with its reason)
+    if (cause instanceof CommandError && cause.result === "invalid" && slot !== null) throw new KeyedError("desktop.tension.errors.setGone", { slot }, { cause });
+    throw cause;
   }
 }
 

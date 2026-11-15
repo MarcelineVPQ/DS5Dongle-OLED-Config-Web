@@ -40,6 +40,7 @@ Thanks to [loteran/DS5Dongle](https://github.com/loteran/DS5Dongle) (audio fixes
 | Controller info layouts | The controller firmware report and lifetime-counter offsets (and how to read their unwritten values) follow dualsense-tester by Xuezhou Dai (daidr), MIT. [github.com/daidr/dualsense-tester](https://github.com/daidr/dualsense-tester) |
 | Tray icon and button glyphs | "PS5 Button Icons and Controls" by Zacksly, CC BY 3.0, modified. [zacksly.itch.io](https://zacksly.itch.io) |
 | PICOBOOT flasher | picoflash by Piers Finlayson, MIT |
+| Tension's trigger effects | The effects' ranges and zones (and how the picture draws them) follow Nielk1's TriggerEffectGenerator, revision 6, MIT, © 2021-2022 John "Nielk1" Klein; the firmware encodes the effects with it. Staging effects by pull position: an idea seen in artzox/DS5Dongle-Studio (MIT); no code taken |
 | Liquid glass technique | The displacement-map refraction follows Shu Ding's liquid-glass (MIT, [github.com/shuding/liquid-glass](https://github.com/shuding/liquid-glass)), with ideas from Max Rovensky's liquid-glass-react (MIT, [github.com/rdev/liquid-glass-react](https://github.com/rdev/liquid-glass-react)); our own implementation |
 | Fonts | Space Grotesk, DM Sans, JetBrains Mono, SIL Open Font License |
 | Icons | Lucide, ISC |

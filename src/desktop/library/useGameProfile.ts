@@ -173,7 +173,7 @@ export function useGameProfile(bridge: UseDs5BridgeResult, paused: boolean): Gam
 
   const { isConnected, config, operation, applyBody, client, identity } = bridge;
   const caps = profileCaps(identity);
-  const { layouts, edgeExtras, curves: curvesSupported, slot } = caps;
+  const { layouts, edgeExtras, curves: curvesSupported, tension, slot } = caps;
   // A game's layout or curves (RAM only) are on the dongle now.
   const gameTemporary = !!(identity?.remapTemporary || identity?.curvesTemporary);
   // The step that failed last (an apply stamp, or "restore"), so it isn't
@@ -191,7 +191,7 @@ export function useGameProfile(bridge: UseDs5BridgeResult, paused: boolean): Gam
     if (!desktop || !loaded || !runningKnown || !isConnected || !config || operation || paused) return;
     const step = decideProfileStep({ running: wanted, library, appliedFor: appliedFor.current, failed: failed.current, active: !!active });
     if (step.kind === "clear-active") setActive(null);
-    const capsNow = { layouts, edgeExtras, curves: curvesSupported, slot };
+    const capsNow = { layouts, edgeExtras, curves: curvesSupported, tension, slot };
     if (step.kind === "apply") {
       switchOnce(async () => {
         try {
@@ -271,6 +271,7 @@ export function useGameProfile(bridge: UseDs5BridgeResult, paused: boolean): Gam
     layouts,
     edgeExtras,
     curvesSupported,
+    tension,
     slot,
     gameTemporary,
     appliedStamp,

@@ -83,6 +83,17 @@ Try the trigger effects games can use (resistance, weapon, vibration…) on L2 a
 
 **Trigger calibration** (below it): **Start calibration**, then press both triggers all the way and let go; triggers that don't reach full count as full again. Then the **Pull** bars show both triggers live, and the **Adaptive trigger test** is last.
 
+**Tension: your own adaptive trigger effects** (newer firmware). A **set** holds L2 and R2 together under a name, and your board keeps up to 8 of them (slots 0–7). Your board runs them itself, so they work with or without the app.
+
+- **Edit set** picks a slot. An empty one offers sets to start from: **Bow** (the draw builds to full, lets go at full pull, then a vibration grows the longer you hold), **Heavy trigger**, **Brake pedal**, **Machine gun** or an **Empty set**. Names are 16 English letters, digits or spaces at most.
+- Per trigger: **Game** leaves it to the game; **Fill in** uses yours only while the game sends nothing on that trigger; **Replace** always uses yours.
+- Each trigger has up to 4 **stages**. A stage is one effect (Sony's Feedback, Weapon, Vibration, Multiple Position Feedback, Slope Feedback or Multiple Position Vibration; Bow, Galloping and Machine are marked unofficial: they are in the controller's firmware but not in Sony's list, so a controller update might remove them), the part of the pull it covers (**Pull from** / **Pull to**), and a **Hold time** before it starts. One setting can **build** across the pull or over the time held. The first stage that matches runs, so put the longer-held ones first; the picture over the stages shows the strength over the pull (dashed: after its hold time) and says when an earlier stage cuts one short.
+- The controller's limits are real: 8 levels of strength, 10 zones along the pull, and Sony's Weapon effect starts between zones 2 and 7.
+- **Feel it** runs the set you're editing, unsaved, until you press it again or close the section.
+- **Runs from power-on** picks the set your board runs on its own. The save bar's **Save** keeps your sets and this choice on your board; **Revert** drops what you changed.
+- **Tension now** shows what each trigger is doing: Tension's stage and how long it's been held, the game's own effect, or a short wait after the game stops sending one (Fill in waits half a second, so a game switching effects doesn't hand the trigger back and forth).
+- A game's profile (Games → the game → Controller profile) can pick a **Tension set** for while the game runs; it is never saved on your board, and your board's own choice comes back when the game ends.
+
 ### Haptic feedback
 
 ![The Haptic feedback panel with the left and right vibration intensity and the test buttons](screenshots/guide-haptics.png)

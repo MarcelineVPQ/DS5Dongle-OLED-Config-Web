@@ -5579,3 +5579,92 @@ main.dk-body:focus:not(:focus-visible),
   color: var(--dk-sel-text);
   box-shadow: inset 2px 0 0 var(--dk-accent);
 }
+
+/* Tension (Adaptive triggers): L2 and R2 side by side when the panel is wide
+   enough, one under the other when it isn't; each stage a small inset card;
+   the picture a static SVG (drawn on change only, no animation). */
+.tn-pair {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 8px;
+  padding: 4px 0;
+}
+.tn-trigger {
+  min-width: 0;
+}
+.tn-stage {
+  margin: 6px 0;
+  padding: 4px 8px;
+  border: 1px solid var(--border-default);
+  border-radius: var(--dk-radius);
+  background: var(--bg-inset);
+}
+.tn-stage-head {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 24px;
+}
+.tn-icon {
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  justify-content: center;
+}
+.tn-zones {
+  display: grid;
+  grid-template-columns: repeat(10, minmax(0, 1fr));
+  gap: 2px;
+}
+.tn-zones .dk-input,
+.tn-name {
+  height: 26px;
+  min-width: 0;
+  border: 1px solid var(--border-default);
+  border-radius: var(--dk-radius);
+  background: var(--bg-input);
+  color: var(--text-strong);
+  font: inherit;
+}
+.tn-name {
+  flex: 1;
+  padding: 0 6px;
+}
+.tn-zones .dk-input {
+  padding: 0 2px;
+  text-align: center;
+}
+.tn-picture {
+  margin: 4px 0;
+}
+.tn-picture svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 72px;
+}
+.tn-picture path {
+  fill: none;
+  stroke-width: 2;
+  stroke-linejoin: round;
+}
+.tn-axis {
+  stroke: var(--border-soft);
+  stroke-width: 1;
+}
+.tn-resistance path {
+  stroke: var(--dk-accent);
+}
+.tn-vibration path {
+  stroke: var(--status-warn);
+}
+.tn-none path {
+  stroke: var(--text-muted);
+}
+.tn-wait path {
+  stroke-dasharray: 4 3;
+}
+.tn-picture .tn-ramp-end {
+  stroke-width: 1;
+  stroke-dasharray: 2 2;
+}

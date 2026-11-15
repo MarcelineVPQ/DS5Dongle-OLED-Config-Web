@@ -44,7 +44,7 @@ const BACKLOG_ROW: Record<string, string> = {
   "Profiles hold every setting": "Profiles hold every setting",
   "Community game database": "Community game database",
   "Per-trigger resistance strength": "Per-trigger resistance strength",
-  "Trigger Lab": "Trigger Lab",
+  Tension: "Tension (your own adaptive trigger effects",
   "Per-controller settings": "Per-controller settings",
   "Edge on-controller profiles": "Edge on-controller profiles",
   "Limited-edition looks": "Limited-edition looks",

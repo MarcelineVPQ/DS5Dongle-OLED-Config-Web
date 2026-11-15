@@ -81,6 +81,11 @@ export const ProfileSettingsSchema = z.strictObject({
   // Stick response curves for the game (protocol 1.10: applied for the game
   // only, never to flash); a stick left out keeps the player's saved curve.
   stickCurves: z.strictObject({ left: ProfileCurveSchema.optional(), right: ProfileCurveSchema.optional() }).optional(),
+  // Tension (protocol 1.23): the board's set (slot 0..7, TENSION_SLOTS in
+  // protocol/tension.ts; not in the main process build) that runs while the
+  // game does, chosen for now only (RAM, never flash); absent = the board's
+  // saved choice.
+  tensionSet: z.number().int().min(0).max(7).optional(),
 });
 export type ProfileSettings = z.infer<typeof ProfileSettingsSchema>;
 // The dongle config fields a profile can set (the layout and the stick curves

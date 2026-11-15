@@ -25,6 +25,7 @@ import { DeviceGoneError, ReportStalledError, type Ds5Transport } from "./transp
 import { drawBattery, drawPad, kBattTextX, kBattY, kEtaX, packedCanvas } from "../oled/statusPad";
 import { SCREEN_NAMES } from "../oled/screenNames";
 import { type SimBoard, SimOledScreens } from "../oled/simScreens";
+import { crc32, decodeSetBody, SET_BODY_BYTES, TENSION_CHUNK_AT, TENSION_CHUNK_REPLY_BYTES, TENSION_REPORT, TENSION_SLOTS, type TensionProgram } from "./tension";
 import { CTRL_FIRMWARE_BYTES, CTRL_HEADER_BYTES, CTRL_INFO_REPORT, CTRL_MAX_PAGES, CTRL_PAGE_BYTES, CTRL_PAGE_REPLY_BYTES, CTRL_SEL, CTRL_TEST, telemetryPages } from "./controllerInfo";
 
 const DEFERRED = new Set([0x02, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0e]);
@@ -272,6 +273,19 @@ export class SimulatedDongle implements Ds5Transport {
   private pending: { func: number; arg: number; arg2?: number; polls: number } | null = null;
   private core1Loops = 1234;
 
+  // Tension (protocol 1.23, firmware tension.cpp): the staged set, the saved
+  // sets (the flash), the saved choice and the one for now, and Feel it.
+  readonly tension = {
+    staged: new Uint8Array(SET_BODY_BYTES),
+    slots: new Array<Uint8Array | null>(TENSION_SLOTS).fill(null),
+    saved: 0xff,
+    now: 0xff,
+    temporary: false,
+    feel: null as Uint8Array | null,
+    newerStore: false, // the sets were saved by newer firmware: read-only
+    paused: false,
+  };
+
   constructor(private readonly opts: SimulatedDongleOptions = {}) {
     this.oledScreen = opts.live ? 0 : 2;
     this.serial = opts.serial ?? "E6614103E7A1B2C3";
@@ -403,6 +417,7 @@ export class SimulatedDongle implements Ds5Transport {
   async getReport(reportId: number, length: number): Promise<Uint8Array> {
     if (this.gone) throw new DeviceGoneError();
     if ((reportId & 0xff) === CTRL_INFO_REPORT && this.minor >= 12) return this.controllerInfo(reportId >> 8).subarray(0, length);
+    if ((reportId & 0xff) === TENSION_REPORT && this.minor >= 23) return this.tensionGet(reportId >> 8, length);
     switch (reportId) {
       case 0xf0:
         return (this.opts.live ? this.liveInput() : this.input).slice(0, length);
@@ -624,6 +639,11 @@ export class SimulatedDongle implements Ds5Transport {
       else this.ctrlTest = { state: 1, dev, action, pages, request: (this.ctrlTest.request + 1) & 0xff, polls: this.opts.pendingPolls ?? 1, block: new Uint8Array(CTRL_MAX_PAGES * CTRL_PAGE_BYTES) };
     } else if (func === 0x12 && this.minor >= 8) {
       this.tempCurves = null; // 1.10: a game's stick curves end too
+      // 1.23 (owner decision 2026-11-15): a game's Tension choice ends too.
+      if (this.minor >= 23 && this.tension.temporary) {
+        this.tension.now = this.tension.saved;
+        this.tension.temporary = false;
+      }
       this.extra = this.flashExtra.slice();
       this.remap = this.flashRemap.slice();
       this.remapTemporary = false;
@@ -638,6 +658,8 @@ export class SimulatedDongle implements Ds5Transport {
         this.pending = { func, arg, arg2, polls: this.opts.pendingPolls ?? 1 };
         this.lastResult = RESULT.pending;
       }
+    } else if (func >= 0x1c && func <= 0x20 && this.minor >= 23) {
+      this.tensionSet(func, payload);
     } else if (func === 0x1b && this.minor >= 21) {
       // 1.21 display choice: [display] 0 none, 1 Pico-OLED-1.3; saved for the next start.
       if (payload.length < 2 || arg > 1) this.lastResult = RESULT.invalid;
@@ -680,6 +702,130 @@ export class SimulatedDongle implements Ds5Transport {
     } else if (func !== 0x03) {
       this.lastResult = RESULT.invalid;
     }
+  }
+
+  // ---- Tension (protocol 1.23): firmware tension.cpp's checks, then cmd_task()'s flash writes ----
+
+  private tensionCrcOk(a: Uint8Array): boolean {
+    if (a.length < 4) return false;
+    const crc = (a[0] | (a[1] << 8) | (a[2] << 16) | (a[3] << 24)) >>> 0;
+    return crc === crc32(this.tension.staged) && decodeSetBody(this.tension.staged) !== null;
+  }
+
+  private tensionSet(func: number, payload: Uint8Array): void {
+    const a = payload.subarray(1);
+    const t = this.tension;
+    const defer = (slot: number) => {
+      this.pending = { func, arg: slot, polls: this.opts.pendingPolls ?? 1 };
+      this.lastResult = RESULT.pending;
+    };
+    if (a.length < 2 || a[0] !== 1) this.lastResult = RESULT.invalid;
+    else if (func === 0x1c) {
+      if (a.length < 3 || a[1] + (a.length - 2) > SET_BODY_BYTES) this.lastResult = RESULT.invalid;
+      else t.staged.set(a.subarray(2), a[1]);
+    } else if (func === 0x1d) {
+      if (a.length < 6 || a[1] >= TENSION_SLOTS || !this.tensionCrcOk(a.subarray(2))) this.lastResult = RESULT.invalid;
+      else if (t.newerStore) this.lastResult = RESULT.failed;
+      else defer(a[1]);
+    } else if (func === 0x1e) {
+      if (a[1] > 1 || (a[1] === 1 && (a.length < 6 || !this.tensionCrcOk(a.subarray(2))))) this.lastResult = RESULT.invalid;
+      else t.feel = a[1] === 1 ? t.staged.slice() : null;
+    } else if (func === 0x1f) {
+      if (a[1] >= TENSION_SLOTS) this.lastResult = RESULT.invalid;
+      else if (t.newerStore) this.lastResult = RESULT.failed;
+      else defer(a[1]);
+    } else {
+      const slot = a[1];
+      const ok = slot === 0xff || slot === 0xfe || (slot < TENSION_SLOTS && t.slots[slot] !== null);
+      if (a.length < 3 || a[2] > 1 || !ok) this.lastResult = RESULT.invalid;
+      else if (slot === 0xfe) {
+        t.now = t.saved;
+        t.temporary = false;
+      } else if (a[2] === 1) {
+        t.now = slot;
+        t.temporary = true;
+      } else if (t.newerStore) this.lastResult = RESULT.failed;
+      else defer(slot);
+    }
+  }
+
+  private tensionDeferred(func: number, slot: number): void {
+    const t = this.tension;
+    if (this.opts.saveFails) {
+      this.lastResult = RESULT.failed;
+      return;
+    }
+    if (func === 0x1d) t.slots[slot] = t.staged.slice();
+    else if (func === 0x1f) {
+      t.slots[slot] = null;
+      if (t.saved === slot) t.saved = 0xff;
+      if (t.now === slot) {
+        t.now = 0xff;
+        t.temporary = false;
+      }
+    } else {
+      t.saved = slot < TENSION_SLOTS && !t.slots[slot] ? 0xff : slot;
+      t.now = t.saved;
+      t.temporary = false;
+    }
+  }
+
+  // The set that runs (Feel it, then the choice now), decoded.
+  private tensionRunning(): { l2: TensionProgram; r2: TensionProgram } | null {
+    const t = this.tension;
+    const body = t.feel ?? (t.now < TENSION_SLOTS ? t.slots[t.now] : null);
+    return body ? decodeSetBody(body) : null;
+  }
+
+  // GET 0xE9: status, list or a chunk of a saved set. Like the firmware, a
+  // request shorter than the reply gets nothing. The stage running is the
+  // first one whose window holds the pull and that needs no hold time (the
+  // simulation keeps no timers), and no game sends effects, so Fill in is
+  // Tension's at once; the 11 effect bytes are left zero (not encoded here).
+  private tensionGet(sel: number, length: number): Uint8Array {
+    const t = this.tension;
+    const flags = (this.tensionRunning() ? 0x01 : 0) | (t.feel ? 0x02 : 0) | (t.temporary ? 0x04 : 0) | (t.newerStore ? 0x08 : 0) | (t.paused ? 0x10 : 0);
+    if (sel === 0x00) {
+      if (length < 38) return new Uint8Array(0);
+      const out = new Uint8Array(38);
+      out.set([0x54, 0x4e, 1, flags, t.saved, t.now, TENSION_SLOTS, 4]);
+      const run = this.tensionRunning();
+      const input = this.opts.live ? this.liveInput() : this.input;
+      // loop: HOT-PATH-OK — dev/test fake only; N = 2 triggers per status read
+      [run?.l2, run?.r2].forEach((pg, i) => {
+        const o = 8 + 15 * i;
+        const pull = this.controllerConnected ? input[4 + i] : 0;
+        // loop: HOT-PATH-OK — dev/test fake only; N ≤ 4 stages
+        const stage = pg ? pg.stages.findIndex((s) => s.holdTenths === 0 && pull >= s.pullMin && pull <= s.pullMax) : -1;
+        out[o] = pg && pg.stages.length ? 1 : 0;
+        out[o + 1] = stage < 0 ? 0xff : stage;
+        out[o + 2] = pull;
+      });
+      return out;
+    }
+    if (sel === 0x01) {
+      if (length < 38) return new Uint8Array(0);
+      const out = new Uint8Array(38);
+      const v = new DataView(out.buffer);
+      out.set([1, TENSION_SLOTS, 0, t.saved, t.now, flags]);
+      // loop: NOT-WORTH — dev/test fake only; N = 8 slots per list read
+      t.slots.forEach((body, i) => {
+        if (!body) return;
+        out[2] |= 1 << i;
+        v.setUint32(6 + 4 * i, crc32(body), true);
+      });
+      return out;
+    }
+    const chunk = sel & 0x03;
+    if ((sel & 0xe0) !== 0x40 || chunk > 2) return new Uint8Array(0);
+    const want = TENSION_CHUNK_REPLY_BYTES[chunk];
+    if (length < want) return new Uint8Array(0);
+    const slot = (sel >> 2) & 0x07;
+    const body = t.slots[slot] ?? new Uint8Array(SET_BODY_BYTES);
+    const out = new Uint8Array(want);
+    out.set([1, slot, chunk, t.slots[slot] ? 1 : 0]);
+    out.set(body.subarray(TENSION_CHUNK_AT(chunk), TENSION_CHUNK_AT(chunk) + want - 4), 4);
+    return out;
   }
 
   // GET 0xEB: the header (which also advances a running test, like the
@@ -750,7 +896,10 @@ export class SimulatedDongle implements Ds5Transport {
       this.flashTail = this.tail.slice();
       this.powerFlags = 0x01;
       this.hostGen++;
-    } else if (func === 0x0a) this.lastTrigger = arg;
+    } else if (func === 0x0a) {
+      this.lastTrigger = arg;
+      this.tension.paused = arg !== 0; // 1.23: a preset other than Off pauses Tension, Off resumes it
+    }
     else if (func === 0x0e) {
       if (arg2 === 0) this.gripStops++;
       else {
@@ -765,6 +914,7 @@ export class SimulatedDongle implements Ds5Transport {
       if (this.opts.saveFails) this.lastResult = RESULT.failed;
       else this.powerFlags = arg; // saved on its own, nothing else
     } else if (func === 0x18) this.pressKey(arg & 1, (arg & 2) !== 0);
+    else if (func === 0x1d || func === 0x1f || func === 0x20) this.tensionDeferred(func, arg);
     else if (func === 0x19) {
       // loop: NOT-WORTH — dev/test fake only; N = 9 button names, one press
       const button = (Object.keys(OLED_PAD_BUTTONS) as OledPadButton[]).find((b) => OLED_PAD_BUTTONS[b] === arg)!;
@@ -882,6 +1032,7 @@ export class SimulatedDongle implements Ds5Transport {
       out[49] = 0x01 | 0x02; // FEATURES4: board id, identify (1.20)
       if (minor >= 21) out[49] |= 0x04 | 0x08; // FEATURES4: firmware identity 0xEA, display choice 0xF6 0x1B (1.21)
       if (minor >= 22) out[49] |= 0x10 | 0x20 | 0x40; // FEATURES4: 1000 Hz polling, audio report choice, dock disconnect (1.22)
+      if (minor >= 23) out[49] |= 0x80; // FEATURES4: Tension, 0xF6 0x1C..0x20 and GET 0xE9 (1.23)
       // loop: HOT-PATH-OK — dev/test fake only; N = 8 id bytes
       for (let i = 0; i < 8; i++) out[50 + i] = parseInt(this.boardId.slice(i * 2, i * 2 + 2), 16) || 0;
     }

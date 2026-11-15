@@ -8,6 +8,30 @@ import { DeviceGoneError, MAX_REPORT_PAYLOAD, type Ds5Transport, OLED_MIRROR_BYT
 import { decodeInputReport, type InputReport } from "../oled/inputReport";
 import { KeyedError } from "../errorText";
 import {
+  crc32,
+  crcBytes,
+  decodeSetBody,
+  decodeTensionChunk,
+  decodeTensionList,
+  decodeTensionStatus,
+  encodeSetBody,
+  SET_BODY_BYTES,
+  TENSION_BACK_TO_SAVED,
+  TENSION_CHUNK_AT,
+  TENSION_CHUNK_REPLY_BYTES,
+  TENSION_LIST_BYTES,
+  TENSION_NONE,
+  TENSION_SEL,
+  TENSION_STAGE_CHUNK,
+  TENSION_STATUS_BYTES,
+  TENSION_WIRE_VER,
+  tensionChunkSel,
+  tensionReport,
+  type TensionList,
+  type TensionSet,
+  type TensionStatus,
+} from "./tension";
+import {
   CTRL_FIRMWARE_BYTES,
   CTRL_HEADER_BYTES,
   CTRL_MAX_PAGES,
@@ -39,6 +63,7 @@ export const REPORT = {
   calibration: 0xee, // protocol 1.5+, feature bit FEATURES2.calibration
   controllerInfo: 0xeb, // protocol 1.12+, feature bit FEATURES3.controllerInfo; selector in wValue's high byte
   firmwareIdentity: 0xea, // protocol 1.21+, feature bit FEATURES4.firmwareIdentity
+  tension: 0xe9, // protocol 1.23+, feature bit FEATURES4.tension; selector in wValue's high byte (tension.ts)
 } as const;
 
 // 0xF9's "no reading" byte (firmware src/rssi_poll.h kRssiNoReading).
@@ -70,6 +95,11 @@ export const FUNC = {
   oledKey: 0x18, // protocol 1.18: [key 0 KEY0 / 1 KEY1, 0 short / 1 long], pressed like the board's own keys
   oledPad: 0x19, // protocol 1.19: [button, hold ms lo, hi], a controller button for the OLED screens only (games never see it)
   identify: 0x1a, // protocol 1.20: [tenths] the "THIS ONE" screen + LED blink (0 stops; answered at once)
+  tensionStage: 0x1c, // protocol 1.23: [ver, offset, data ≤ 60] into the board's staged set (answered at once)
+  tensionSave: 0x1d, // protocol 1.23: [ver, slot, crc32 LE] saves the staged set (deferred: flash)
+  tensionFeel: 0x1e, // protocol 1.23: [ver, 1, crc32 LE] Feel it with the staged set; [ver, 0] stops it
+  tensionDelete: 0x1f, // protocol 1.23: [ver, slot] (deferred: flash)
+  tensionChoose: 0x20, // protocol 1.23: [ver, slot / 0xFF none / 0xFE back to the saved choice, temporary 0/1]
 } as const;
 
 // The commands that take the board off USB on purpose: losing it after one of
@@ -83,7 +113,7 @@ export const SUPPORTED_PROTO_MAJOR = 1;
 // under it): the firmware's PICO_PROTO_MINOR (src/cmd.h), checked against the
 // firmware repo by tests/unit/protocolLockstep.test.ts. The simulated board
 // (the tests' fake) speaks it unless told otherwise.
-export const PROTOCOL_MINOR_KNOWN = 22;
+export const PROTOCOL_MINOR_KNOWN = 23;
 
 export const IDENTITY_FEATURES = {
   remap: 0x01,
@@ -127,6 +157,7 @@ export const FEATURES4 = {
   poll1000: 0x10, // protocol 1.22: polling_rate_mode 3 = 1000 Hz (2 stays real-time)
   packetMode: 0x20, // protocol 1.22: config byte 51, the audio report choice (two frames per 0x39, or one per 0x36)
   dockDisconnect: 0x40, // protocol 1.22: config byte 52, drop the controller's link when it is docked (body 53 bytes)
+  tension: 0x80, // protocol 1.23: Tension, your own adaptive trigger effects (0xF6 0x1C..0x20, GET 0xE9; docs/TENSION.md in the firmware repo)
 } as const;
 
 // 0xEA (protocol 1.21, firmware src/fw_identity.h): what this board and its
@@ -219,6 +250,9 @@ export const supportsFeature3 = (identity: BridgeIdentity | null, minMinor: numb
 export const supportsFeature4 = (identity: BridgeIdentity | null, minMinor: number, bit: number) => supportsFeature(identity, "features4", minMinor, bit);
 // Protocol 1.20: the board can show "THIS ONE" on request (0xF6 0x1A).
 export const supportsIdentify = (identity: BridgeIdentity | null) => supportsFeature4(identity, 20, FEATURES4.identify);
+// Protocol 1.23: Tension, the board's own adaptive trigger effects.
+export const TENSION_MINOR = 23;
+export const supportsTension = (identity: BridgeIdentity | null) => supportsFeature4(identity, TENSION_MINOR, FEATURES4.tension);
 
 export interface BridgeIdentity {
   protoMajor: number;
@@ -891,6 +925,98 @@ export class Ds5BridgeClient {
 
   async readAudioCounters(): Promise<AudioCounters> {
     return decodeAudioCounters(await this.transport.getReport(REPORT.audioCounters, AUDIO_COUNTERS_BYTES));
+  }
+
+  // ---- Tension (protocol 1.23, FEATURES4.tension; the firmware's docs/TENSION.md §7) ----
+
+  get tension(): boolean {
+    const p = this.protocol;
+    return !!p && (p.major > 1 || p.minor >= TENSION_MINOR) && (p.features4 & FEATURES4.tension) !== 0;
+  }
+
+  // The board has one staged set: staging one and saving it (or feeling it)
+  // must not interleave with another stage-and-commit.
+  private tensionQueue: Promise<unknown> = Promise.resolve();
+  private tensionOp<T>(op: () => Promise<T>): Promise<T> {
+    // error: SHOWN — desktop.tension.errors.notOn via the caller's error line (the section offers Tension only when the board has it); a bug guard
+    if (!this.tension) return Promise.reject(new KeyedError("desktop.tension.errors.notOn"));
+    const run = this.tensionQueue.then(op);
+    // error: NOT-WORTH — the queue's own copy; the caller gets \`run\` with the error
+    this.tensionQueue = run.catch(() => undefined);
+    return run;
+  }
+
+  // The whole SetBody into the board's staged buffer (three SETs: 0, 60, 120); returns its CRC-32.
+  private async stageTension(set: TensionSet): Promise<number> {
+    const body = encodeSetBody(set);
+    // loop: SERIAL-REQUIRED — one HID session: three SETs in protocol order (offsets 0, 60, 120)
+    for (let at = 0; at < SET_BODY_BYTES; at += TENSION_STAGE_CHUNK) {
+      await this.command(FUNC.tensionStage, [TENSION_WIRE_VER, at, ...body.subarray(at, at + TENSION_STAGE_CHUNK)]);
+    }
+    return crc32(body);
+  }
+
+  // Saved in the board's flash in that slot (0..7).
+  saveTensionSet(slot: number, set: TensionSet): Promise<void> {
+    return this.tensionOp(async () => {
+      const crc = await this.stageTension(set);
+      await this.command(FUNC.tensionSave, [TENSION_WIRE_VER, slot, ...crcBytes(crc)]);
+    });
+  }
+
+  // Feel it: the board runs this set (unsaved) instead of its choice until
+  // stopped (null) or it restarts.
+  feelTension(set: TensionSet | null): Promise<void> {
+    return this.tensionOp(async () => {
+      if (!set) {
+        await this.command(FUNC.tensionFeel, [TENSION_WIRE_VER, 0]);
+        return;
+      }
+      const crc = await this.stageTension(set);
+      await this.command(FUNC.tensionFeel, [TENSION_WIRE_VER, 1, ...crcBytes(crc)]);
+    });
+  }
+
+  deleteTensionSet(slot: number): Promise<void> {
+    return this.tensionOp(() => this.command(FUNC.tensionDelete, [TENSION_WIRE_VER, slot]).then(() => undefined));
+  }
+
+  // Which set runs: a slot, none, or "saved" (back to the saved choice).
+  // temporary = for now only (RAM: a game's profile), else saved in flash.
+  chooseTension(slot: number | "none" | "saved", temporary: boolean): Promise<void> {
+    const b = slot === "none" ? TENSION_NONE : slot === "saved" ? TENSION_BACK_TO_SAVED : slot;
+    return this.tensionOp(() => this.command(FUNC.tensionChoose, [TENSION_WIRE_VER, b, temporary && slot !== "saved" ? 1 : 0]).then(() => undefined));
+  }
+
+  // GET 0xE9 sel 0x00: what runs now, per trigger (the live view, ~10 Hz while shown).
+  async readTensionStatus(): Promise<TensionStatus | null> {
+    if (!this.tension) return null;
+    return decodeTensionStatus(await this.transport.getReport(tensionReport(TENSION_SEL.status), TENSION_STATUS_BYTES));
+  }
+
+  // GET 0xE9 sel 0x01: which slots hold a set, their CRCs and the choices.
+  async readTensionList(): Promise<TensionList | null> {
+    if (!this.tension) return null;
+    return decodeTensionList(await this.transport.getReport(tensionReport(TENSION_SEL.list), TENSION_LIST_BYTES));
+  }
+
+  // One saved set (three chunks), null for an empty slot. Checked against
+  // \`crc\` (the list's): a set saved between two chunk reads reads as changed.
+  async readTensionSet(slot: number, crc: number): Promise<TensionSet | null> {
+    const body = new Uint8Array(SET_BODY_BYTES);
+    // loop: SERIAL-REQUIRED — one HID session: chunk reads must not interleave; 63-byte report cap
+    for (let chunk = 0; chunk < TENSION_CHUNK_REPLY_BYTES.length; chunk++) {
+      const reply = decodeTensionChunk(await this.transport.getReport(tensionReport(tensionChunkSel(slot, chunk)), TENSION_CHUNK_REPLY_BYTES[chunk]), slot, chunk);
+      if (!reply) throw new KeyedError("desktop.errors.board.short");
+      if (!reply.used) return null;
+      body.set(reply.bytes, TENSION_CHUNK_AT(chunk));
+    }
+    // error: SHOWN — desktop.tension.errors.changed via the section's error line (Retry reads again)
+    if (crc32(body) !== crc) throw new KeyedError("desktop.tension.errors.changed");
+    const set = decodeSetBody(body);
+    // error: SHOWN — desktop.tension.errors.unreadable via the section's error line: a set this app can't read (a newer layout)
+    if (!set) throw new KeyedError("desktop.tension.errors.unreadable");
+    return set;
   }
 
   // Protocol 1.22+ (the first release with them, firmware 0.9.5-dev.21): the

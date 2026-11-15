@@ -8,6 +8,7 @@ import { applyGameProfile, ProfileNotApplied, profileCaps, restoreNormal, type G
 import { settingsFrom } from "../../src/desktop/library/profileValues";
 import type { ProfileSettings } from "../../src/desktop/games/library";
 import { FakeDongle } from "../support/fakeDongle";
+import { STARTERS } from "../../src/protocol/tension";
 
 const FLASH_WRITES = new Set([0x02, 0x04, 0x09, 0x0b, 0x0d, 0x10]); // save, slot switch (saves), factory reset, narrator, calibration, saved remap
 
@@ -46,7 +47,7 @@ const profile: ProfileSettings = {
   lightbarMode: 6,
   btMicEnable: false,
 };
-const parts: GameParts = { layout: { table: Array.from({ length: 16 }, (_, i) => (i === 3 ? 0xff : i)), extra: [5, 0xff, 0xfe, 0xff] }, curves: [precise, undefined] };
+const parts: GameParts = { layout: { table: Array.from({ length: 16 }, (_, i) => (i === 3 ? 0xff : i)), extra: [5, 0xff, 0xfe, 0xff] }, curves: [precise, undefined], tension: null };
 
 describe("game profiles on the dongle (RAM only)", () => {
   it("puts every part of a profile on without a save, and leaving restores exactly the saved state", async () => {
@@ -142,5 +143,32 @@ describe("game profiles on the dongle (RAM only)", () => {
       expect(s.dongle.remap).toEqual(s.dongle.flashRemap);
       expect([...s.dongle.sets.map((p) => p[0])].filter((f) => FLASH_WRITES.has(f))).toEqual([]);
     }
+  });
+});
+
+describe("a game's Tension set (protocol 1.23)", () => {
+  it("is chosen for now only (0x20 temporary), and the board's saved choice comes back after it", async () => {
+    const s = await setup(23);
+    await s.client.saveTensionSet(4, STARTERS.heavy);
+    s.dongle.sets = [];
+    await applyGameProfile({ client: s.client, caps: s.caps, applyConfig: s.applyConfig, config: s.config(), normal: s.normal, profile, parts: { ...parts, tension: 4 } });
+    expect(s.dongle.tension).toMatchObject({ now: 4, temporary: true, saved: 0xff });
+    await restoreNormal({ client: s.client, caps: s.caps, applyConfig: s.applyConfig, config: s.config(), normal: s.normal });
+    expect(s.dongle.tension).toMatchObject({ now: 0xff, temporary: false });
+    // Never a flash write: no save or delete, and every 0x20 is for now or back to the saved choice.
+    expect(s.dongle.sets.some((p) => p[0] === 0x1d || p[0] === 0x1f)).toBe(false);
+    // loop: test
+    expect(s.dongle.sets.filter((p) => p[0] === 0x20).every((p) => p[3] === 1 || p[2] === 0xfe)).toBe(true);
+  });
+
+  it("a set deleted since the profile picked it is said in plain words, and the normal settings are back", async () => {
+    const s = await setup(23);
+    const failure = await applyGameProfile({ client: s.client, caps: s.caps, applyConfig: s.applyConfig, config: s.config(), normal: s.normal, profile, parts: { ...parts, tension: 6 } }).catch(
+      (e: unknown) => e,
+    );
+    expect(failure).toBeInstanceOf(ProfileNotApplied);
+    expect((failure as ProfileNotApplied).left).toBe("normal");
+    expect((failure as Error).message).toContain("desktop.tension.errors.setGone");
+    expect(s.dongle.tension.temporary).toBe(false);
   });
 });

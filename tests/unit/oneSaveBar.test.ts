@@ -29,9 +29,10 @@ describe("one save bar", () => {
     expect(offenders.map((f) => rel(f))).toEqual([]);
   });
 
-  it("no section writes a board setting at once: setPowerFlags, applyRemap, setCalibration and saved stick curves go through the drafts", () => {
-    const allowed = new Set(["src/desktop/live/boardDrafts.tsx", "src/desktop/live/useRemap.ts", "src/hooks/useDs5Bridge.ts"]);
-    const WRITES = /\.(setPowerFlags|applyRemap|setCalibration)\(|applyRemapExtra\([^)]*false\)|applyStickCurves\([^)]*false\)/; // a game profile's temporary writes (true) are the profile's
+  it("no section writes a board setting at once: setPowerFlags, applyRemap, setCalibration, saved stick curves and Tension's sets and saved choice go through the drafts", () => {
+    const allowed = new Set(["src/desktop/live/boardDrafts.tsx", "src/desktop/live/useRemap.ts", "src/desktop/live/tensionDraft.ts", "src/hooks/useDs5Bridge.ts"]);
+    // A game profile's temporary writes (true) are the profile's; Tension's Feel it runs a set unsaved (a test, like the trigger test).
+    const WRITES = /\.(setPowerFlags|applyRemap|setCalibration|saveTensionSet|deleteTensionSet)\(|applyRemapExtra\([^)]*false\)|applyStickCurves\([^)]*false\)|chooseTension\([^)]*false\)/;
     // loop: test
     const offenders = files(join(ROOT, "src/desktop")).filter((f) => !allowed.has(rel(f)) && WRITES.test(readFileSync(f, "utf8")));
     expect(offenders.map((f) => rel(f))).toEqual([]);

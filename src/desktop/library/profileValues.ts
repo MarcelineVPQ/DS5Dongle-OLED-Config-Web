@@ -73,6 +73,7 @@ export function gameFields(profile: ProfileSettings, normal: ProfileSettings | n
 export const nonConfigParts = (s: ProfileSettings | undefined): Partial<ProfileSettings> => ({
   ...(s?.buttonLayout ? { buttonLayout: s.buttonLayout } : {}),
   ...(s?.stickCurves ? { stickCurves: s.stickCurves } : {}),
+  ...(s?.tensionSet !== undefined ? { tensionSet: s.tensionSet } : {}),
 });
 
 // Only the values that differ from normal stay; the rest use the normal settings.

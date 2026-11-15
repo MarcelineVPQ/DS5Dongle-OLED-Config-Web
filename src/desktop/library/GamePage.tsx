@@ -14,7 +14,8 @@ import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 import { BadgeCheck, Info, Layers, MessageSquareText, NotebookPen, SlidersHorizontal, Sun, Wrench } from "lucide-react";
 import { useLibrary } from "./libraryContext";
 import { layoutSummary } from "../live/layoutSummary";
-import { FEATURES2, supportsFeature2 } from "../../protocol/bridgeClient";
+import { FEATURES2, supportsFeature2, supportsTension } from "../../protocol/bridgeClient";
+import { useBoardDraftsIfAny } from "../live/boardDrafts";
 import { LauncherIcon } from "./LauncherIcon";
 import { protonApplies } from "../games/platform";
 import { knownHdr } from "../games/knownGames";
@@ -355,6 +356,7 @@ function ProfileBody({
       <ProfileSummary draft={draft} normal={normal} split={!!bridge.client?.splitHaptics} onChange={set} />
       <LayoutPicker value={draft.buttonLayout} bridge={bridge} onChange={(id) => edit({ buttonLayout: id })} />
       <CurvePicker value={draft.stickCurves} bridge={bridge} onChange={(stickCurves) => edit({ stickCurves })} />
+      <TensionPicker value={draft.tensionSet} bridge={bridge} onChange={(tensionSet) => edit({ tensionSet })} />
       <div className="dk-row-btns">
         {/* These need the board: shown only while it's connected. */}
         {bridge.isConnected && (
@@ -567,6 +569,40 @@ function CurvePicker({ value, bridge, onChange }: { value: StickCurvesSetting | 
         ))}
       {oldFirmware && <p className="dk-hint">{t("desktop.curves.needsFirmware")}</p>}
     </>
+  );
+}
+
+// A Tension set for this game (protocol 1.23): the board runs it while the
+// game does (chosen for now only, never written to its flash), then its own
+// saved choice again. The sets are made on the Controller page.
+function TensionPicker({ value, bridge, onChange }: { value: number | undefined; bridge: UseDs5BridgeResult; onChange: (slot: number | undefined) => void }) {
+  const { t } = useTranslation();
+  const tn = useBoardDraftsIfAny()?.tension ?? null;
+  const supported = supportsTension(bridge.identity);
+  const load = tn?.load;
+  // lifetime: OK — acquires nothing (reads the board's sets once per connection; the read is the draft's)
+  useEffect(() => load?.(), [load]);
+  if (!bridge.identity) return null;
+  // hint: MUST-SHOW — why a game can't pick a set: what to update
+  if (!supported) return <p className="dk-hint">{t("desktop.tension.needsFirmwareGame")}</p>;
+  if (!tn?.loaded) return null;
+  // loop: HOT-PATH-OK — N = 8 slots
+  const used = tn.sets.map((s, i) => [i, s] as const).filter(([, s]) => s);
+  // hint: MUST-SHOW — the empty state: where sets are made
+  if (!used.length && value === undefined) return <p className="dk-hint">{t("desktop.tension.noneForGame")}</p>;
+  return (
+    <Row label={t("desktop.tension.gameLabel")} info={t("desktop.tension.gameInfo")}>
+      <select className="dk-select" value={value ?? ""} onChange={(e) => onChange(e.target.value === "" ? undefined : Number(e.target.value))}>
+        <option value="">{t("desktop.tension.boardChoice")}</option>
+        {/* loop: HOT-PATH-OK — N ≤ 8 saved sets */}
+        {used.map(([i, s]) => (
+          <option key={i} value={i}>
+            {t("desktop.tension.slot", { slot: i, name: s!.name })}
+          </option>
+        ))}
+        {value !== undefined && !tn.sets[value] && <option value={value}>{t("desktop.tension.slot", { slot: value, name: t("desktop.tension.gone") })}</option>}
+      </select>
+    </Row>
   );
 }
 

@@ -624,7 +624,17 @@ const live = async (view: "overview" | "dongle" | "app") => {
 // what each section shows: its rows' labels, headings and buttons.
 const CONTROLLER_INVENTORY: Record<string, string[]> = {
   lightbar: ["desktop.lightbar.mode", "desktop.lightbar.modes.rainbow", "desktop.lightbar.favorites"],
-  triggers: ["desktop.live.pull", "desktop.settings.triggerReduce", "desktop.calib.triggersTitle", "desktop.triggers.title", "desktop.triggers.presets.weapon"],
+  triggers: [
+    "desktop.live.pull",
+    "desktop.settings.triggerReduce",
+    "desktop.calib.triggersTitle",
+    "desktop.tension.title",
+    "desktop.tension.edit",
+    "desktop.tension.starters.bow",
+    "desktop.tension.liveTitle",
+    "desktop.triggers.title",
+    "desktop.triggers.presets.weapon",
+  ],
   haptics: ["haptics.audioBufferLabel", "haptics.packetMode", "desktop.live.hapticLevel", "autoHaptics.sectionTitle", "autoHaptics.modeLabel"],
   speaker: [
     "desktop.settings.speakerLevel",

@@ -25,6 +25,7 @@ import LightbarPage, { LIGHTBAR_MODES } from "../pages/LightbarPage";
 import { AutoHapticsSection, HapticsSection, HapticsTest, MicSection, SpeakerSection, TriggerIntensitySection } from "../pages/SettingsPage";
 import SlotsPage from "../pages/SlotsPage";
 import TriggersPage from "../pages/TriggersPage";
+import { TensionLive, TensionSection } from "./Tension";
 import { usePoll } from "../usePoll";
 import { EDGE_REMAP_ROWS } from "./parts";
 import type { Remap } from "./useRemap";
@@ -83,6 +84,10 @@ export default function ControllerSections({ bridge, input, remap, buttonFocus, 
             <TriggerIntensitySection bridge={bridge} />
             {/* Trigger calibration with the triggers (IA audit C9): a setting, so before the meter and the test. */}
             <TriggerCalibration bridge={bridge} input={input} />
+            {/* Tension, the board's own trigger effects: settings, so before the meters and the test. */}
+            <TensionSection bridge={bridge} />
+            {/* Two live meters (page rule 5, Q2): what Tension runs now, then the pull, right before the test. */}
+            <TensionLive bridge={bridge} />
             <TriggerLive input={input} side={trigger} />
             <TriggersPage bridge={bridge} />
           </>

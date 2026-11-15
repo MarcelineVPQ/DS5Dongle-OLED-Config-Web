@@ -4,7 +4,8 @@
 // the settings the firmware only takes as a saved write wait here as drafts
 // ("staged") until the bar's Save: button assignments (0x10), stick curves
 // (0x14), calibration (0x0D: sticks, triggers, gyroscope) and the PC sleep
-// options (0x17). The firmware applies none of these four only for now: each
+// options (0x17), and Tension's sets and saved choice (0x1D / 0x1F / 0x20,
+// tensionDraft.ts). The firmware applies none of these four only for now: each
 // write saves, so staging them changes nothing about what the board does
 // until Save, and Revert just drops the drafts.
 //
@@ -23,6 +24,7 @@ import { DEFAULT_CURVES, curvesEqual, type StickCurvePair } from "../../protocol
 import { causeText } from "../shownError";
 import { useRemap, type Remap } from "./useRemap";
 import { sameBoard, showDraftsDropped, useSlotSettings, type SlotRead } from "./slotSettings";
+import { useTensionDraft, type TensionDraft } from "./tensionDraft";
 
 export const supportsCalibration = (identity: UseDs5BridgeResult["identity"]) => supportsFeature2(identity, 5, FEATURES2.calibration);
 export const supportsStickCurves = (identity: UseDs5BridgeResult["identity"]) => supportsFeature2(identity, 10, FEATURES2.stickCurves);
@@ -144,6 +146,7 @@ export interface BoardDrafts {
   calibration: SlotDraft<Calibration>;
   curves: SlotDraft<StickCurvePair>;
   power: PowerDraft;
+  tension: TensionDraft;
   // A game's profile is on: buttons and curves go to it, not to the board.
   inProfile: boolean;
   // Anything staged for the board's Save (buttons and curves only outside a profile).
@@ -159,9 +162,10 @@ export function useBoardDraftsState(bridge: UseDs5BridgeResult, { inProfile, app
   const calibration = useSlotDraft(bridge, supportsCalibration(bridge.identity), DEFAULT_CALIBRATION, readCal, writeCal, sameCal);
   const curves = useSlotDraft(bridge, supportsStickCurves(bridge.identity), DEFAULT_CURVES, readCurves, writeCurves, sameCurves, t("desktop.curves.readFailed"));
   const power = usePowerDraft(bridge);
+  const tension = useTensionDraft(bridge);
   const remapStaged = !inProfile && remap.dirty;
   const curvesStaged = !inProfile && curves.dirty;
-  const staged = remapStaged || curvesStaged || calibration.dirty || power.dirty;
+  const staged = remapStaged || curvesStaged || calibration.dirty || power.dirty || tension.dirty;
   const saveStaged = useCallback(async () => {
     let ok = true;
     // loop: SERIAL-REQUIRED — the board's vendor interface is one session: one write after another
@@ -170,11 +174,12 @@ export function useBoardDraftsState(bridge: UseDs5BridgeResult, { inProfile, app
       [curvesStaged, curves.save],
       [calibration.dirty, calibration.save],
       [power.dirty, power.save],
+      [tension.dirty, tension.save],
     ] as const) {
       if (on && !(await part())) ok = false;
     }
     return ok;
-  }, [remapStaged, remap.apply, curvesStaged, curves.save, calibration.dirty, calibration.save, power.dirty, power.save]);
+  }, [remapStaged, remap.apply, curvesStaged, curves.save, calibration.dirty, calibration.save, power.dirty, power.save, tension.dirty, tension.save]);
   const revertStaged = useCallback(() => {
     if (!inProfile) {
       remap.revert();
@@ -182,8 +187,12 @@ export function useBoardDraftsState(bridge: UseDs5BridgeResult, { inProfile, app
     }
     calibration.revert();
     power.revert();
-  }, [inProfile, remap, curves, calibration, power]);
-  return useMemo(() => ({ remap, calibration, curves, power, inProfile, staged, saveStaged, revertStaged }), [remap, calibration, curves, power, inProfile, staged, saveStaged, revertStaged]);
+    tension.revert();
+  }, [inProfile, remap, curves, calibration, power, tension]);
+  return useMemo(
+    () => ({ remap, calibration, curves, power, tension, inProfile, staged, saveStaged, revertStaged }),
+    [remap, calibration, curves, power, tension, inProfile, staged, saveStaged, revertStaged],
+  );
 }
 
 export const BoardDraftsContext = createContext<BoardDrafts | null>(null);
@@ -203,6 +212,9 @@ export function BoardDraftsProvider({
   const drafts = useBoardDraftsState(bridge, { inProfile, appliedStamp });
   return createElement(BoardDraftsContext.Provider, { value: drafts }, children);
 }
+
+// The drafts where they may be missing (a game page rendered on its own in a test).
+export const useBoardDraftsIfAny = (): BoardDrafts | null => useContext(BoardDraftsContext);
 
 export function useBoardDrafts(): BoardDrafts {
   const drafts = useContext(BoardDraftsContext);

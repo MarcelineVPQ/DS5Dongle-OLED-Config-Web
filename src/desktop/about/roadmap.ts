@@ -328,7 +328,12 @@ export const ROADMAP: RoadmapItem[] = [
     areas: ["dongle"],
   },
   { column: "planned", title: "Per-trigger resistance strength", text: "Make each trigger's adaptive resistance stronger or weaker than the game sets it.", areas: ["controller"] },
-  { column: "planned", title: "Trigger Lab", text: "Build your own trigger effects for L2 and R2, save them as sets, and use them in games.", areas: ["controller"] },
+  {
+    column: "progress",
+    title: "Tension",
+    text: "Your own adaptive trigger effects: L2 and R2 as one named set, effects that build with how far you pull and how long you hold, run by {{device}} with or without the app, and picked per game.",
+    areas: ["controller"],
+  },
   { column: "planned", title: "Per-controller settings", text: "Each paired controller keeps its own haptic feedback, light bar, button assignments and speaker settings.", areas: ["controller"] },
   { column: "planned", title: "Edge on-controller profiles", text: "Read, edit and switch the profiles stored on a DualSense Edge.", areas: ["controller"] },
   { column: "planned", title: "Limited-edition looks", text: "Show a limited-edition controller's colors on the drawing; one edition first, to try it.", areas: ["controller"] },
