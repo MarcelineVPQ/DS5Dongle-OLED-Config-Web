@@ -6,6 +6,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ## [Unreleased]
 
+## [0.9.5-dev.22] - 2026-11-15
+
 ### Added
 
 - **Button layouts hold everything** (firmware protocol 1.24). The Button layouts you already have now hold, for every button, a **Press**, **Hold** (with its time), **Double press**, **With PS** (pressed together with the PS button), **Toggle** and **Turbo**. Each of them can be a controller button, a keyboard key (with Ctrl / Shift / Alt / Win), a mouse button, mouse movement or the wheel, a layer, the gyro, or nothing (Disabled). A layout also holds up to three **layers** over the base, **Gyro as mouse** (or as the right stick; in the Gyroscope section) and its own **trigger effects** (Tension, below).
