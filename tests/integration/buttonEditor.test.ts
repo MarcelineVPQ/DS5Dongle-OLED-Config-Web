@@ -17,7 +17,7 @@ import { DEFAULT_CONFIG } from "../../src/protocol/config";
 import { decodeSetWire } from "../../src/protocol/tension";
 import type { UseDs5BridgeResult } from "../../src/hooks/useDs5Bridge";
 import { BoardDraftsProvider, useBoardDrafts, type BoardDrafts } from "../../src/desktop/live/boardDrafts";
-import { ButtonAssignments, LayerTabs, newlyPressed } from "../../src/desktop/live/ButtonEditor";
+import { ButtonAssignments, keyToMap, LayerTabs, newlyPressed } from "../../src/desktop/live/ButtonEditor";
 import { layoutBadges } from "../../src/desktop/live/buttonWords";
 import { FakeDongle, type FakeDongleOptions } from "../support/fakeDongle";
 
@@ -176,11 +176,57 @@ describe("Button assignments opens on the layout editor", () => {
     });
     act(() => focused().dispatchEvent(new KeyboardEvent("keydown", { key: "F5", code: "F5", ctrlKey: true, bubbles: true })));
     expect(seen.d!.layout.layout.buttons!.entries[0].double).toEqual({ kind: TARGET_KIND.key, a: 0x3e, b: 0x01 });
-    // Keys and mouse are off on the board: said, with the one-click fix.
-    expect(container!.textContent).toContain(i18n.t("desktop.buttons.warn.needsKeys"));
-    expect(button(i18n.t("desktop.buttons.turnOn"))).toBeTruthy();
+    // No switch to find: the save bar turns keys and mouse on by itself (saveBar.test.ts), so nothing asks.
+    expect(container!.textContent).not.toContain(i18n.t("desktop.buttons.warn.reconnect"));
     act(() => button(i18n.t("desktop.buttons.resetButton"))!.click());
     expect(seen.d!.layout.layout.buttons!.entries).toEqual([]);
+  });
+
+  it("press a key = mapped: a picked button takes the key pressed on the PC's keyboard as its Press, with the modifiers held; Escape un-picks", async () => {
+    await open();
+    pickButton(SOURCE.triangle);
+    expect(container!.textContent).toContain(i18n.t("desktop.buttons.pressKeyHint"));
+    const press = () => seen.d!.layout.layout.buttons!.entries.find((e) => e.source === SOURCE.triangle)?.press;
+    const key = (init: KeyboardEventInit, on: Element = document.body) => act(() => void on.dispatchEvent(new KeyboardEvent("keydown", { bubbles: true, cancelable: true, ...init })));
+    key({ key: "g", code: "KeyG" });
+    expect(press()).toEqual({ kind: TARGET_KIND.key, a: 0x0a, b: 0 });
+    expect(rowButton("press").textContent).toContain("G");
+    // A real combo: Ctrl + Shift + G.
+    key({ key: "G", code: "KeyG", ctrlKey: true, shiftKey: true });
+    expect(press()).toEqual({ kind: TARGET_KIND.key, a: 0x0a, b: 0x03 });
+    // Not taken: an app shortcut (Ctrl alone), Tab, a modifier alone, a key typed in a text field.
+    key({ key: "s", code: "KeyS", ctrlKey: true });
+    key({ key: "Tab", code: "Tab" });
+    key({ key: "Shift", code: "ShiftLeft", shiftKey: true });
+    key({ key: "h", code: "KeyH" }, container!.querySelector("input.tn-name")!);
+    expect(press()).toEqual({ kind: TARGET_KIND.key, a: 0x0a, b: 0x03 });
+    // Escape un-picks: back to the Changed list, and keys go nowhere.
+    key({ key: "Escape", code: "Escape" });
+    expect(container!.textContent).not.toContain(i18n.t("desktop.buttons.does", { button: "Triangle △" }));
+    expect(container!.textContent).not.toContain(i18n.t("desktop.buttons.pressKeyHint"));
+    key({ key: "f", code: "KeyF" });
+    expect(press()).toEqual({ kind: TARGET_KIND.key, a: 0x0a, b: 0x03 });
+  });
+
+  it("press a key: a focused control keeps its own keys (a select always, others after Tab); a popover's keys stay its own", () => {
+    const at = (el: Element, init: KeyboardEventInit) => {
+      const e = new KeyboardEvent("keydown", init);
+      Object.defineProperty(e, "target", { value: el });
+      return e;
+    };
+    const select = document.createElement("select");
+    const btn = document.createElement("button");
+    const pop = document.createElement("div");
+    pop.setAttribute("role", "dialog");
+    const inPop = pop.appendChild(document.createElement("button"));
+    expect(keyToMap(at(select, { key: "ArrowDown", code: "ArrowDown" }), true)).toBeNull();
+    expect(keyToMap(at(select, { key: "g", code: "KeyG" }), true)).toEqual({ kind: TARGET_KIND.key, a: 0x0a, b: 0 });
+    expect(keyToMap(at(btn, { key: " ", code: "Space" }), false)).toBeNull();
+    expect(keyToMap(at(btn, { key: " ", code: "Space" }), true)).toEqual({ kind: TARGET_KIND.key, a: 0x2c, b: 0 });
+    expect(keyToMap(at(inPop, { key: "g", code: "KeyG" }), true)).toBeNull();
+    expect(keyToMap(at(inPop, { key: "Escape", code: "Escape" }), true)).toBeNull();
+    expect(keyToMap(at(btn, { key: "g", code: "KeyG", metaKey: true }), true)).toBeNull();
+    expect(keyToMap(at(btn, { key: "g", code: "KeyG", metaKey: true, altKey: true }), true)).toEqual({ kind: TARGET_KIND.key, a: 0x0a, b: 0x0c });
   });
 
   it("layers: + Layer adds a tab; a button is same as base until switched off; Delete layer removes it", async () => {

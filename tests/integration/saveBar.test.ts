@@ -33,6 +33,7 @@ let m: {
   acc: typeof import("../../src/desktop/accordion/useAccordion");
   shownError: typeof import("../../src/desktop/shownError");
   tension: typeof import("../../src/protocol/tension");
+  toast: typeof import("../../src/desktop/toast");
 };
 
 beforeAll(async () => {
@@ -49,6 +50,7 @@ beforeAll(async () => {
     acc: await import("../../src/desktop/accordion/useAccordion"),
     shownError: await import("../../src/desktop/shownError"),
     tension: await import("../../src/protocol/tension"),
+    toast: await import("../../src/desktop/toast"),
   };
   await m.i18n.changeLanguage("en");
 });
@@ -85,9 +87,11 @@ const FW = {
 const NO_PROFILE = { active: null, editing: null, profileDirty: false, revertToProfile: async () => undefined, saveToProfile: async () => true };
 let drafts: import("../../src/desktop/live/boardDrafts").BoardDrafts | null = null;
 let notice: string | null = null;
+let toasts: readonly { text: string }[] = [];
 function Probe() {
   drafts = m.drafts.useBoardDrafts();
   notice = m.shownError.useShownError();
+  toasts = m.toast.useToasts();
   return null;
 }
 // The Controller page as DesktopApp shows it: the board's drafts, the page and the bar.
@@ -360,6 +364,44 @@ describe("the save bar", () => {
       expect(boardCross()).toBe(saved); // nothing written to the board meanwhile
       expect(notice).toBeNull();
     });
+  });
+
+  // Keys and mouse have no switch (protocol 1.24): Save decides them from the
+  // layouts on the board and reconnects the board's USB when that changes.
+  it("keys and mouse, decided by Save: nothing without a key target; a key turns them on and reconnects, with one notice; none left turns them off", async () => {
+    await live();
+    const client = bridgeNow!.client!;
+    const reconnects = vi.spyOn(client, "reconnectUsb");
+    const keysSaved = async () => ((await client.identity()).keysMouseFlags ?? 0) & 0x04;
+    const save = async () => {
+      act(() => m.toast.clearToasts());
+      await act(async () => barButton(t("desktop.bar.save")).click());
+      // loop: test — until the save (and a reconnect) is done
+      for (let i = 0; i < 100 && (bridgeNow!.operation || drafts!.staged); i++) await wait(10);
+      await wait(50);
+    };
+    // No key target anywhere: the USB stays exactly as it was (a button the board's Cross doesn't press yet, so Save has something to write).
+    const other = boardCross() === 12 ? 14 : 12;
+    await stageCross(other);
+    await save();
+    expect(reconnects).not.toHaveBeenCalled();
+    expect(await keysSaved()).toBe(0);
+    expect(dongle().keysMouseUp).toBe(false);
+    // Cross picked: G pressed on the PC's keyboard is its Press; Save turns keys and mouse on and reconnects.
+    act(() => document.body.dispatchEvent(new KeyboardEvent("keydown", { key: "g", code: "KeyG", bubbles: true, cancelable: true })));
+    expect(drafts!.layout.layout.buttons!.entries.find((e) => e.source === CROSS)?.press).toEqual({ kind: 2, a: 0x0a, b: 0 }); // TARGET_KIND.key, HID usage G
+    await save();
+    expect(reconnects).toHaveBeenCalledTimes(1);
+    expect(await keysSaved()).toBe(0x04);
+    expect(dongle().keysMouseUp).toBe(true);
+    expect(toasts.map((x) => x.text)).toEqual([t("desktop.bar.keysOn")]);
+    // Back to a controller button: no key target left, so off, reconnected again.
+    await stageCross(other);
+    await save();
+    expect(reconnects).toHaveBeenCalledTimes(2);
+    expect(await keysSaved()).toBe(0);
+    expect(dongle().keysMouseUp).toBe(false);
+    expect(toasts.map((x) => x.text)).toEqual([t("desktop.bar.keysOff")]);
   });
 
   it("a game's profile on: the bar saves to the profile, nothing staged for the board is written", async () => {

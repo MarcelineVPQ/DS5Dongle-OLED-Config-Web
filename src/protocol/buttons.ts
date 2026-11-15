@@ -638,6 +638,12 @@ export function legacyFromPart(part: ButtonPart): { table: number[]; extra: numb
 // loop: HOT-PATH-OK — N = 4 rows per entry
 const ALL_TARGETS = (e: ButtonEntry) => [e.press, e.hold, e.double, e.withPs].filter((t): t is Target => !!t);
 
+const isKeyish = (t: Target) => t.kind === TARGET_KIND.key || t.kind === TARGET_KIND.mouseButton || t.kind === TARGET_KIND.mouseMove;
+// A layout that needs the board's keyboard + mouse interface (config byte 53):
+// a key, mouse-button or mouse-motion target anywhere, or the gyro as the mouse.
+// loop: HOT-PATH-OK — N ≤ 61 entries × 4 rows, per edit (and once per layout on Save)
+export const needsKeysMouse = (part: ButtonPart) => part.entries.some((e) => ALL_TARGETS(e).some(isKeyish)) || part.gyro?.mode === 1;
+
 export interface PressWarnings {
   noCross: boolean; // nothing presses ✕ in the base
   noCircle: boolean; // nothing presses ○ in the base
@@ -671,15 +677,13 @@ export function pressWarnings(part: ButtonPart, layer = 0): PressWarnings {
   });
   // loop: HOT-PATH-OK — N ≤ 61 entries, per edit
   const inLayer = SOURCES.map((_, s) => effectiveEntry(part, layer, s)).filter((e): e is ButtonEntry => !!e);
-  const isKeyish = (t: Target) => t.kind === TARGET_KIND.key || t.kind === TARGET_KIND.mouseButton || t.kind === TARGET_KIND.mouseMove;
   return {
     noCross: !reaches(SOURCE.cross),
     noCircle: !reaches(SOURCE.circle),
     duplicates,
     // loop: HOT-PATH-OK — N ≤ 22 entries, per edit
     psCost: inLayer.some((e) => !!e.withPs),
-    // loop: HOT-PATH-OK — N ≤ 61 entries × 4 rows, per edit
-    needsKeys: part.entries.some((e) => ALL_TARGETS(e).some(isKeyish)) || part.gyro?.mode === 1,
+    needsKeys: needsKeysMouse(part),
     // loop: HOT-PATH-OK — N ≤ 22 entries × 4 rows, per edit
     sixKeys: inLayer.filter((e) => ALL_TARGETS(e).some((t) => t.kind === TARGET_KIND.key && t.a !== 0)).length > 6,
     full: poolBytes(part) > BUTTON_POOL_BYTES,

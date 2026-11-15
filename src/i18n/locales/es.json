@@ -99,6 +99,8 @@
       "unsaved": "Aplicado {{device_a}}, aún sin guardar: los cambios se pierden al apagarse.",
       "staged": "Aún sin guardar: Guardar pone tus cambios en {{device}}.",
       "saved": "Todos los cambios guardados en {{device}}.",
+      "keysOn": "Teclas del teclado activadas: {{device}} se ha reconectado.",
+      "keysOff": "Teclas del teclado desactivadas: {{device}} se ha reconectado.",
       "revert": "Revertir",
       "save": "Guardar en {{device}}",
       "profileActive": "Perfil de {{title}} activo",
@@ -174,11 +176,7 @@
       "pollRealTime": "Tiempo real",
       "pollRateInfo": "1000 Hz envía el último estado del mando cada milisegundo. Tiempo real envía cada informe Bluetooth en cuanto llega.",
       "dockDisconnect": "Desconectar en la base de carga",
-      "dockDisconnectInfo": "Corta la conexión Bluetooth del mando cuando lo pones en una base de carga o dock. Pulsa el botón PS para volver a conectarlo.",
-      "keysMouse": "Teclas y ratón desde el mando",
-      "keysMouseShort": "Teclas y ratón",
-      "keysMouseSub": "Se activa en la próxima conexión.",
-      "keysMouseInfo": "Activado: {{device}} también aparece en el PC como teclado y ratón, para que los botones de una distribución puedan pulsar teclas (llegan con un firmware posterior). Desactivado: el PC solo ve el mando, igual que antes. Aún no probado en todos los sistemas: en Linux puede que el teclado no tenga controlador, y macOS puede pedir configurar un teclado nuevo."
+      "dockDisconnectInfo": "Corta la conexión Bluetooth del mando cuando lo pones en una base de carga o dock. Pulsa el botón PS para volver a conectarlo."
     },
     "lightbar": {
       "mode": "Modo",
@@ -2152,7 +2150,7 @@
     },
     "buttons": {
       "warn": {
-        "reconnect": "Reconecta para activar teclas y ratón.",
+        "reconnect": "Las teclas del teclado empiezan cuando {{device}} se reconecte.",
         "noCross": "Nada pulsa ✕ ahora: los menús pueden costar.",
         "noCircle": "Nada pulsa ○ ahora: podrías quedarte en menús.",
         "duplicate": "{{other}} ya hace esto.",
@@ -2164,7 +2162,6 @@
         "doubleCostInfo": "La placa espera {{time}} después de soltar para ver si llega una segunda pulsación.",
         "psCost": "Con PS retiene el botón PS hasta que sueltas.",
         "psCostInfo": "El botón PS sale al soltar, o tras medio segundo. Steam también usa PS con otros botones.",
-        "needsKeys": "Teclas y ratón están desactivados en {{device}}.",
         "paused": "Teclas y ratón se pausan con esta ventana delante.",
         "layerNoEntry": "Ningún botón entra aún en esta capa.",
         "layerNoEntryInfo": "Elige un botón y escoge esta capa como uno de sus destinos.",
@@ -2174,6 +2171,7 @@
       "status": "{{name}} · {{count}} cambiados",
       "pick": "Botón",
       "pickHint": "Haz clic en una pieza o púlsala en el mando.",
+      "pressKeyHint": "O pulsa una tecla del teclado para asignarla.",
       "pickNone": "Botones cambiados",
       "changed": "Cambiados",
       "changedLine": "{{from}} → {{to}}",
@@ -2273,7 +2271,6 @@
         "offHeld": "Giroscopio inactivo mientras se mantiene",
         "switch": "Activar / desactivar giroscopio"
       },
-      "turnOn": "Activar",
       "live": {
         "title": "En vivo desde la placa",
         "line": "{{from}} → {{layer}} · {{type}} → el PC recibió {{to}}",

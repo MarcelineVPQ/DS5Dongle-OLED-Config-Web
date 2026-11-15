@@ -10,9 +10,9 @@
 // player picks under "Saves into"). With a game's profile on, it is that
 // game's layout in the library, saved by Save to profile (useGameProfile.ts).
 import { useCallback, useMemo, useState } from "react";
-import { emptyButtonPart, legacyFromPart, partFromLegacy, type ButtonPart } from "../../protocol/buttons";
+import { emptyButtonPart, legacyFromPart, needsKeysMouse, partFromLegacy, type ButtonPart } from "../../protocol/buttons";
 import { cleanName, decodeSetWire, encodeSetWire, setValid, SET_WIRE_BYTES, type TensionProgram, type TensionSet } from "../../protocol/tension";
-import type { ButtonLayout } from "../games/library";
+import type { ButtonLayout, LibraryFile } from "../games/library";
 import type { Remap } from "./useRemap";
 import type { TensionDraft } from "./tensionDraft";
 
@@ -133,3 +133,20 @@ export function slotOnBoard(sets: readonly (TensionSet | null)[], set: TensionSe
 export const firstFreeSlot = (sets: readonly (TensionSet | null)[]) =>
   // loop: HOT-PATH-OK — N = 8 slots
   sets.findIndex((s) => !s);
+
+// Keys and mouse, decided by the app (no switch): on when a layout that runs
+// on the board needs them: a board slot (as Save leaves them), or (forNow:
+// firmware that takes a layout sent for now, 0x22) a layout a game's profile
+// names, which is sent for now while the game runs. The board adds its
+// keyboard + mouse interface only at a USB connect, so it must be on before.
+export function keysMouseWanted(sets: readonly (TensionSet | null)[], library: LibraryFile, forNow: boolean): boolean {
+  // loop: NOT-WORTH — N = 8 slots, once per Save
+  if (sets.some((s) => !!s?.buttons && needsKeysMouse(s.buttons))) return true;
+  if (!forNow) return false;
+  // loop: NOT-WORTH — N = games with a profile (hundreds), once per Save
+  return Object.values(library.games).some((g) => {
+    const id = g.profile?.settings.buttonLayout;
+    const layout = id ? library.layouts?.[id] : undefined;
+    return !!layout && needsKeysMouse(layoutSet(layout).buttons ?? emptyButtonPart());
+  });
+}

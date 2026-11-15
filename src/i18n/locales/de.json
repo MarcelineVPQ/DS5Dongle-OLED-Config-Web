@@ -99,6 +99,8 @@
       "unsaved": "Auf {{device_akk}} angewendet, noch nicht gespeichert: Änderungen gehen beim Ausschalten verloren.",
       "staged": "Noch nicht gespeichert: Speichern legt deine Änderungen auf {{device_akk}}.",
       "saved": "Alle Änderungen auf {{device_dat}} gespeichert.",
+      "keysOn": "Tastatur-Tasten sind an: {{device}} wurde neu verbunden.",
+      "keysOff": "Tastatur-Tasten sind aus: {{device}} wurde neu verbunden.",
       "revert": "Verwerfen",
       "save": "Auf {{device_dat}} speichern",
       "profileActive": "Profil „{{title}}“ aktiv",
@@ -174,11 +176,7 @@
       "pollRealTime": "Echtzeit",
       "pollRateInfo": "1000 Hz sendet jede Millisekunde den neuesten Zustand des Controllers. Echtzeit sendet jeden Bluetooth-Bericht, sobald er ankommt.",
       "dockDisconnect": "Beim Laden in der Station trennen",
-      "dockDisconnectInfo": "Trennt die Bluetooth-Verbindung des Controllers, wenn du ihn auf eine Ladestation oder ein Dock legst. Drücke die PS-Taste, um ihn wieder zu verbinden.",
-      "keysMouse": "Tasten und Maus vom Controller",
-      "keysMouseShort": "Tasten und Maus",
-      "keysMouseSub": "Gilt ab der nächsten Verbindung.",
-      "keysMouseInfo": "An: {{device, capitalize}} erscheint am PC zusätzlich als Tastatur und Maus, damit die Tasten einer Belegung Tasten drücken können (Tastenziele kommen mit einer späteren Firmware). Aus: Der PC sieht nur den Controller, genau wie bisher. Noch nicht auf jedem System getestet: Unter Linux bekommt die Tastatur eventuell keinen Treiber, und macOS fragt eventuell, eine neue Tastatur einzurichten."
+      "dockDisconnectInfo": "Trennt die Bluetooth-Verbindung des Controllers, wenn du ihn auf eine Ladestation oder ein Dock legst. Drücke die PS-Taste, um ihn wieder zu verbinden."
     },
     "lightbar": {
       "mode": "Modus",
@@ -2152,7 +2150,7 @@
     },
     "buttons": {
       "warn": {
-        "reconnect": "Neu verbinden, um Tasten und Maus zu starten.",
+        "reconnect": "Tastatur-Tasten starten, sobald {{device}} neu verbunden ist.",
         "noCross": "Nichts drückt jetzt ✕: Menüs sind evtl. schwer bedienbar.",
         "noCircle": "Nichts drückt jetzt ○: Du kommst evtl. aus Menüs nicht raus.",
         "duplicate": "{{other}} macht das schon.",
@@ -2164,7 +2162,6 @@
         "doubleCostInfo": "Das Board wartet nach dem Loslassen {{time}}, ob ein zweiter Druck kommt.",
         "psCost": "„Mit PS“ hält die PS-Taste bis zum Loslassen zurück.",
         "psCostInfo": "Die PS-Taste geht beim Loslassen raus oder nach einer halben Sekunde. Steam nutzt PS auch zusammen mit anderen Tasten.",
-        "needsKeys": "Tasten und Maus sind auf {{device_dat}} aus.",
         "paused": "Tasten und Maus pausieren, solange dieses Fenster vorn ist.",
         "layerNoEntry": "Noch keine Taste führt in diese Ebene.",
         "layerNoEntryInfo": "Wähle eine Taste und dann diese Ebene als eines ihrer Ziele.",
@@ -2174,6 +2171,7 @@
       "status": "{{name}} · {{count}} geändert",
       "pick": "Taste",
       "pickHint": "Teil anklicken oder am Controller drücken.",
+      "pressKeyHint": "Oder Taste auf der Tastatur drücken, um sie zuzuweisen.",
       "pickNone": "Geänderte Tasten",
       "changed": "Geändert",
       "changedLine": "{{from}} → {{to}}",
@@ -2273,7 +2271,6 @@
         "offHeld": "Gyro aus, solange gehalten",
         "switch": "Gyro an / aus"
       },
-      "turnOn": "Einschalten",
       "live": {
         "title": "Live vom Board",
         "line": "{{from}} → {{layer}} · {{type}} → PC bekam {{to}}",

@@ -9,14 +9,23 @@
 // (Save to profile: the profile's settings, buttons and curves); what belongs
 // to the board (calibration, the board-wide settings) waits until the profile
 // ends, as their sections say.
+//
+// Keys and mouse (protocol 1.24, config byte 53) have no switch: Save turns
+// them on when a layout that runs on the board sends keys or moves the mouse
+// (keysMouseWanted), off when none does, and when that changes what's saved
+// it reconnects the board's USB (0xF6 0x03), since the board adds or drops
+// its keyboard + mouse interface only at a USB connect, and says so.
 import type { Ref } from "react";
 import { useTranslation } from "react-i18next";
 import type { UseDs5BridgeResult } from "../hooks/useDs5Bridge";
 import { BusyButton } from "./controls";
 import type { GameProfileState } from "./library/useGameProfile";
-import { profileTarget } from "./library/libraryContext";
+import { profileTarget, useLibrary } from "./library/libraryContext";
+import { profileCaps } from "./library/profileDongle";
 import type { BoardDrafts } from "./live/boardDrafts";
-import { announce } from "./toast";
+import { keysMouseWanted } from "./live/layoutEditor";
+import { supportsKeysMouse } from "../protocol/bridgeClient";
+import { announce, showToast } from "./toast";
 import { showError } from "./shownError";
 
 export type MainView = "controller" | "games" | "app" | "about";
@@ -36,6 +45,7 @@ interface Props {
 
 export default function SaveBar({ bridge, profiles, drafts, barRef }: Props) {
   const { t } = useTranslation();
+  const { library } = useLibrary();
   const busy = bridge.operation !== null;
   if (profiles.active)
     return (
@@ -58,7 +68,16 @@ export default function SaveBar({ bridge, profiles, drafts, barRef }: Props) {
     const staged = drafts.staged ? await drafts.saveStaged() : true;
     // error: SHOWN — desktop.errors.saveFailed (what wasn't saved is also said in its own section)
     if (!staged) showError("desktop.errors.saveFailed");
-    const config = bridge.hasUnsavedChanges ? await bridge.saveToFlash() : true;
+    // The layouts as Save leaves them on the board (only once they were read on this connection).
+    const tn = drafts.tension;
+    const keys = staged && supportsKeysMouse(bridge.identity) && tn.buttons && tn.loaded && !tn.readOnly ? keysMouseWanted(tn.sets, library, profileCaps(bridge.identity).forNow) : null;
+    const patch = keys !== null && keys !== bridge.config?.keysMouse ? { keysMouse: keys } : undefined;
+    const config = bridge.hasUnsavedChanges || patch ? await bridge.saveToFlash(patch) : true;
+    if (config && keys !== null && bridge.savedConfig && keys !== bridge.savedConfig.keysMouse) {
+      // error: SHOWN — the board's keyed USB errors (causeText) in the app's error notice (bridge.error), and Button assignments' warn.reconnect with Reconnect USB
+      if (await bridge.reconnectUsb()) showToast(keys ? "desktop.bar.keysOn" : "desktop.bar.keysOff");
+      return;
+    }
     if (staged && config) announce("desktop.bar.saved", "app_saved");
   };
   const revert = async () => {

@@ -131,7 +131,7 @@ Their choices: Auto, Speaker, Headset, Off, Built-in (de: Auto, Lautsprecher, He
 | With PS (a chord with the PS button) | With PS | Mit PS | Avec PS | Con PS | Com PS | 配合 PS 键 | PS と同時 |
 | Toggle | Toggle | Umschalten | Bascule | Alternar | Alternar | 切换 | トグル |
 | Turbo | Turbo | Turbo | Turbo | Turbo | Turbo | 连发 | ターボ |
-| Keys and mouse from the controller | Keys and mouse from the controller | Tasten und Maus vom Controller | Clavier et souris depuis la manette | Teclas y ratón desde el mando | Teclas e mouse pelo controle | 由控制器发送键盘和鼠标 | コントローラーからキーとマウス |
+| Keyboard keys (no switch: the app turns them on when a layout presses keys) | Keyboard keys | Tastatur-Tasten | Touches du clavier | Teclas del teclado | Teclas do teclado | 键盘按键 | キーボードのキー |
 | Gyro as mouse | Gyro as mouse | Gyro als Maus | Gyro en souris | Giroscopio como ratón | Giroscópio como mouse | 陀螺仪作鼠标 | ジャイロをマウスに |
 | Same as base | Same as base | Wie Basis | Comme la base | Igual que la base | Igual à base | 同基础层 | ベースと同じ |
 | Swap with | Swap with | Tauschen mit | Échanger avec | Intercambiar con | Trocar com | 与…互换 | 入れ替え |

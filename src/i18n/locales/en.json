@@ -98,6 +98,8 @@
       "unsaved": "Applied to {{device}}, not saved yet: changes are lost when it powers off.",
       "staged": "Not saved yet: Save puts your changes on {{device}}.",
       "saved": "All changes saved on {{device}}.",
+      "keysOn": "Keyboard keys are on: {{device}} reconnected.",
+      "keysOff": "Keyboard keys are off: {{device}} reconnected.",
       "revert": "Revert",
       "save": "Save to {{device}}",
       "profileActive": "{{title}} profile is active",
@@ -173,11 +175,7 @@
       "pollRealTime": "Real-time",
       "pollRateInfo": "1000 Hz sends the controller's latest state every millisecond. Real-time sends each Bluetooth report the moment it arrives.",
       "dockDisconnect": "Disconnect when docked",
-      "dockDisconnectInfo": "Turns the controller's Bluetooth connection off when you put it on a charging station or dock. Press the PS button to connect again.",
-      "keysMouse": "Keys and mouse from the controller",
-      "keysMouseShort": "Keys and mouse",
-      "keysMouseSub": "Starts the next time {{device}} connects.",
-      "keysMouseInfo": "On: {{device}} also shows up on the PC as a keyboard and mouse, so a button layout's buttons can press keys (key targets come with a later firmware). Off: the PC sees only the controller, exactly as before. Not yet tested on every system: on Linux the keyboard may get no driver, and macOS may ask you to set up a new keyboard."
+      "dockDisconnectInfo": "Turns the controller's Bluetooth connection off when you put it on a charging station or dock. Press the PS button to connect again."
     },
     "lightbar": {
       "mode": "Mode",
@@ -2151,7 +2149,7 @@
     },
     "buttons": {
       "warn": {
-        "reconnect": "Reconnect to start keys and mouse.",
+        "reconnect": "Keyboard keys start once {{device}} reconnects.",
         "noCross": "Nothing presses ✕ now: menus may be hard to use.",
         "noCircle": "Nothing presses ○ now: you may get stuck in menus.",
         "duplicate": "{{other}} already does this.",
@@ -2163,7 +2161,6 @@
         "doubleCostInfo": "The board waits {{time}} after you let go to see whether a second press comes.",
         "psCost": "With PS holds back the PS button until you let go.",
         "psCostInfo": "The PS button goes out when you let go, or after half a second. Steam also uses PS with other buttons.",
-        "needsKeys": "Keys and mouse are off on {{device}}.",
         "paused": "Keys and mouse pause while this window is in front.",
         "layerNoEntry": "No button enters this layer yet.",
         "layerNoEntryInfo": "Choose a button and pick this layer as one of its targets.",
@@ -2173,6 +2170,7 @@
       "status": "{{name}} · {{count}} changed",
       "pick": "Button",
       "pickHint": "Click a part, or press it on the controller.",
+      "pressKeyHint": "Or press a key on the keyboard to map it.",
       "pickNone": "Changed buttons",
       "changed": "Changed",
       "changedLine": "{{from}} → {{to}}",
@@ -2272,7 +2270,6 @@
         "offHeld": "Gyro off while held",
         "switch": "Gyro on / off"
       },
-      "turnOn": "Turn on",
       "live": {
         "title": "Live from the board",
         "line": "{{from}} → {{layer}} · {{type}} → PC got {{to}}",

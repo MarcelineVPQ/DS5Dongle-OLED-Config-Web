@@ -99,6 +99,8 @@
       "unsaved": "Appliqué {{device_a}}, pas encore enregistré : les changements seront perdus à l'extinction.",
       "staged": "Pas encore enregistré : Enregistrer met tes changements sur {{device}}.",
       "saved": "Tous les changements sont enregistrés sur {{device}}.",
+      "keysOn": "Touches du clavier activées : reconnexion {{device_de}} faite.",
+      "keysOff": "Touches du clavier désactivées : reconnexion {{device_de}} faite.",
       "revert": "Annuler",
       "save": "Enregistrer sur {{device}}",
       "profileActive": "Profil {{title}} actif",
@@ -174,11 +176,7 @@
       "pollRealTime": "Temps réel",
       "pollRateInfo": "1000 Hz envoie le dernier état de la manette chaque milliseconde. Temps réel envoie chaque rapport Bluetooth dès qu'il arrive.",
       "dockDisconnect": "Déconnecter sur la station de charge",
-      "dockDisconnectInfo": "Coupe la connexion Bluetooth de la manette quand vous la posez sur une station de charge ou un dock. Appuyez sur la touche PS pour la reconnecter.",
-      "keysMouse": "Clavier et souris depuis la manette",
-      "keysMouseShort": "Clavier et souris",
-      "keysMouseSub": "Actif à la prochaine connexion.",
-      "keysMouseInfo": "Activé : {{device}} apparaît aussi sur le PC comme clavier et souris, pour que les touches d'une disposition puissent taper des touches (elles arrivent avec un prochain firmware). Désactivé : le PC ne voit que la manette, exactement comme avant. Pas encore testé partout : sous Linux, le clavier risque de n'avoir aucun pilote, et macOS peut proposer de configurer un nouveau clavier."
+      "dockDisconnectInfo": "Coupe la connexion Bluetooth de la manette quand vous la posez sur une station de charge ou un dock. Appuyez sur la touche PS pour la reconnecter."
     },
     "lightbar": {
       "mode": "Mode",
@@ -2152,7 +2150,7 @@
     },
     "buttons": {
       "warn": {
-        "reconnect": "Reconnecte pour activer clavier et souris.",
+        "reconnect": "Les touches du clavier démarrent à la reconnexion {{device_de}}.",
         "noCross": "Rien n'appuie sur ✕ : les menus seront difficiles.",
         "noCircle": "Rien n'appuie sur ○ : tu risques d'être bloqué.",
         "duplicate": "{{other}} le fait déjà.",
@@ -2164,7 +2162,6 @@
         "doubleCostInfo": "La carte attend {{time}} après le relâchement pour voir si un second appui arrive.",
         "psCost": "Avec PS retient la touche PS jusqu'au relâchement.",
         "psCostInfo": "La touche PS part au relâchement, ou après une demi-seconde. Steam utilise aussi PS avec d'autres touches.",
-        "needsKeys": "Clavier et souris sont désactivés sur {{device}}.",
         "paused": "Clavier et souris en pause quand cette fenêtre est devant.",
         "layerNoEntry": "Aucune touche n'entre encore dans ce calque.",
         "layerNoEntryInfo": "Choisis une touche et prends ce calque comme l'une de ses cibles.",
@@ -2174,6 +2171,7 @@
       "status": "{{name}} · {{count}} modifiée(s)",
       "pick": "Touche",
       "pickHint": "Clique une pièce ou appuie dessus sur la manette.",
+      "pressKeyHint": "Ou appuie sur une touche du clavier pour l'assigner.",
       "pickNone": "Touches modifiées",
       "changed": "Modifiées",
       "changedLine": "{{from}} → {{to}}",
@@ -2273,7 +2271,6 @@
         "offHeld": "Gyro coupé tant que maintenu",
         "switch": "Gyro activé / désactivé"
       },
-      "turnOn": "Activer",
       "live": {
         "title": "En direct de la carte",
         "line": "{{from}} → {{layer}} · {{type}} → le PC a reçu {{to}}",

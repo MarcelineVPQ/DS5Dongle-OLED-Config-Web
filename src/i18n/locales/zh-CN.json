@@ -99,6 +99,8 @@
       "unsaved": "已应用到 {{device}}，尚未保存：断电后更改将丢失。",
       "staged": "尚未保存：点击保存会将更改写入 {{device}}。",
       "saved": "所有更改已保存到 {{device}}。",
+      "keysOn": "键盘按键已开启：{{device}} 已重新连接。",
+      "keysOff": "键盘按键已关闭：{{device}} 已重新连接。",
       "revert": "还原",
       "save": "保存到 {{device}}",
       "profileActive": "{{title}} 配置文件已启用",
@@ -174,11 +176,7 @@
       "pollRealTime": "实时",
       "pollRateInfo": "1000 Hz：每毫秒发送一次控制器的最新状态。实时：每个蓝牙报告一到就发送。",
       "dockDisconnect": "放上底座时断开",
-      "dockDisconnectInfo": "把控制器放到充电座或底座上时，断开它的蓝牙连接。按 PS 按钮即可重新连接。",
-      "keysMouse": "由控制器发送键盘和鼠标",
-      "keysMouseShort": "键盘和鼠标",
-      "keysMouseSub": "下次连接时生效。",
-      "keysMouseInfo": "开启：{{device}}在电脑上还会显示为键盘和鼠标，按键布局中的按键就能按下键盘按键（按键目标将随以后的固件提供）。关闭：电脑只看到控制器，与以前完全相同。尚未在所有系统上测试：在 Linux 上键盘可能没有驱动，macOS 可能会要求设置新键盘。"
+      "dockDisconnectInfo": "把控制器放到充电座或底座上时，断开它的蓝牙连接。按 PS 按钮即可重新连接。"
     },
     "lightbar": {
       "mode": "模式",
@@ -2134,7 +2132,7 @@
     },
     "buttons": {
       "warn": {
-        "reconnect": "重新连接以启用键盘和鼠标。",
+        "reconnect": "{{device}} 重新连接后键盘按键即可使用。",
         "noCross": "现在没有按键会按下 ✕：菜单可能难以操作。",
         "noCircle": "现在没有按键会按下 ○：可能无法退出菜单。",
         "duplicate": "{{other}} 已经有此作用。",
@@ -2146,7 +2144,6 @@
         "doubleCostInfo": "松开后，开发板会等待 {{time}}，看是否有第二次按下。",
         "psCost": "“配合 PS 键”会扣住 PS 键直到你松开。",
         "psCostInfo": "PS 键在松开时或半秒后发出。Steam 也会将 PS 键与其他按键一起使用。",
-        "needsKeys": "{{device}} 上的键盘和鼠标已关闭。",
         "paused": "此窗口在前台时，键盘和鼠标暂停。",
         "layerNoEntry": "还没有按键能进入此层。",
         "layerNoEntryInfo": "选择一个按键，并将此层设为它的目标之一。",
@@ -2156,6 +2153,7 @@
       "status": "{{name}} · 已改 {{count}} 个",
       "pick": "按键",
       "pickHint": "点击部件，或在控制器上按下它。",
+      "pressKeyHint": "或按下键盘上的键来映射。",
       "pickNone": "已更改的按键",
       "changed": "已更改",
       "changedLine": "{{from}} → {{to}}",
@@ -2254,7 +2252,6 @@
         "offHeld": "按住时关闭陀螺仪",
         "switch": "陀螺仪 开 / 关"
       },
-      "turnOn": "开启",
       "live": {
         "title": "开发板实时信息",
         "line": "{{from}} → {{layer}} · {{type}} → 电脑收到 {{to}}",

@@ -151,8 +151,9 @@ there:
 
 Inline, under the row they concern, ≤ 60 characters, detail behind ⓘ.
 `holdCost`, `doubleCost`, `psCost`, `noCross`, `noCircle`, `duplicate`,
-`needsKeys` (+ **Turn on**: drafts the Keys and mouse setting), `reconnect` (+
-**Reconnect**), `paused`, `layerNoEntry`, `full`, `sixKeys`, ⓘ-only
+`reconnect` "Keyboard keys start once {{device}} reconnects." (+ **Reconnect
+USB**, only while keys and mouse are saved on and the interface isn't up: the
+automatic reconnect after Save failed, §2.8), `paused`, `layerNoEntry`, `full`, `sixKeys`, ⓘ-only
 `promptsInfo` and `triggerEffectInfo`. Texts: `TENSION_BUTTONS.md` §7.6, with
 "set" replaced by "layout" (`full`: "This layout has no room for more
 changes."). `noLinux` waits for the USB probe's result (open question).
@@ -185,12 +186,44 @@ this slot), reworded without "set".
 Group **Gyro as mouse** (`desktop.gyroMouse.*`, [58] bit5) for the layout in
 the editor: Gyro Off / On / With a button, Moves Mouse / Right stick, Turn
 with Yaw / Roll, Speed across / up and down (1–255), Invert across / up and
-down, Steadiness (0–255), and `needsKeys` when it moves the mouse with keys and
-mouse off.
+down, Steadiness (0–255), and `reconnect` (§2.3) when it moves the mouse.
 
 ### 2.7 Pico 2 W page
 
-**Keys and mouse from the controller** stays as built (Connection to the PC).
+No keys-and-mouse switch (removed 2026-11-15, owner decision: nothing to turn on):
+Connection to the PC has the polling rate, the controller mode and Reconnect
+USB, and its status line doesn't mention keys.
+
+### 2.8 Keys just work
+
+- **Press a key = mapped.** While a button is picked (the drawing, the list,
+  or pressed on the controller) and its Press can change (not PS, not a
+  layer's same-as-base button, firmware with [58] bit 4), a key pressed on the
+  PC's keyboard sets its **Press** to that key with the modifiers held (the
+  Key tab's encoding, `keyForCode` / `heldMods`), and the hint
+  `desktop.buttons.pressKeyHint` "Or press a key on the keyboard to map it."
+  shows under the Press row. Not taken: a text field, a popover (the target
+  picker's own keys), Tab, a modifier alone, a repeat, Ctrl / ⌘ without
+  Shift or Alt (the app's shortcuts), a hidden drawer. A focused control keeps
+  its own keys (Enter, Space, arrows, Home, End, Page Up / Down): a select
+  always, other controls after a Tab (a click hands them to the mapping
+  again). **Escape** un-picks. Show all keys covers keys you can't press.
+- **The app decides keys and mouse** (config byte 53). On the save bar's Save,
+  once the staged writes succeeded and the board's layouts were read: on when
+  a board slot (as Save leaves them) or, with [58] bit 6, a layout a game's
+  profile names (sent for now while it runs) has a key, mouse-button or
+  mouse-motion target or the gyro as the mouse (`keysMouseWanted`); off when
+  none does. Saved with the config (`saveToFlash` with a patch). When the
+  saved value changed, the bar reconnects USB (0xF6 0x03) and shows one toast,
+  `desktop.bar.keysOn` / `keysOff` "Keyboard keys are on / off: {{device}}
+  reconnected.", instead of "All changes saved". Nothing is asked. With no key
+  target and keys off, Save sends exactly what it did before.
+- **A failed reconnect**: the board's error in the app's notice, and
+  `warn.reconnect` with Reconnect USB under a button that sends keys and in
+  Gyro as mouse, from identity [59] (saved on, not up).
+- **Open**: while a game's profile is on, Save to profile doesn't decide keys
+  and mouse (it must not write the game's config to flash); the next board
+  Save does.
 
 ## 3. States
 
@@ -242,9 +275,12 @@ needsFirmware, tab.controller / key / mouse / layer / gyro, target.title /
 gridHint / pressKey / pressKeyArmed / showAll / keyText / modsOnly, keyGroup.*,
 mod.ctrl / shift / alt / gui, mouse.left / right / middle / back / forward,
 move.up / down / left / right, wheel.up / wheel.down, speed, layerMode.held /
-switch, gyro.held / offHeld / switch, warn.* (§2.3), turnOn, reconnect,
+switch, gyro.held / offHeld / switch, warn.* (§2.3), pressKeyHint (§2.8),
 live.title / line / wouldSend / idle / noController / nothing / type.*,
 badge.create / options / touchpad / mouse, defaultName.
+`desktop.bar.*` adds keysOn, keysOff (§2.8). Removed: `desktop.settings.keysMouse
+/ keysMouseSub / keysMouseInfo / keysMouseShort`, `desktop.buttons.turnOn`,
+`desktop.buttons.warn.needsKeys`.
 `desktop.layers.*`: base, defaultName, add, tabs, sameAsBase, name, nameSub,
 colour, colourN, enteredBy, enteredLine, gyro, gyroMode.same / on / off, reset,
 delete, title.

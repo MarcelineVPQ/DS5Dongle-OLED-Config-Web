@@ -14,7 +14,7 @@
 import { useTranslation } from "react-i18next";
 import { Activity, Download, Lightbulb, Monitor, Power, RotateCcw, Usb } from "lucide-react";
 import type { UseDs5BridgeResult } from "../../hooks/useDs5Bridge";
-import { FEATURES3, supportsFeature3, supportsKeysMouse, type BridgeIdentity, type OledPadButton } from "../../protocol/bridgeClient";
+import { FEATURES3, supportsFeature3, type BridgeIdentity, type OledPadButton } from "../../protocol/bridgeClient";
 import { STATUS_GPIO_OFF } from "../../protocol/config";
 import { shortVersion } from "../../update/manifest";
 import UsbAccessSetup from "../UsbAccessSetup";
@@ -142,14 +142,8 @@ export default function DonglePage({ bridge, fw, identity, controllerOn, oled, r
         id="usb"
         icon={Usb}
         title={t("desktop.sections.usb")}
-        // loop: NOT-WORTH — N = 3 parts of one status line
-        status={[
-          pollNames[d.pollingRateMode] ?? "",
-          named(t, t("behavior.controllerModeLabel"), ["DS5", "Edge", "Auto"][d.controllerMode] ?? ""),
-          supportsKeysMouse(bridge.identity) ? onOff(t, t("desktop.settings.keysMouseShort"), d.keysMouse) : "",
-        ]
-          .filter(Boolean)
-          .join(" · ")}
+        // loop: NOT-WORTH — N = 2 parts of one status line
+        status={[pollNames[d.pollingRateMode] ?? "", named(t, t("behavior.controllerModeLabel"), ["DS5", "Edge", "Auto"][d.controllerMode] ?? "")].filter(Boolean).join(" · ")}
       >
         {() => (
           <>

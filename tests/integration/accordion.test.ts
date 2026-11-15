@@ -663,7 +663,8 @@ const CONTROLLER_INVENTORY: Record<string, string[]> = {
 const DONGLE_INVENTORY: Record<string, string[]> = {
   oled: ["desktop.settings.brightness", "behavior.screenDimTimeoutLabel", "behavior.screenOffTimeoutLabel", "desktop.settings.controllerWakes"],
   power: ["desktop.settings.idleDisconnect", "behavior.inactiveTimeLabel", "desktop.settings.pcSleep", "desktop.settings.sleepControllerOff"],
-  usb: ["behavior.pollingRateLabel", "behavior.controllerModeLabel", "desktop.settings.keysMouse", "actions.reconnect"],
+  // No keys-and-mouse switch: the save bar decides it from the layouts on the board (saveBar.test.ts).
+  usb: ["behavior.pollingRateLabel", "behavior.controllerModeLabel", "actions.reconnect"],
   lights: ["desktop.settings.picoLed", "desktop.settings.statusPin", "desktop.settings.statusPinGpio", "desktop.settings.statusPinMode"],
   firmware: ["desktop.setup.checkUpdates"],
   device: ["desktop.firmware.enterBootsel", "desktop.firmware.factoryReset"],
@@ -891,6 +892,12 @@ describe("the Pico 2 W page on the accordion", () => {
     counters.mockRestore();
     cpu.mockRestore();
     await inventory("dongle", DONGLE_INVENTORY);
+    // Connection to the PC (protocol 1.24 board): no switch at all, so nothing for keys and mouse to find.
+    click(head("usb"));
+    await act(() => new Promise((r) => setTimeout(r, 30)));
+    expect(container.querySelectorAll('[data-section="usb"] .dk-sec-body [role="switch"]')).toHaveLength(0);
+    expect(container.querySelector('[data-section="usb"]')!.textContent).not.toMatch(/keys and mouse/i);
+    closeOpen();
     expect(container.querySelector(".dk-split-head h2")?.textContent).toBe("Pico 2 W");
     // The dials stay in the main view.
     expect(container.querySelectorAll(".dk-split-main .dash-gauge")).toHaveLength(3);

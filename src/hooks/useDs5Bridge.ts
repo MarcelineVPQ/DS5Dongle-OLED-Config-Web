@@ -65,7 +65,9 @@ export interface UseDs5BridgeResult {
   readConfig: () => Promise<boolean>;
   // Resolves false if the dongle refused or the transfer failed (see error).
   applyConfig: () => Promise<boolean>;
-  saveToFlash: () => Promise<boolean>;
+  // Saves the board's RAM to flash; with a patch (the app's own decision, e.g.
+  // keysMouse on Save), applies it on top of the config first.
+  saveToFlash: (patch?: Partial<ConfigBody>) => Promise<boolean>;
   reconnectUsb: () => Promise<boolean>;
   // Protocol 1.14: the PC sleep options (POWER_FLAGS bits), saved on the
   // dongle right away; identity.powerFlags shows them once it has.
@@ -519,11 +521,20 @@ export function useDs5Bridge(): UseDs5BridgeResult {
     });
   }, [draft, issues.length, run, savedConfig, setUnsaved]);
 
-  const saveToFlash = useCallback(async (): Promise<boolean> => {
+  const saveToFlash = useCallback(async (patch?: Partial<ConfigBody>): Promise<boolean> => {
     if (isDirty) return false;
     return run("saving", async (c) => {
+      let saved = config;
+      if (patch && config) {
+        const next = normalizeConfig({ ...config, ...patch });
+        await c.applyConfig(next);
+        setConfig(next);
+        // Edits made meanwhile stay (and get applied next).
+        setDraft((current) => (configsEqual(current, config) ? next : current));
+        saved = next;
+      }
       await c.saveToFlash();
-      setSavedConfig(config);
+      setSavedConfig(saved);
       setUnsaved(false);
       setSaveState("saved");
     });

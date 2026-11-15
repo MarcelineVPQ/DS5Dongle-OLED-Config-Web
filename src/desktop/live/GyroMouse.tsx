@@ -9,7 +9,7 @@ import type { UseDs5BridgeResult } from "../../hooks/useDs5Bridge";
 import { emptyButtonPart, withGyro, type ButtonGyro } from "../../protocol/buttons";
 import { Segmented, Slider, Toggle } from "../controls";
 import { SectionGroup } from "../accordion/Section";
-import { KeysWarning } from "./ButtonEditor";
+import { KeysReconnect } from "./ButtonEditor";
 import { useBoardDrafts } from "./boardDrafts";
 
 // Starting values (tunable, the firmware's §3.2 / §4.6: no one has measured them).
@@ -77,7 +77,7 @@ export function GyroMouse({ bridge }: { bridge: UseDs5BridgeResult }) {
             step={1}
             onChange={(steadiness) => change({ steadiness })}
           />
-          {g.mode === 1 && <KeysWarning bridge={bridge} flags={bridge.identity?.keysMouseFlags ?? 0} />}
+          {g.mode === 1 && <KeysReconnect bridge={bridge} />}
         </>
       )}
     </SectionGroup>

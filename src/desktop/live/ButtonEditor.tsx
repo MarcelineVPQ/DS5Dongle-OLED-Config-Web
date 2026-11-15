@@ -12,7 +12,7 @@
 // open; the drawing's badges are a static SVG overlay drawn when the layout
 // or the tab changes (LiveController); the live line's poll is LiveTruth's.
 import { X } from "lucide-react";
-import { useMemo, useState, type KeyboardEvent, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type KeyboardEvent, type ReactNode, type RefObject } from "react";
 import { useTranslation } from "react-i18next";
 import type { UseDs5BridgeResult } from "../../hooks/useDs5Bridge";
 import { FEATURES5, KEYS_MOUSE_FLAGS } from "../../protocol/bridgeClient";
@@ -53,8 +53,8 @@ import {
   type Target,
 } from "../../protocol/buttons";
 import { cleanName, TENSION_SLOTS } from "../../protocol/tension";
-import { InfoTip, Row, Segmented, Slider, Toggle } from "../controls";
-import { KeysMouseReconnect } from "../pages/SettingsPage";
+import { heldMods, keyForCode, MOD_CODES } from "../../protocol/keys";
+import { BusyButton, InfoTip, Row, Segmented, Slider, Toggle } from "../controls";
 import { SectionGroup } from "../accordion/Section";
 import Notice from "../Notice";
 import { useNoticeTasks } from "../notices";
@@ -203,7 +203,6 @@ export function ButtonAssignments({
   const shown = pick !== null && sources.includes(pick) ? pick : null;
   // loop: HOT-PATH-OK — N ≤ 22 changed buttons per render of the section
   const changed = changedSources(part, layer).filter((s) => sources.includes(s));
-  const keys = bridge.identity?.keysMouseFlags ?? 0;
   const layoutWarnings = (
     <>
       {warnings.noCross && <p className="dk-hint dk-bad">{t("desktop.buttons.warn.noCross")}</p>}
@@ -269,7 +268,7 @@ export function ButtonAssignments({
           {layoutWarnings}
         </SectionGroup>
       ) : (
-        <ChosenButton bridge={bridge} part={part} layer={layer} source={shown} sources={sources} caps={caps} warnings={warnings} keysFlags={keys} layoutWarnings={layoutWarnings} onChange={update} />
+        <ChosenButton bridge={bridge} part={part} layer={layer} source={shown} sources={sources} caps={caps} warnings={warnings} layoutWarnings={layoutWarnings} onPick={onPick} onChange={update} />
       )}
       {layer > 0 && caps.layers && <LayerGroup part={part} layer={layer} caps={caps} onPick={onPick} onChange={update} onLayer={onLayer} />}
       {caps.pressTypes && (
@@ -314,24 +313,83 @@ export function ButtonAssignments({
   );
 }
 
-// "Keys and mouse are off on the board" with Turn on, or "Reconnect to start keys and mouse" with Reconnect.
-export function KeysWarning({ bridge, flags }: { bridge: UseDs5BridgeResult; flags: number }) {
+// Keys and mouse are saved on (the save bar decides them) but the board's
+// keyboard + mouse interface isn't up: the reconnect after Save didn't happen
+// (its error shows in the app's notice). Reconnect USB starts them.
+export function KeysReconnect({ bridge }: { bridge: UseDs5BridgeResult }) {
   const { t } = useTranslation();
-  const on = bridge.draft.keysMouse;
-  if (!on)
-    return (
-      <Notice
-        action={
-          <button type="button" className="dk-btn" onClick={() => bridge.setDraftField("keysMouse", true)}>
-            {t("desktop.buttons.turnOn")}
-          </button>
-        }
-      >
-        {t("desktop.buttons.warn.needsKeys")}
-      </Notice>
-    );
-  if ((flags & KEYS_MOUSE_FLAGS.saved) !== 0 && (flags & KEYS_MOUSE_FLAGS.up) === 0) return <KeysMouseReconnect bridge={bridge} />;
-  return null;
+  const flags = bridge.identity?.keysMouseFlags ?? 0;
+  if ((flags & KEYS_MOUSE_FLAGS.saved) === 0 || (flags & KEYS_MOUSE_FLAGS.up) !== 0 || bridge.operation === "reconnecting") return null;
+  return (
+    <Notice
+      action={
+        <BusyButton disabled={!bridge.client || bridge.operation !== null} onClick={bridge.reconnectUsb}>
+          {t("actions.reconnect")}
+        </BusyButton>
+      }
+    >
+      {t("desktop.buttons.warn.reconnect")}
+    </Notice>
+  );
+}
+
+// Press a key = mapped: while a button is picked, a key pressed on the PC's
+// keyboard becomes its Press target, with the modifiers held (the Key tab's
+// encoding). Not taken: a text field or a popover's keys, Tab, a modifier
+// alone, an app shortcut (Ctrl / ⌘ without Shift or Alt), a repeat. Escape
+// un-picks. A focused control keeps its own keys (Enter, Space, arrows, Home,
+// End, Page Up / Down) while the keyboard drives it: always for a select,
+// for the rest after a Tab (a click hands every key to the mapping again).
+const CONTROL_KEYS = new Set(["Enter", "Space", "NumpadEnter", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Home", "End", "PageUp", "PageDown"]);
+export function keyToMap(e: globalThis.KeyboardEvent, byPointer: boolean): Target | "unpick" | null {
+  if (e.defaultPrevented || e.repeat || e.code === "Tab") return null;
+  const el = e.target instanceof Element ? e.target : null;
+  if (el?.closest('input:not([type="checkbox"]):not([type="radio"]):not([type="range"]), textarea, [contenteditable=""], [contenteditable="true"], [role="dialog"], .top-layer')) return null;
+  if (e.key === "Escape") return "unpick";
+  if (MOD_CODES[e.code] !== undefined) return null;
+  if ((e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey) return null;
+  const control = el?.matches("select, button, input, [role], [tabindex]") ? el : null;
+  if (control && CONTROL_KEYS.has(e.code) && (control.tagName === "SELECT" || !byPointer)) return null;
+  const key = keyForCode(e.code);
+  return key ? { kind: TARGET_KIND.key, a: key.usage, b: heldMods(e) } : null;
+}
+
+// Idle cost: none (one keydown and one pointerdown listener on the window
+// while a button that takes a key is picked; nothing drawn).
+function usePressToMap(on: boolean, hint: RefObject<HTMLElement | null>, map: (x: Target) => void, unpick: () => void) {
+  // cache: NOT-WORTH — key=none (was the last focus move a click?); invalidated=every pointerdown and Tab; bound=1 flag
+  const byPointer = useRef(true);
+  // cache: NOT-WORTH — key=none (the latest map / unpick, so the listener needn't follow each render); invalidated=every render; bound=2 functions
+  const latest = useRef({ map, unpick });
+  // lifetime: OK — acquires nothing (keeps the latest handlers for the listener)
+  useEffect(() => {
+    latest.current = { map, unpick };
+  });
+  // lifetime: OK — cleanup: removes both listeners (unpicked, the section closed or unmounted)
+  useEffect(() => {
+    if (!on) return;
+    const onPointer = () => {
+      byPointer.current = true;
+    };
+    const onKey = (e: globalThis.KeyboardEvent) => {
+      if (e.code === "Tab") byPointer.current = false;
+      // A hidden panel (the closed drawer) takes no keys.
+      if (hint.current?.closest('[aria-hidden="true"]')) return;
+      const x = keyToMap(e, byPointer.current);
+      if (x === null) return;
+      e.preventDefault();
+      if (x === "unpick") latest.current.unpick();
+      else latest.current.map(x);
+    };
+    // lifetime: OK — removed in the effect cleanup
+    window.addEventListener("pointerdown", onPointer, true);
+    // lifetime: OK — removed in the effect cleanup
+    window.addEventListener("keydown", onKey);
+    return () => {
+      window.removeEventListener("pointerdown", onPointer, true);
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [on, hint]);
 }
 
 const keyish = (x: Target | undefined) => !!x && (x.kind === TARGET_KIND.key || x.kind === TARGET_KIND.mouseButton || x.kind === TARGET_KIND.mouseMove);
@@ -344,8 +402,8 @@ function ChosenButton({
   sources,
   caps,
   warnings,
-  keysFlags,
   layoutWarnings,
+  onPick,
   onChange,
 }: {
   bridge: UseDs5BridgeResult;
@@ -355,8 +413,8 @@ function ChosenButton({
   sources: number[];
   caps: EditorCaps;
   warnings: ReturnType<typeof pressWarnings>;
-  keysFlags: number;
   layoutWarnings: ReactNode;
+  onPick: (source: number | null) => void;
   onChange: (p: ButtonPart) => void;
 }) {
   const { t } = useTranslation();
@@ -377,6 +435,10 @@ function ChosenButton({
     return x ? targetName(t, part, x) : row === "press" ? selfText : t("desktop.buttons.notSet");
   };
   const set = (row: RowKey, x: Target | null) => onChange(withRow(part, layer, source, row, x));
+  // Press a key on the PC's keyboard: this button's Press (firmware with key targets, [58] bit 4).
+  const takesKey = caps.keys && !ps && !readOnly;
+  const hint = useRef<HTMLParagraphElement>(null);
+  usePressToMap(takesKey, hint, (x) => set("press", x), () => onPick(null));
   const picker = (row: RowKey) =>
     readOnly ? (
       <span className="bt-fixed">{rowText(row)}</span>
@@ -409,6 +471,7 @@ function ChosenButton({
       <Row id={PRESS_ROW} label={t("desktop.buttons.row.press")} info={trigger ? t("desktop.buttons.warn.triggerEffectInfo") : undefined}>
         {ps ? <span className="bt-fixed">{t("desktop.buttons.psFixed")}</span> : picker("press")}
       </Row>
+      {takesKey && <p ref={hint} className="dk-hint">{t("desktop.buttons.pressKeyHint")}</p>}
       {caps.pressTypes && (
         <>
           <Row label={t("desktop.buttons.row.hold")}>{picker("hold")}</Row>
@@ -461,7 +524,7 @@ function ChosenButton({
       )}
       {/* loop: HOT-PATH-OK — N ≤ 21 other buttons with the same Press, one section's render */}
       {dups && <p className="dk-hint dk-bad">{t("desktop.buttons.warn.duplicate", { other: dups.map((o) => sourceName(t, o)).join(", ") })}</p>}
-      {sendsKeys && <KeysWarning bridge={bridge} flags={keysFlags} />}
+      {sendsKeys && <KeysReconnect bridge={bridge} />}
       {layoutWarnings}
       {!ps && !readOnly && (
         <div className="dk-row-btns">

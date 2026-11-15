@@ -99,6 +99,8 @@
       "unsaved": "Aplicado {{device_a}}, ainda não salvo: as alterações se perdem ao desligar.",
       "staged": "Ainda não salvo: Salvar coloca suas mudanças {{device_em}}.",
       "saved": "Todas as alterações salvas {{device_em}}.",
+      "keysOn": "Teclas do teclado ligadas: reconexão {{device_de}} feita.",
+      "keysOff": "Teclas do teclado desligadas: reconexão {{device_de}} feita.",
       "revert": "Reverter",
       "save": "Salvar {{device_em}}",
       "profileActive": "Perfil de {{title}} ativo",
@@ -174,11 +176,7 @@
       "pollRealTime": "Tempo real",
       "pollRateInfo": "1000 Hz envia o estado mais recente do controle a cada milissegundo. Tempo real envia cada relatório Bluetooth assim que ele chega.",
       "dockDisconnect": "Desconectar na base de carga",
-      "dockDisconnectInfo": "Desliga a conexão Bluetooth do controle quando você o coloca numa base de carga ou dock. Pressione o botão PS para conectar de novo.",
-      "keysMouse": "Teclas e mouse pelo controle",
-      "keysMouseShort": "Teclas e mouse",
-      "keysMouseSub": "Começa na próxima conexão.",
-      "keysMouseInfo": "Ligado: {{device}} também aparece no PC como teclado e mouse, para que os botões de um layout possam apertar teclas (chegam com um firmware futuro). Desligado: o PC vê só o controle, exatamente como antes. Ainda não testado em todos os sistemas: no Linux o teclado pode ficar sem driver, e o macOS pode pedir para configurar um teclado novo."
+      "dockDisconnectInfo": "Desliga a conexão Bluetooth do controle quando você o coloca numa base de carga ou dock. Pressione o botão PS para conectar de novo."
     },
     "lightbar": {
       "mode": "Modo",
@@ -2152,7 +2150,7 @@
     },
     "buttons": {
       "warn": {
-        "reconnect": "Reconecte para ativar teclas e mouse.",
+        "reconnect": "As teclas do teclado começam ao reconectar {{device}}.",
         "noCross": "Nada aperta ✕ agora: os menus podem ficar difíceis.",
         "noCircle": "Nada aperta ○ agora: você pode ficar preso em menus.",
         "duplicate": "{{other}} já faz isso.",
@@ -2164,7 +2162,6 @@
         "doubleCostInfo": "A placa espera {{time}} depois que você solta para ver se vem um segundo aperto.",
         "psCost": "Com PS segura o botão PS até você soltar.",
         "psCostInfo": "O botão PS sai quando você solta, ou após meio segundo. A Steam também usa PS com outros botões.",
-        "needsKeys": "Teclas e mouse estão desligados {{device_em}}.",
         "paused": "Teclas e mouse pausam com esta janela na frente.",
         "layerNoEntry": "Nenhum botão entra nesta camada ainda.",
         "layerNoEntryInfo": "Escolha um botão e selecione esta camada como um dos destinos dele.",
@@ -2174,6 +2171,7 @@
       "status": "{{name}} · {{count}} alterados",
       "pick": "Botão",
       "pickHint": "Clique numa peça ou aperte-a no controle.",
+      "pressKeyHint": "Ou aperte uma tecla do teclado para atribuí-la.",
       "pickNone": "Botões alterados",
       "changed": "Alterados",
       "changedLine": "{{from}} → {{to}}",
@@ -2273,7 +2271,6 @@
         "offHeld": "Giroscópio desligado enquanto segura",
         "switch": "Giroscópio liga / desliga"
       },
-      "turnOn": "Ligar",
       "live": {
         "title": "Ao vivo da placa",
         "line": "{{from}} → {{layer}} · {{type}} → o PC recebeu {{to}}",
