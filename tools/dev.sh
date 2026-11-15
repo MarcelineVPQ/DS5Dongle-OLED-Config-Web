@@ -26,11 +26,18 @@ esac
 mkdir -p "$DEV/home" "$DEV/app"
 
 # Only ever our own dev copy: matched by its debug port (the user's own copy
-# never has one) or the AppImage path under tmp/dev/app.
+# never has one) or the AppImage path under tmp/dev/app. A child the app
+# started can inherit the DevTools socket (pactl subscribe did) and keep the
+# port open after the app is gone, answering nothing: every curl has a
+# timeout, and whatever still listens on this port, of this user's
+# processes only, is ended too.
 stop() {
   pkill -f -- "--remote-debugging-port=$PORT" 2>/dev/null || true
   pkill -f "^$DEV/app/" 2>/dev/null || true
-  for _ in $(seq 1 20); do curl -s -o /dev/null "http://127.0.0.1:$PORT/json" || return 0; sleep 0.5; done
+  for _ in $(seq 1 20); do curl -s -m 1 -o /dev/null "http://127.0.0.1:$PORT/json" || break; sleep 0.5; done
+  for pid in $(ss -ltnpH "sport = :$PORT" 2>/dev/null | grep -o 'pid=[0-9]*' | cut -d= -f2 | sort -u); do
+    [ "$(ps -o uid= -p "$pid" 2>/dev/null | tr -d ' ')" = "$(id -u)" ] && kill "$pid" 2>/dev/null || true
+  done
 }
 stop
 [ "$MODE" = stop ] && { echo "Dev copy stopped."; exit 0; }
@@ -45,6 +52,6 @@ if [ "$MODE" = package ]; then
 else
   (HOME="$DEV/home" ./node_modules/.bin/electron . --no-sandbox --remote-debugging-port="$PORT" > "$DEV/app.log" 2>&1 &)
 fi
-for _ in $(seq 1 60); do curl -s -o /dev/null "http://127.0.0.1:$PORT/json" && break; sleep 1; done
-curl -s -o /dev/null "http://127.0.0.1:$PORT/json" || { echo "The dev copy didn't start; see $DEV/app.log" >&2; exit 1; }
+for _ in $(seq 1 60); do curl -s -m 1 -o /dev/null "http://127.0.0.1:$PORT/json" && break; sleep 1; done
+curl -s -m 1 -o /dev/null "http://127.0.0.1:$PORT/json" || { echo "The dev copy didn't start; see $DEV/app.log" >&2; exit 1; }
 echo "Dev copy running ($MODE), DevTools port $PORT, settings in $DEV/home"
