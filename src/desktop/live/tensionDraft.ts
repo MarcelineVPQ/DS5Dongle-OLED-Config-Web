@@ -11,7 +11,7 @@ import type { UseDs5BridgeResult } from "../../hooks/useDs5Bridge";
 import { CommandError, supportsTension, type Ds5BridgeClient } from "../../protocol/bridgeClient";
 import { encodeSetBody, setValid, TENSION_SLOTS, type TensionSet } from "../../protocol/tension";
 import { causeText } from "../shownError";
-import { KeyedError } from "../../errorText";
+import { KeyedError, logged } from "../../errorText";
 import { sameBoard, showDraftsDropped } from "./slotSettings";
 
 export interface TensionDraft {
@@ -188,8 +188,7 @@ export function useTensionDraft(bridge: UseDs5BridgeResult): TensionDraft {
       // error: SHOWN — desktop.tension.errors.invalid / failed / notValid (tensionErrorText) in the section's error line, and the save bar's notice (desktop.errors.saveFailed)
       setError(tensionErrorText(cause));
       // What did save is read back, so only what didn't stays staged.
-      // error: SHOWN — a failed read back shows in the same error line on the next load (Retry)
-      await read(client).catch(() => undefined);
+      await read(client).catch(logged("Tension read back after a failed save; the next load shows a failure with Retry"));
       return false;
     }
   }, [dirty, client, mine, changedSlots, sets, choiceChanged, choice, read]);
