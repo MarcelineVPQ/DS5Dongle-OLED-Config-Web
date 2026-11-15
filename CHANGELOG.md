@@ -6,6 +6,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ## [Unreleased]
 
+## [0.9.5-dev.23] - 2026-11-15
+
 ### Changed
 
 - **The macOS app is signed and notarized by Apple.** It's signed with a Developer ID and notarized, so macOS opens it like any other app: no more "Apple could not verify it is free of malware" and no trip to Privacy & Security → Open Anyway. The microphone test still asks for microphone access once.
