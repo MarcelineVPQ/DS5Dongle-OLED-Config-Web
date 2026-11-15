@@ -300,10 +300,12 @@ function ChosenButton({
           <TargetPicker label={t("desktop.buttons.row.press")} source={source} value={press} onPick={(to) => onChange(withBasePress(part, source, to))} />
         )}
       </Row>
+      {/* loop: HOT-PATH-OK — N ≤ 21 other buttons with the same Press, one section's render */}
       {dups && <p className="dk-hint dk-bad">{t("desktop.buttons.warn.duplicate", { other: dups.map((o) => sourceName(t, o)).join(", ") })}</p>}
       {layoutWarnings}
       {!ps && (
         <div className="dk-row-btns">
+          {/* loop: HOT-PATH-OK — N ≤ 21 swappable buttons, one section's render */}
           {swappable.includes(source) && <SwapPicker sources={swappable.filter((s) => s !== source)} onPick={(other) => onChange(swapBase(part, source, other))} />}
           <button type="button" className="dk-btn" onClick={() => onChange(withBasePress(part, source, null))}>
             {t("desktop.buttons.resetButton")}

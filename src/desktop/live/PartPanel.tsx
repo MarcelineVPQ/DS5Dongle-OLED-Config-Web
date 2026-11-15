@@ -84,13 +84,6 @@ export default function ControllerSections({ bridge, input, remap, buttonFocus, 
     .filter(Boolean)
     .join(" · ");
   const gains = bridge.client?.splitHaptics ? `L ${d.hapticsGain.toFixed(1)}× · R ${d.hapticsGainRight.toFixed(1)}×` : `${d.hapticsGain.toFixed(1)}×`;
-  // Today's list (the legacy table), as before sets held buttons.
-  const legacy = (
-    <>
-      <AllButtonsList remap={remap} focus={buttonFocus} onFocus={onButtonFocus} onHover={onButtonHover} edge={edge} />
-      {edge && !remap.extraDevice && <EdgePartInfo />}
-    </>
-  );
   return (
     <>
       {/* Sets first (TENSION_BUTTONS.md §7.1, approved 2026-11-15; an exception to page rule 10's drawing order): it decides what the part sections show. */}
@@ -174,7 +167,11 @@ export default function ControllerSections({ bridge, input, remap, buttonFocus, 
           !setsReady ? (
             // Older firmware (no identity [58] bit 0), or the sets not read (yet): today's editor.
             <>
-              {legacy}
+              {/* today's list (the legacy table) */}
+              <>
+                <AllButtonsList remap={remap} focus={buttonFocus} onFocus={onButtonFocus} onHover={onButtonHover} edge={edge} />
+                {edge && !remap.extraDevice && <EdgePartInfo />}
+              </>
               {remap.supported && !tn.buttons && <SetButtonsNeedFirmware />}
               <TouchLive input={input} />
               {remap.supported && <SavedLayouts remap={remap} />}
@@ -182,7 +179,14 @@ export default function ControllerSections({ bridge, input, remap, buttonFocus, 
           ) : tn.editing === null || !editedSet ? (
             // Without a set (today's list, §7.4), or an empty slot being edited.
             <>
-              {tn.editing === null ? legacy : <p className="dk-hint">{t("desktop.buttons.emptySlot")}</p>}
+              {tn.editing === null ? (
+                <>
+                  <AllButtonsList remap={remap} focus={buttonFocus} onFocus={onButtonFocus} onHover={onButtonHover} edge={edge} />
+                  {edge && !remap.extraDevice && <EdgePartInfo />}
+                </>
+              ) : (
+                <p className="dk-hint">{t("desktop.buttons.emptySlot")}</p>
+              )}
               {remap.supported && tn.editing === null && <p className="dk-hint">{t("desktop.buttons.legacyHint")}</p>}
               {remap.supported && <MakeSetFromButtons tn={tn} remap={remap} />}
               {tn.editing === null && <TouchLive input={input} />}

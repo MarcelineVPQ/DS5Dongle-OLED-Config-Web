@@ -338,6 +338,7 @@ export function decodeButtonPart(b: Uint8Array): ButtonPart | undefined | null {
 
 // ---- Press only (build step 2): the base layer's Press rows ----
 
+// loop: HOT-PATH-OK — N ≤ 61 entries (the pool's limit), one lookup per row rendered
 const baseEntry = (part: ButtonPart, source: number) => part.entries.find((e) => e.layer === 0 && e.source === source);
 
 // What a button's Press does in the base: its target, or null = itself.
