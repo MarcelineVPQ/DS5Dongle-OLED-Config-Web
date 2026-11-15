@@ -178,7 +178,7 @@
       "keysMouse": "Teclas y ratón desde el mando",
       "keysMouseShort": "Teclas y ratón",
       "keysMouseSub": "Se activa en la próxima conexión.",
-      "keysMouseInfo": "Activado: {{device}} también aparece en el PC como teclado y ratón, para que los botones de un set puedan pulsar teclas (llegan con un firmware posterior). Desactivado: el PC solo ve el mando, igual que antes. Aún no probado en todos los sistemas: en Linux puede que el teclado no tenga controlador, y macOS puede pedir configurar un teclado nuevo."
+      "keysMouseInfo": "Activado: {{device}} también aparece en el PC como teclado y ratón, para que los botones de una distribución puedan pulsar teclas (llegan con un firmware posterior). Desactivado: el PC solo ve el mando, igual que antes. Aún no probado en todos los sistemas: en Linux puede que el teclado no tenga controlador, y macOS puede pedir configurar un teclado nuevo."
     },
     "lightbar": {
       "mode": "Modo",
@@ -228,16 +228,16 @@
     },
     "tension": {
       "title": "Tension",
-      "info": "Tension: tus propios efectos de gatillos adaptativos. Un set reúne L2 y R2; cada gatillo tiene hasta 4 etapas que cambian el efecto según cuánto aprietas y cuánto tiempo mantienes. La placa los ejecuta, con o sin esta app.",
+      "info": "Tension: tus propios efectos de gatillos adaptativos. L2 y R2 tienen cada uno hasta 4 etapas que cambian el efecto según cuánto aprietas y cuánto tiempo mantienes. La placa los ejecuta, con o sin esta app.",
       "needsFirmware": "Tension (tus efectos de gatillo) necesita un firmware más reciente.",
-      "needsFirmwareGame": "Los sets de Tension necesitan un firmware más reciente ({{deviceName}} → Firmware).",
+      "needsFirmwareGame": "Los efectos de gatillo para un juego necesitan un firmware más reciente ({{deviceName}} → Firmware).",
       "retry": "Leer de nuevo",
-      "reading": "Leyendo los sets guardados…",
-      "readOnly": "Estos sets vienen de un firmware más reciente: actualiza para cambiarlos.",
+      "reading": "Leyendo las distribuciones de la placa…",
+      "readOnly": "Estas distribuciones vienen de un firmware más reciente: actualiza para cambiarlas.",
       "runs": "Activo desde el encendido",
-      "runsInfo": "El set que la placa ejecuta por su cuenta desde el encendido, con o sin la app. El perfil de un juego puede elegir otro mientras el juego está en marcha.",
+      "runsInfo": "Lo que la placa ejecuta por su cuenta desde el encendido, con o sin la app. El perfil de un juego puede elegir otra cosa mientras el juego está en marcha.",
       "none": "Ninguno",
-      "edit": "Editar set",
+      "edit": "Espacio a editar",
       "slot": "{{slot}} · {{name}}",
       "empty": "vacío",
       "startFrom": "Un espacio vacío. Empezar con:",
@@ -246,14 +246,14 @@
         "heavy": "Gatillo pesado",
         "brake": "Pedal de freno",
         "machineGun": "Ametralladora",
-        "empty": "Set vacío"
+        "empty": "Vacío"
       },
       "name": "Nombre",
       "nameSub": "16 caracteres, solo letras inglesas",
       "feel": "Probar",
       "feelStop": "Dejar de probar",
-      "feelHint": "Ejecuta este set ahora, sin guardarlo, hasta que lo detengas",
-      "delete": "Eliminar set",
+      "feelHint": "Ejecuta estos efectos ahora, sin guardar, hasta detenerlo",
+      "delete": "Vaciar este espacio",
       "useInfo": "Juego: los efectos del juego. Completar: los tuyos solo mientras el juego no envía nada en este gatillo. Reemplazar: siempre los tuyos.",
       "use": {
         "game": "Juego",
@@ -320,30 +320,33 @@
       "pictureCaption": "Fuerza según la pulsación · discontinua: tras mantener",
       "liveTitle": "Tension ahora",
       "livePaused": "En pausa mientras se prueba el gatillo",
-      "liveFeel": "Probar: se ejecuta el set que editas",
+      "liveFeel": "Probar: se ejecuta lo que editas",
       "liveGame": "El perfil de un juego ejecuta {{name}}",
       "liveSet": "Se ejecuta {{name}}",
-      "liveNone": "No se ejecuta ningún set",
+      "liveNone": "No se ejecuta nada",
       "owner": {
         "none": "sin usar",
         "tension": "Tension",
         "game": "el efecto del juego",
         "waiting": "el juego, un momento más"
       },
-      "gameLabel": "Set de Tension",
+      "gameLabel": "Efectos de gatillo",
       "gameInfo": "Se ejecuta mientras este juego está en marcha, y después vuelve la elección de la placa. Nunca se guarda en la placa.",
       "boardChoice": "La elección de la placa",
       "gone": "eliminado",
-      "noneForGame": "Crea sets de Tension en la página Mando (Gatillos adaptativos).",
+      "noneForGame": "Crea efectos de gatillo en la página Mando (Gatillos adaptativos).",
       "errors": {
         "notOn": "Este firmware no tiene Tension: actualízalo primero.",
-        "changed": "Un set cambió mientras se leía. Léelo de nuevo.",
-        "unreadable": "Un set guardado tiene un formato que esta app no puede leer: actualiza la app.",
-        "invalid": "{{device, capitalize}} no aceptó ese set. No se guardó nada.",
+        "changed": "Una distribución cambió mientras se leía. Léela de nuevo.",
+        "unreadable": "Una distribución en {{deviceName}} tiene un formato que esta app no puede leer: actualiza la app.",
+        "invalid": "{{device, capitalize}} no aceptó esa distribución. No se guardó nada.",
         "failed": "{{device, capitalize}} no pudo guardarlo en su memoria. Inténtalo de nuevo.",
-        "notValid": "El set {{slot}} aún no tiene nombre. No se guardó nada.",
-        "setGone": "El set de Tension de este juego (espacio {{slot}}) ya no está en {{deviceName}}: elige otro en la página del juego."
-      }
+        "notValid": "La distribución del espacio {{slot}} aún no tiene nombre. No se guardó nada.",
+        "setGone": "Los efectos de gatillo de este juego (espacio {{slot}}) ya no están en {{deviceName}}: elige otros en la página del juego."
+      },
+      "infoLayout": "Tension: tus propios efectos de gatillos adaptativos, parte de la distribución de botones que editas. L2 y R2 tienen cada uno hasta 4 etapas que cambian el efecto según cuánto aprietas y cuánto tiempo mantienes. La placa los ejecuta, con o sin esta app.",
+      "presets": "Efectos de gatillo: empezar desde",
+      "presetsInfo": "Reemplaza L2 y R2 de esta distribución; sus botones quedan como están."
     },
     "diag": {
       "core1Frozen": "Core1 detenido: el audio no funcionará hasta que {{device}} se reinicie.",
@@ -854,6 +857,12 @@
       "remapResetHint": "Cada botón vuelve a ser él mismo",
       "pull": "Pulsación",
       "effect": "Efecto",
+      "effects": {
+        "0": "ninguno",
+        "1": "resistencia",
+        "2": "arma",
+        "3": "vibración"
+      },
       "touchHint": "Toca el panel táctil para ver tus dedos aquí. No hay nada que configurar.",
       "finger": "Dedo {{n}}",
       "speakerLevel": "Nivel del altavoz ahora",
@@ -871,12 +880,6 @@
         "fn": "El botón Fn del DualSense Edge. Junto con otros botones cambia los perfiles personalizados del mando. Se ilumina aquí cuando lo pulsas.",
         "paddle": "Uno de los botones posteriores del DualSense Edge. Los perfiles personalizados del mando pueden hacer que actúe como cualquier botón. Se ilumina aquí cuando lo pulsas.",
         "soon": "Para asignarlos hace falta el firmware más reciente en {{device}} ({{deviceName}} → Actualizar)."
-      },
-      "effects": {
-        "0": "ninguno",
-        "1": "resistencia",
-        "2": "arma",
-        "3": "vibración"
       },
       "autoInstall": "Instalar actualizaciones automáticamente",
       "autoInstallSub": "Se descargan y verifican en segundo plano; la nueva versión se inicia la próxima vez que abras la app",
@@ -1806,7 +1809,20 @@
         "edited": "Cambiada desde que la cargaste: «Actualizar» guarda los cambios en la distribución; «Guardar en {{device}}» los convierte en tus botones normales.",
         "applied": "Aplicada: ahora son tus botones normales en {{device}}."
       },
-      "extraSelf": "Él mismo (predeterminado)"
+      "extraSelf": "Él mismo (predeterminado)",
+      "hintBoard": "Cada distribución de botones una vez: las guardadas en este PC y las de {{device}}. Una distribución en {{device}} funciona sin la app; la que se ejecuta desde el encendido es la que edita «Asignaciones de botones». El perfil de un juego puede usar cualquier distribución mientras el juego está en marcha.",
+      "loadHintBoard": "Pasar esta distribución al editor («Guardar en {{device}}» hace que se ejecute desde el encendido)",
+      "onBoard": "En la placa",
+      "runs": "Activa desde el encendido",
+      "putOnBoard": "Poner en la placa",
+      "putOnBoardHint": "Guardar una copia en {{device}} para que funcione sin la app («Guardar en {{device}}» la escribe)",
+      "takeOff": "Quitar de la placa",
+      "runFromPowerOn": "Ejecutar desde el encendido",
+      "boardFull": "La placa guarda 8 distribuciones: quita una primero.",
+      "layers_one": "{{count}} capa",
+      "layers_other": "{{count}} capas",
+      "triggerEffects": "efectos de gatillo",
+      "needsBoard": "Pon esta distribución en la placa para usarla entera en este juego."
     },
     "editing": {
       "title": "Editando: perfil de {{title}}",
@@ -2072,8 +2088,7 @@
       "oled": "Pantalla OLED",
       "usb": "Conexión con el PC",
       "lights": "Luces de estado",
-      "diagnostics": "Diagnóstico",
-      "sets": "Sets"
+      "diagnostics": "Diagnóstico"
     },
     "boardBusy": {
       "title": "Otro programa está usando {{device}}.",
@@ -2135,12 +2150,6 @@
       "identifyTip": "En uso. Haz clic para que THIS ONE parpadee en su pantalla",
       "switchTip": "Haz clic para mostrar esta placa (THIS ONE parpadea en su pantalla)"
     },
-    "sets": {
-      "without": "Sin set",
-      "status": "Activo: {{name}}",
-      "info": "Un set reúne L2, R2 y los botones con un nombre. Tu placa guarda hasta 8 y los ejecuta con o sin la aplicación. «Editar set» elige el set que muestran el dibujo, Gatillos adaptativos y Asignaciones de botones; «Sin set» edita los botones que se usan mientras ningún set los cambia.",
-      "editInSets": "Crea o elige un set en Sets para editar sus gatillos."
-    },
     "buttons": {
       "warn": {
         "reconnect": "Reconecta para activar teclas y ratón.",
@@ -2148,9 +2157,21 @@
         "noCircle": "Nada pulsa ○ ahora: podrías quedarte en menús.",
         "duplicate": "{{other}} ya hace esto.",
         "promptsInfo": "Los juegos siguen mostrando sus propios iconos de botones: no conocen esta distribución.",
-        "triggerEffectInfo": "Los efectos de gatillo se quedan en el gatillo que aprietas."
+        "triggerEffectInfo": "Los efectos de gatillo se quedan en el gatillo que aprietas.",
+        "holdCost": "Mantener en {{button}}: su pulsación espera a que sueltes.",
+        "holdCostInfo": "Una pulsación corta sale ahora al soltar, como un toque rápido, así que no se puede mantener. Mantén {{time}} para la acción Mantener.",
+        "doubleCost": "Doble pulsación en {{button}} retrasa su pulsación {{time}}.",
+        "doubleCostInfo": "La placa espera {{time}} después de soltar para ver si llega una segunda pulsación.",
+        "psCost": "Con PS retiene el botón PS hasta que sueltas.",
+        "psCostInfo": "El botón PS sale al soltar, o tras medio segundo. Steam también usa PS con otros botones.",
+        "needsKeys": "Teclas y ratón están desactivados en {{device}}.",
+        "paused": "Teclas y ratón se pausan con esta ventana delante.",
+        "layerNoEntry": "Ningún botón entra aún en esta capa.",
+        "layerNoEntryInfo": "Elige un botón y escoge esta capa como uno de sus destinos.",
+        "full": "Esta distribución no tiene sitio para más cambios.",
+        "sixKeys": "Solo se pueden mantener seis teclas a la vez."
       },
-      "status": "{{set}} · {{count}} cambiados",
+      "status": "{{name}} · {{count}} cambiados",
       "pick": "Botón",
       "pickHint": "Haz clic en una pieza o púlsala en el mando.",
       "pickNone": "Botones cambiados",
@@ -2159,27 +2180,168 @@
       "noneChanged": "Cada botón es él mismo en esta capa.",
       "does": "{{button}} hace",
       "row": {
-        "press": "Pulsar"
+        "press": "Pulsar",
+        "hold": "Mantener",
+        "double": "Doble pulsación",
+        "withPs": "Con PS",
+        "toggle": "Alternar",
+        "turbo": "Turbo"
       },
       "psFixed": "Botón PS (siempre)",
       "swap": "Intercambiar con…",
       "resetButton": "Restablecer este botón",
-      "legacyHint": "Mantener, doble pulsación y capas necesitan un set.",
-      "makeSet": "Crear un set con estos botones",
-      "makeSetReplace": "Reemplazar set",
-      "emptySlot": "Ranura vacía: crea un set en Sets.",
       "needsFirmware": "Mantener, doble pulsación y capas requieren actualizar.",
-      "setLeaves": "Este set deja los botones como están.",
-      "useInSet": "Cambiar botones en este set",
       "target": {
         "title": "{{row}}: qué hace",
-        "gridHint": "Flechas para moverse, Intro para elegir."
+        "gridHint": "Flechas para moverse, Intro para elegir.",
+        "pressKey": "Pulsa una tecla…",
+        "pressKeyArmed": "Pulsa la tecla ahora (Esc cancela)",
+        "showAll": "Mostrar todas las teclas",
+        "mods": "Modificadores",
+        "modsOnly": "Solo los modificadores",
+        "keyText": "Tecla {{key}}",
+        "layerText": "{{name}} ({{mode}})"
       },
       "badge": {
         "create": "Crear",
         "options": "Opciones",
-        "touchpad": "Panel"
+        "touchpad": "Panel",
+        "mouse": "Ratón"
+      },
+      "statusLayers_one": "{{name}} · {{changed}} cambiados · {{count}} capa",
+      "statusLayers_other": "{{name}} · {{changed}} cambiados · {{count}} capas",
+      "name": "Nombre",
+      "nameSub": "16 caracteres, solo letras inglesas",
+      "saveInto": "Se guarda en",
+      "saveIntoInfo": "Los 8 espacios de la placa tienen una distribución y ninguna se ejecuta desde el encendido. Elige la que esta distribución reemplaza al guardar.",
+      "saveIntoPick": "Elige uno",
+      "holdTime": "Tiempo para mantener",
+      "turboRate": "Pulsaciones por segundo",
+      "notSet": "sin asignar",
+      "clearRow": "Borrar {{row}}",
+      "presets": "Empezar desde",
+      "presetsInfo": "Puntos de partida para probar y cambiar, no diseños probados. «Una mano» reemplaza los botones de esta distribución; «Alternar en vez de mantener» hace que L2, L1 y L3 queden fijados.",
+      "preset": {
+        "oneLeft": "Una mano (izquierda)",
+        "oneRight": "Una mano (derecha)",
+        "toggle": "Alternar en vez de mantener"
+      },
+      "tab": {
+        "controller": "Mando",
+        "key": "Tecla",
+        "mouse": "Ratón",
+        "layer": "Capa",
+        "gyro": "Giroscopio"
+      },
+      "keyGroup": {
+        "letters": "Letras",
+        "digits": "Dígitos",
+        "function": "Teclas de función",
+        "navigation": "Navegación",
+        "editing": "Edición",
+        "keypad": "Teclado numérico"
+      },
+      "mod": {
+        "ctrl": "Ctrl",
+        "shift": "Mayús",
+        "alt": "Alt",
+        "gui": "Win / ⌘"
+      },
+      "mouse": {
+        "left": "Clic izquierdo",
+        "right": "Clic derecho",
+        "middle": "Clic central",
+        "back": "Ratón atrás",
+        "forward": "Ratón adelante"
+      },
+      "move": {
+        "up": "Mover arriba",
+        "down": "Mover abajo",
+        "left": "Mover a la izquierda",
+        "right": "Mover a la derecha",
+        "wheelUp": "Rueda arriba",
+        "wheelDown": "Rueda abajo"
+      },
+      "speed": "Velocidad",
+      "wheelSpeed": "Velocidad de la rueda",
+      "layerMode": {
+        "held": "mientras se mantiene",
+        "switch": "cambiar"
+      },
+      "gyro": {
+        "held": "Giroscopio activo mientras se mantiene",
+        "offHeld": "Giroscopio inactivo mientras se mantiene",
+        "switch": "Activar / desactivar giroscopio"
+      },
+      "turnOn": "Activar",
+      "live": {
+        "title": "En vivo desde la placa",
+        "line": "{{from}} → {{layer}} · {{type}} → el PC recibió {{to}}",
+        "wouldSend": "{{from}} → {{layer}} · {{type}} → enviaría {{to}}",
+        "idle": "Pulsa un botón del mando.",
+        "noController": "Conecta el mando para verlo en vivo.",
+        "nothing": "nada",
+        "type": {
+          "deciding": "decidiendo",
+          "press": "Pulsar",
+          "hold": "Mantener",
+          "double": "Doble pulsación",
+          "withPs": "Con PS",
+          "toggleOn": "Alternar activado",
+          "toggleOff": "Alternar desactivado",
+          "turbo": "Turbo",
+          "tap": "toque"
+        }
       }
+    },
+    "layers": {
+      "base": "Base",
+      "defaultName": "Capa {{n}}",
+      "add": "+ Capa",
+      "tabs": "Capas",
+      "title": "Capa: {{name}}",
+      "sameAsBase": "Igual que la base",
+      "switchBack": "Aquí vuelve a la base.",
+      "name": "Nombre de la capa",
+      "nameSub": "10 caracteres, solo letras inglesas",
+      "colour": "Color",
+      "colourN": "Color {{n}}",
+      "enteredBy": "Se entra con",
+      "enteredLine": "{{button}} · {{row}} · {{mode}}",
+      "gyro": "Giroscopio en esta capa",
+      "gyroMode": {
+        "same": "Igual que la base",
+        "on": "Activado",
+        "off": "Desactivado"
+      },
+      "reset": "Restablecer esta capa",
+      "delete": "Eliminar capa"
+    },
+    "gyroMouse": {
+      "title": "Giroscopio como ratón",
+      "mode": "Giroscopio",
+      "modes": {
+        "off": "Desactivado",
+        "on": "Activado",
+        "button": "Con un botón"
+      },
+      "buttonHint": "Da a un botón el destino Giroscopio para usarlo.",
+      "use": "Mueve",
+      "uses": {
+        "mouse": "Ratón",
+        "stick": "Joystick derecho"
+      },
+      "axis": "Girar con",
+      "axes": {
+        "yaw": "Guiñada",
+        "roll": "Alabeo"
+      },
+      "speedH": "Velocidad horizontal",
+      "speedV": "Velocidad vertical",
+      "invertH": "Invertir horizontal",
+      "invertV": "Invertir vertical",
+      "steadiness": "Estabilidad",
+      "steadinessInfo": "Los movimientos pequeños por debajo de esto se suavizan, para que la puntería se quede quieta mientras tus manos descansan. 0 = desactivado."
     }
   },
   "ad": {

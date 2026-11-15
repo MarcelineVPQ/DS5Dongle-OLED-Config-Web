@@ -89,6 +89,7 @@ export interface GameProfileState {
 export interface ButtonsDraft {
   table: number[];
   extra?: number[]; // the Edge's Fn buttons and paddles (protocol 1.9)
+  set?: string; // protocol 1.24: the whole layout as the board keeps it, in hex (library.ts)
   revert: () => void;
 }
 
@@ -313,7 +314,14 @@ export function useGameProfile(bridge: UseDs5BridgeResult, paused: boolean): Gam
       const settings = profileToSave(captureProfile(config, normal, stored), { curves: curvesDirty ? curvesDraft : null, buttonLayout: layout?.id });
       file = await desktop.librarySetProfile({ gameKey: target.gameKey, title: target.title, settings });
       // The layout after the profile, so a profile that didn't save leaves no layout behind.
-      if (layout && buttonsDraft) file = await desktop.librarySetLayout({ id: layout.id, name: layout.name, table: buttonsDraft.table, ...(buttonsDraft.extra ? { extra: buttonsDraft.extra } : {}) });
+      if (layout && buttonsDraft)
+        file = await desktop.librarySetLayout({
+          id: layout.id,
+          name: layout.name,
+          table: buttonsDraft.table,
+          ...(buttonsDraft.extra ? { extra: buttonsDraft.extra } : {}),
+          ...(buttonsDraft.set ? { set: buttonsDraft.set } : {}),
+        });
       // Settings only: already on the dongle, so don't re-apply the version just
       // saved. New buttons or curves are put on by re-applying it.
       if (!layout && !curvesDirty) {

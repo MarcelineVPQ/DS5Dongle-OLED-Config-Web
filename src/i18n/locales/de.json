@@ -178,7 +178,7 @@
       "keysMouse": "Tasten und Maus vom Controller",
       "keysMouseShort": "Tasten und Maus",
       "keysMouseSub": "Gilt ab der nächsten Verbindung.",
-      "keysMouseInfo": "An: {{device, capitalize}} erscheint am PC zusätzlich als Tastatur und Maus, damit die Tasten eines Sets Tasten drücken können (Tastenziele kommen mit einer späteren Firmware). Aus: Der PC sieht nur den Controller, genau wie bisher. Noch nicht auf jedem System getestet: Unter Linux bekommt die Tastatur eventuell keinen Treiber, und macOS fragt eventuell, eine neue Tastatur einzurichten."
+      "keysMouseInfo": "An: {{device, capitalize}} erscheint am PC zusätzlich als Tastatur und Maus, damit die Tasten einer Belegung Tasten drücken können (Tastenziele kommen mit einer späteren Firmware). Aus: Der PC sieht nur den Controller, genau wie bisher. Noch nicht auf jedem System getestet: Unter Linux bekommt die Tastatur eventuell keinen Treiber, und macOS fragt eventuell, eine neue Tastatur einzurichten."
     },
     "lightbar": {
       "mode": "Modus",
@@ -228,16 +228,16 @@
     },
     "tension": {
       "title": "Tension",
-      "info": "Tension: deine eigenen Effekte für die adaptiven Trigger. Ein Set enthält L2 und R2 zusammen; jeder Trigger hat bis zu 4 Stufen, die den Effekt danach ändern, wie weit du drückst und wie lange du hältst. Das Board führt sie aus, mit oder ohne diese App.",
+      "info": "Tension: deine eigenen Effekte für die adaptiven Trigger. L2 und R2 haben je bis zu 4 Stufen, die den Effekt danach ändern, wie weit du drückst und wie lange du hältst. Das Board führt sie aus, mit oder ohne diese App.",
       "needsFirmware": "Tension (eigene Trigger-Effekte) braucht neuere Firmware.",
-      "needsFirmwareGame": "Tension-Sets brauchen neuere Firmware ({{deviceName}} → Firmware).",
+      "needsFirmwareGame": "Trigger-Effekte für ein Spiel brauchen neuere Firmware ({{deviceName}} → Firmware).",
       "retry": "Erneut lesen",
-      "reading": "Gespeicherte Sets werden gelesen…",
-      "readOnly": "Diese Sets stammen von neuerer Firmware: aktualisiere, um sie zu ändern.",
+      "reading": "Belegungen auf dem Board werden gelesen…",
+      "readOnly": "Diese Belegungen stammen von neuerer Firmware: aktualisiere, um sie zu ändern.",
       "runs": "Läuft ab dem Einschalten",
-      "runsInfo": "Das Set, das das Board ab dem Einschalten selbst ausführt, mit oder ohne App. Das Profil eines Spiels kann ein anderes wählen, solange das Spiel läuft.",
+      "runsInfo": "Was das Board ab dem Einschalten selbst ausführt, mit oder ohne App. Das Profil eines Spiels kann etwas anderes wählen, solange das Spiel läuft.",
       "none": "Keines",
-      "edit": "Set bearbeiten",
+      "edit": "Platz zum Bearbeiten",
       "slot": "{{slot}} · {{name}}",
       "empty": "leer",
       "startFrom": "Ein leerer Platz. Beginne mit:",
@@ -246,14 +246,14 @@
         "heavy": "Schwerer Trigger",
         "brake": "Bremspedal",
         "machineGun": "Maschinengewehr",
-        "empty": "Leeres Set"
+        "empty": "Leer"
       },
       "name": "Name",
       "nameSub": "16 Zeichen, nur englische Buchstaben",
       "feel": "Ausprobieren",
       "feelStop": "Ausprobieren beenden",
-      "feelHint": "Führt dieses Set jetzt aus, ungespeichert, bis du es beendest",
-      "delete": "Set löschen",
+      "feelHint": "Führt diese Effekte jetzt aus, ungespeichert, bis du stoppst",
+      "delete": "Diesen Platz leeren",
       "useInfo": "Spiel: die Effekte des Spiels. Ergänzen: deine nur, solange das Spiel auf diesem Trigger nichts sendet. Ersetzen: immer deine.",
       "use": {
         "game": "Spiel",
@@ -320,30 +320,33 @@
       "pictureCaption": "Stärke über den Druck · gestrichelt: nach der Haltezeit",
       "liveTitle": "Tension jetzt",
       "livePaused": "Pausiert, solange der Trigger-Test läuft",
-      "liveFeel": "Ausprobieren: das bearbeitete Set läuft",
+      "liveFeel": "Ausprobieren: das Bearbeitete läuft",
       "liveGame": "Das Profil eines Spiels führt {{name}} aus",
       "liveSet": "{{name}} läuft",
-      "liveNone": "Kein Set läuft",
+      "liveNone": "Nichts läuft",
       "owner": {
         "none": "nicht genutzt",
         "tension": "Tension",
         "game": "Effekt des Spiels",
         "waiting": "noch kurz das Spiel"
       },
-      "gameLabel": "Tension-Set",
+      "gameLabel": "Trigger-Effekte",
       "gameInfo": "Läuft, solange dieses Spiel läuft, danach wieder die Wahl des Boards. Wird nie auf dem Board gespeichert.",
       "boardChoice": "Wahl des Boards",
       "gone": "gelöscht",
-      "noneForGame": "Erstelle Tension-Sets auf der Controller-Seite (Adaptive Trigger).",
+      "noneForGame": "Erstelle Trigger-Effekte auf der Controller-Seite (Adaptive Trigger).",
       "errors": {
         "notOn": "Diese Firmware hat kein Tension: aktualisiere sie zuerst.",
-        "changed": "Ein Set hat sich beim Lesen geändert. Lies es erneut.",
-        "unreadable": "Ein gespeichertes Set hat ein Format, das diese App nicht lesen kann: aktualisiere die App.",
-        "invalid": "{{device, capitalize}} hat dieses Set nicht angenommen. Nichts wurde gespeichert.",
+        "changed": "Eine Belegung hat sich beim Lesen geändert. Lies erneut.",
+        "unreadable": "Eine Belegung auf {{deviceName}} hat ein Format, das diese App nicht lesen kann: aktualisiere die App.",
+        "invalid": "{{device, capitalize}} hat diese Belegung nicht angenommen. Nichts wurde gespeichert.",
         "failed": "{{device, capitalize}} konnte das nicht in seinem Speicher sichern. Versuch es noch einmal.",
-        "notValid": "Set {{slot}} hat noch keinen Namen. Nichts wurde gespeichert.",
-        "setGone": "Das Tension-Set dieses Spiels (Platz {{slot}}) ist nicht mehr auf {{deviceName}}: wähl auf der Seite des Spiels ein anderes."
-      }
+        "notValid": "Die Belegung auf Platz {{slot}} hat noch keinen Namen. Nichts wurde gespeichert.",
+        "setGone": "Die Trigger-Effekte dieses Spiels (Platz {{slot}}) sind nicht mehr auf {{deviceName}}: wähl auf der Seite des Spiels andere."
+      },
+      "infoLayout": "Tension: deine eigenen Effekte für die adaptiven Trigger, Teil der Tastenbelegung, die du bearbeitest. L2 und R2 haben je bis zu 4 Stufen, die den Effekt danach ändern, wie weit du drückst und wie lange du hältst. Das Board führt sie aus, mit oder ohne diese App.",
+      "presets": "Trigger-Effekte: beginne mit",
+      "presetsInfo": "Ersetzt L2 und R2 dieser Belegung; ihre Tasten bleiben, wie sie sind."
     },
     "diag": {
       "core1Frozen": "Core1 gestoppt: Der Audiopfad bleibt tot, bis {{device}} neu startet.",
@@ -854,6 +857,12 @@
       "remapResetHint": "Jede Taste wieder auf sich selbst",
       "pull": "Druck",
       "effect": "Effekt",
+      "effects": {
+        "0": "keiner",
+        "1": "Widerstand",
+        "2": "Waffe",
+        "3": "Vibration"
+      },
       "touchHint": "Berühre das Touchpad, um deine Finger hier zu sehen. Dafür gibt es nichts einzustellen.",
       "finger": "Finger {{n}}",
       "speakerLevel": "Lautsprecherpegel jetzt",
@@ -871,12 +880,6 @@
         "fn": "Die Fn-Taste des DualSense Edge. Zusammen mit anderen Tasten wechselt sie die benutzerdefinierten Profile des Controllers. Sie leuchtet hier auf, wenn du sie drückst.",
         "paddle": "Eine der Rücktasten des DualSense Edge. Die benutzerdefinierten Profile des Controllers können ihr jede Taste zuweisen. Sie leuchtet hier auf, wenn du sie drückst.",
         "soon": "Für die Zuweisung braucht es die neueste Firmware auf {{device_dat}} ({{deviceName}} → Aktualisieren)."
-      },
-      "effects": {
-        "0": "keiner",
-        "1": "Widerstand",
-        "2": "Waffe",
-        "3": "Vibration"
       },
       "autoInstall": "Updates automatisch installieren",
       "autoInstallSub": "Lädt und prüft sie im Hintergrund; die neue Version startet beim nächsten Öffnen der App",
@@ -1806,7 +1809,20 @@
         "edited": "Seit dem Laden geändert: „Aktualisieren“ speichert die Änderungen in der Belegung; „Auf {{device_dat}} speichern“ macht sie zu deiner normalen.",
         "applied": "Angewendet: das ist jetzt deine normale Belegung auf {{device_dat}}."
       },
-      "extraSelf": "Sich selbst (Standard)"
+      "extraSelf": "Sich selbst (Standard)",
+      "hintBoard": "Jede Tastenbelegung einmal: die auf diesem PC und die auf {{device_dat}}. Eine Belegung auf {{device_dat}} funktioniert ohne App; die ab dem Einschalten läuft, bearbeitest du unter Tastenzuweisung. Das Profil eines Spiels kann jede Belegung nutzen, solange das Spiel läuft.",
+      "loadHintBoard": "Diese Belegung in den Editor laden („Auf {{device_dat}} speichern“ lässt sie ab dem Einschalten laufen)",
+      "onBoard": "Auf dem Board",
+      "runs": "Läuft ab dem Einschalten",
+      "putOnBoard": "Aufs Board legen",
+      "putOnBoardHint": "Eine Kopie auf {{device_dat}} behalten, damit sie ohne App funktioniert („Auf {{device_dat}} speichern“ schreibt sie)",
+      "takeOff": "Vom Board nehmen",
+      "runFromPowerOn": "Ab dem Einschalten laufen lassen",
+      "boardFull": "Das Board fasst 8 Belegungen: nimm zuerst eine herunter.",
+      "layers_one": "{{count}} Ebene",
+      "layers_other": "{{count}} Ebenen",
+      "triggerEffects": "Trigger-Effekte",
+      "needsBoard": "Leg diese Belegung aufs Board, um sie in diesem Spiel ganz zu nutzen."
     },
     "editing": {
       "title": "Bearbeitung: Profil {{title}}",
@@ -2072,8 +2088,7 @@
       "oled": "OLED-Bildschirm",
       "usb": "Verbindung zum PC",
       "lights": "Statusleuchten",
-      "diagnostics": "Diagnose",
-      "sets": "Sets"
+      "diagnostics": "Diagnose"
     },
     "boardBusy": {
       "title": "{{device, capitalize}} wird von einem anderen Programm benutzt.",
@@ -2135,12 +2150,6 @@
       "identifyTip": "In Benutzung. Klicken: THIS ONE blinkt auf seinem Bildschirm",
       "switchTip": "Klicken, um dieses Board anzuzeigen (THIS ONE blinkt auf seinem Bildschirm)"
     },
-    "sets": {
-      "without": "Ohne Set",
-      "status": "Läuft: {{name}}",
-      "info": "Ein Set fasst L2, R2 und die Tasten unter einem Namen zusammen. Dein Board speichert bis zu 8 und führt sie mit oder ohne App aus. „Set bearbeiten“ wählt das Set, das die Zeichnung, Adaptive Trigger und Tastenzuweisung zeigen; „Ohne Set“ bearbeitet die Tasten, die gelten, solange kein Set sie ändert.",
-      "editInSets": "Starte oder wähle unter Sets ein Set für seine Trigger."
-    },
     "buttons": {
       "warn": {
         "reconnect": "Neu verbinden, um Tasten und Maus zu starten.",
@@ -2148,9 +2157,21 @@
         "noCircle": "Nichts drückt jetzt ○: Du kommst evtl. aus Menüs nicht raus.",
         "duplicate": "{{other}} macht das schon.",
         "promptsInfo": "Spiele zeigen weiter ihre eigenen Tastensymbole: Sie kennen diese Belegung nicht.",
-        "triggerEffectInfo": "Trigger-Effekte bleiben auf dem Trigger, den du ziehst."
+        "triggerEffectInfo": "Trigger-Effekte bleiben auf dem Trigger, den du ziehst.",
+        "holdCost": "Halten auf {{button}}: Drücken wartet bis zum Loslassen.",
+        "holdCostInfo": "Ein kurzer Druck geht jetzt erst beim Loslassen raus, als kurzes Antippen, und lässt sich daher nicht halten. Halte {{time}} lang für die Aktion „Halten“.",
+        "doubleCost": "Doppeldruck auf {{button}} verzögert Drücken um {{time}}.",
+        "doubleCostInfo": "Das Board wartet nach dem Loslassen {{time}}, ob ein zweiter Druck kommt.",
+        "psCost": "„Mit PS“ hält die PS-Taste bis zum Loslassen zurück.",
+        "psCostInfo": "Die PS-Taste geht beim Loslassen raus oder nach einer halben Sekunde. Steam nutzt PS auch zusammen mit anderen Tasten.",
+        "needsKeys": "Tasten und Maus sind auf {{device_dat}} aus.",
+        "paused": "Tasten und Maus pausieren, solange dieses Fenster vorn ist.",
+        "layerNoEntry": "Noch keine Taste führt in diese Ebene.",
+        "layerNoEntryInfo": "Wähle eine Taste und dann diese Ebene als eines ihrer Ziele.",
+        "full": "Diese Belegung hat keinen Platz für weitere Änderungen.",
+        "sixKeys": "Nur sechs Tasten lassen sich gleichzeitig halten."
       },
-      "status": "{{set}} · {{count}} geändert",
+      "status": "{{name}} · {{count}} geändert",
       "pick": "Taste",
       "pickHint": "Teil anklicken oder am Controller drücken.",
       "pickNone": "Geänderte Tasten",
@@ -2159,27 +2180,168 @@
       "noneChanged": "Jede Taste ist in dieser Ebene sie selbst.",
       "does": "{{button}} macht",
       "row": {
-        "press": "Drücken"
+        "press": "Drücken",
+        "hold": "Halten",
+        "double": "Doppeldruck",
+        "withPs": "Mit PS",
+        "toggle": "Umschalten",
+        "turbo": "Turbo"
       },
       "psFixed": "PS-Taste (immer)",
       "swap": "Tauschen mit…",
       "resetButton": "Diese Taste zurücksetzen",
-      "legacyHint": "Halten, Doppeldruck und Ebenen brauchen ein Set.",
-      "makeSet": "Set aus diesen Tasten machen",
-      "makeSetReplace": "Set ersetzen",
-      "emptySlot": "Leerer Platz: unter Sets ein Set starten.",
       "needsFirmware": "Halten, Doppeldruck und Ebenen brauchen ein Update.",
-      "setLeaves": "Dieses Set lässt die Tasten, wie sie sind.",
-      "useInSet": "Tasten in diesem Set ändern",
       "target": {
         "title": "{{row}}: was es macht",
-        "gridHint": "Pfeiltasten bewegen, Eingabe wählt."
+        "gridHint": "Pfeiltasten bewegen, Eingabe wählt.",
+        "pressKey": "Taste drücken…",
+        "pressKeyArmed": "Drück jetzt die Taste (Esc bricht ab)",
+        "showAll": "Alle Tasten zeigen",
+        "mods": "Sondertasten",
+        "modsOnly": "Nur die Sondertasten",
+        "keyText": "Taste {{key}}",
+        "layerText": "{{name}} ({{mode}})"
       },
       "badge": {
         "create": "Create",
         "options": "Options",
-        "touchpad": "Touch"
+        "touchpad": "Touch",
+        "mouse": "Maus"
+      },
+      "statusLayers_one": "{{name}} · {{changed}} geändert · {{count}} Ebene",
+      "statusLayers_other": "{{name}} · {{changed}} geändert · {{count}} Ebenen",
+      "name": "Name",
+      "nameSub": "16 Zeichen, nur englische Buchstaben",
+      "saveInto": "Speichert in",
+      "saveIntoInfo": "Alle 8 Plätze auf dem Board enthalten eine Belegung, und keine läuft ab dem Einschalten. Wähle die, die diese Belegung beim Speichern ersetzt.",
+      "saveIntoPick": "Einen wählen",
+      "holdTime": "Haltezeit",
+      "turboRate": "Drücke pro Sekunde",
+      "notSet": "nicht gesetzt",
+      "clearRow": "{{row}} leeren",
+      "presets": "Beginne mit",
+      "presetsInfo": "Ausgangspunkte zum Ausprobieren und Ändern, keine getesteten Designs. „Eine Hand“ ersetzt die Tasten dieser Belegung; „Umschalten statt Halten“ lässt L2, L1 und L3 einrasten.",
+      "preset": {
+        "oneLeft": "Eine Hand (links)",
+        "oneRight": "Eine Hand (rechts)",
+        "toggle": "Umschalten statt Halten"
+      },
+      "tab": {
+        "controller": "Controller",
+        "key": "Taste",
+        "mouse": "Maus",
+        "layer": "Ebene",
+        "gyro": "Gyro"
+      },
+      "keyGroup": {
+        "letters": "Buchstaben",
+        "digits": "Ziffern",
+        "function": "Funktionstasten",
+        "navigation": "Navigation",
+        "editing": "Bearbeiten",
+        "keypad": "Ziffernblock"
+      },
+      "mod": {
+        "ctrl": "Strg",
+        "shift": "Umschalt",
+        "alt": "Alt",
+        "gui": "Win / ⌘"
+      },
+      "mouse": {
+        "left": "Maus links",
+        "right": "Maus rechts",
+        "middle": "Maus Mitte",
+        "back": "Maus zurück",
+        "forward": "Maus vor"
+      },
+      "move": {
+        "up": "Nach oben",
+        "down": "Nach unten",
+        "left": "Nach links",
+        "right": "Nach rechts",
+        "wheelUp": "Rad hoch",
+        "wheelDown": "Rad runter"
+      },
+      "speed": "Tempo",
+      "wheelSpeed": "Radtempo",
+      "layerMode": {
+        "held": "solange gehalten",
+        "switch": "umschalten"
+      },
+      "gyro": {
+        "held": "Gyro an, solange gehalten",
+        "offHeld": "Gyro aus, solange gehalten",
+        "switch": "Gyro an / aus"
+      },
+      "turnOn": "Einschalten",
+      "live": {
+        "title": "Live vom Board",
+        "line": "{{from}} → {{layer}} · {{type}} → PC bekam {{to}}",
+        "wouldSend": "{{from}} → {{layer}} · {{type}} → würde {{to}} senden",
+        "idle": "Drück eine Taste am Controller.",
+        "noController": "Verbinde den Controller, um es live zu sehen.",
+        "nothing": "nichts",
+        "type": {
+          "deciding": "entscheidet",
+          "press": "Drücken",
+          "hold": "Halten",
+          "double": "Doppeldruck",
+          "withPs": "Mit PS",
+          "toggleOn": "Umschalten an",
+          "toggleOff": "Umschalten aus",
+          "turbo": "Turbo",
+          "tap": "Antippen"
+        }
       }
+    },
+    "layers": {
+      "base": "Basis",
+      "defaultName": "Ebene {{n}}",
+      "add": "+ Ebene",
+      "tabs": "Ebenen",
+      "title": "Ebene: {{name}}",
+      "sameAsBase": "Wie Basis",
+      "switchBack": "Hier schaltet es zurück zur Basis.",
+      "name": "Name der Ebene",
+      "nameSub": "10 Zeichen, nur englische Buchstaben",
+      "colour": "Farbe",
+      "colourN": "Farbe {{n}}",
+      "enteredBy": "Erreicht über",
+      "enteredLine": "{{button}} · {{row}} · {{mode}}",
+      "gyro": "Gyro in dieser Ebene",
+      "gyroMode": {
+        "same": "Wie Basis",
+        "on": "An",
+        "off": "Aus"
+      },
+      "reset": "Diese Ebene zurücksetzen",
+      "delete": "Ebene löschen"
+    },
+    "gyroMouse": {
+      "title": "Gyro als Maus",
+      "mode": "Gyro",
+      "modes": {
+        "off": "Aus",
+        "on": "An",
+        "button": "Mit einer Taste"
+      },
+      "buttonHint": "Gib einer Taste das Ziel Gyro, um es zu nutzen.",
+      "use": "Bewegt",
+      "uses": {
+        "mouse": "Maus",
+        "stick": "Rechter Stick"
+      },
+      "axis": "Drehen mit",
+      "axes": {
+        "yaw": "Gieren",
+        "roll": "Rollen"
+      },
+      "speedH": "Tempo seitlich",
+      "speedV": "Tempo hoch und runter",
+      "invertH": "Seitlich umkehren",
+      "invertV": "Hoch und runter umkehren",
+      "steadiness": "Ruhe",
+      "steadinessInfo": "Kleine Bewegungen darunter werden abgeschwächt, damit das Zielen ruhig bleibt, während deine Hände ruhen. 0 = aus."
     }
   },
   "ad": {

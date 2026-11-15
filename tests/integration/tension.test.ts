@@ -3,9 +3,11 @@
 // the firmware's tension.cpp: the client stages a set in three SETs and
 // commits it with its CRC-32, reads the slots back by their CRC, Feel it runs
 // the staged set, a game's choice is for now only and 0x12 / 0xFE end it, and
-// the board's refusals are said in plain words. Then the Controller page's
-// Tension group: a starter set is staged like every other board setting and
-// written only by the save bar's Save (page rule 4).
+// the board's refusals are said in plain words. From 1.24 a slot is a whole
+// button layout (trigger effects + buttons), sent for now with 0x22, and the
+// board reports what it sent (0xE8). Then the Controller page's Tension group:
+// on 1.24 it edits the layout in the editor's trigger effects, on 1.23 its own
+// slots; either way staged and written only by the save bar's Save (page rule 4).
 import { act, createElement, useEffect } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeAll, describe, expect, it } from "vitest";
@@ -16,7 +18,7 @@ import { buttonTarget, emptyButtonPart, SOURCE, withBasePress } from "../../src/
 import type { UseDs5BridgeResult } from "../../src/hooks/useDs5Bridge";
 import { BoardDraftsProvider, useBoardDrafts, type BoardDrafts } from "../../src/desktop/live/boardDrafts";
 import { tensionErrorText } from "../../src/desktop/live/tensionDraft";
-import { SetsSection, TensionSection } from "../../src/desktop/live/Tension";
+import { TensionSection } from "../../src/desktop/live/Tension";
 import { FakeDongle } from "../support/fakeDongle";
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
@@ -30,7 +32,7 @@ async function board(protoMinor?: number) {
 }
 const tensionSets = (d: FakeDongle) => d.sets.filter((p) => p[0] >= 0x1c && p[0] <= 0x20);
 
-describe("sets with buttons (protocol 1.24, TENSION_BUTTONS.md §6)", () => {
+describe("whole layouts on the board (protocol 1.24, TENSION_BUTTONS.md §6)", () => {
   const swapped = { ...STARTERS.heavy, buttons: withBasePress(withBasePress(emptyButtonPart(), SOURCE.cross, buttonTarget(SOURCE.circle)), SOURCE.circle, buttonTarget(SOURCE.cross)) };
 
   it("stages the 494 bytes in nine ver-2 SETs (each ≤ 63 bytes), saves with the CRC of all of them, reads them back by it", async () => {
@@ -71,6 +73,53 @@ describe("sets with buttons (protocol 1.24, TENSION_BUTTONS.md §6)", () => {
     const r = await client.command(FUNC.tensionSave, [2, 0, crc & 0xff, (crc >>> 8) & 0xff, (crc >>> 16) & 0xff, crc >>> 24]).catch((e: unknown) => e);
     expect(tensionErrorText(r)).toBe(i18n.t("desktop.tension.errors.invalid"));
     expect(dongle.tension.slots[0]).toBeNull();
+  });
+
+  it("runs a layout for now (0x22, RAM only, choice now 0xFD); 0x22 [2, 0] and 0x12 end it", async () => {
+    const { dongle, client } = await board();
+    await client.runLayoutForNow(swapped);
+    expect(decodeSetWire(dongle.tension.forNow!)).toEqual(swapped);
+    expect(dongle.tension.slots.every((x) => x === null)).toBe(true); // never written to flash
+    expect((await client.readTensionList())!.choiceNow).toBeNull(); // 0xFD: not a slot
+    await client.runLayoutForNow(null);
+    expect(dongle.tension.forNow).toBeNull();
+    await client.runLayoutForNow(swapped);
+    await client.revertRemap(); // a game ended
+    expect(dongle.tension.forNow).toBeNull();
+    // Firmware without the piece ([58] bit 6) refuses it.
+    const step2 = new FakeDongle({ features5: 0x01 });
+    const c2 = new Ds5BridgeClient(step2);
+    await c2.identity();
+    await expect(c2.runLayoutForNow(swapped)).rejects.toBeInstanceOf(CommandError);
+  });
+
+  it("pauses keys and mouse (0x21) only with [58] bit 4, and says so in identity [59]", async () => {
+    const { client } = await board();
+    await client.pauseKeysMouse(2);
+    expect(((await client.identity()).keysMouseFlags ?? 0) & 0x02).toBe(0x02);
+    await client.pauseKeysMouse(0);
+    expect(((await client.identity()).keysMouseFlags ?? 0) & 0x02).toBe(0);
+    const step2 = new FakeDongle({ features5: 0x01 });
+    const c2 = new Ds5BridgeClient(step2);
+    await c2.identity();
+    await c2.pauseKeysMouse(2); // not sent at all
+    expect(step2.sets.some((p) => p[0] === FUNC.buttonsPause)).toBe(false);
+  });
+
+  it("reads what the board sent (0xE8): the press, its target in the running layout, the sources down", async () => {
+    const { dongle, client } = await board();
+    await client.saveTensionSet(0, swapped);
+    await client.chooseTension(0, false);
+    expect((await client.readLiveTruth())!.last).toBeNull();
+    dongle.input[7] = 0x08 | 0x20; // ✕ down (input byte 7 bit 5)
+    const now = (await client.readLiveTruth())!;
+    expect(now).toMatchObject({ running: true, what: 0, layer: 0, down: 1 << SOURCE.cross });
+    expect(now.last).toMatchObject({ source: SOURCE.cross, type: "press", phase: "on", target: buttonTarget(SOURCE.circle) });
+    dongle.input[7] = 0x08;
+    expect((await client.readLiveTruth())!.last!.phase).toBe("released");
+    const step2 = new Ds5BridgeClient(new FakeDongle({ features5: 0x01 }));
+    await step2.identity();
+    expect(await step2.readLiveTruth()).toBeNull(); // no [58] bit 3: never asked
   });
 });
 
@@ -161,9 +210,10 @@ async function page(protoMinor?: number) {
   container = document.createElement("div");
   document.body.append(container);
   root = createRoot(container);
-  act(() => root!.render(createElement(BoardDraftsProvider, { bridge }, createElement(SetsSection, { bridge }), createElement(TensionSection, { bridge }), createElement(Probe))));
-  // loop: test — until the board's sets are read (a few reads of the simulated board)
-  for (let i = 0; i < 100 && !container.textContent!.includes(i18n.t("desktop.tension.edit")) && protoMinor === undefined; i++) await act(() => new Promise((r) => setTimeout(r, 10)));
+  act(() => root!.render(createElement(BoardDraftsProvider, { bridge }, createElement(TensionSection, { bridge }), createElement(Probe))));
+  const ready = () => container!.textContent!.includes(i18n.t("desktop.tension.edit")) || container!.textContent!.includes(i18n.t("desktop.tension.presets"));
+  // loop: test — until the board's layouts are read (a few reads of the simulated board)
+  for (let i = 0; i < 100 && !ready() && (protoMinor === undefined || protoMinor >= 23); i++) await act(() => new Promise((r) => setTimeout(r, 10)));
   return b;
 }
 const button = (text: string) => [...container!.querySelectorAll("button")].find((x) => x.textContent === text)!;
@@ -174,15 +224,26 @@ const choose = (select: HTMLSelectElement, value: string) =>
     select.dispatchEvent(new Event("change", { bubbles: true }));
   });
 
-describe("the Sets section and Adaptive triggers' Tension group (Controller page)", () => {
-  it("stages a starter set and the saved choice; only the save bar's Save writes them, Revert drops them", async () => {
+describe("Adaptive triggers' Tension group (Controller page)", () => {
+  it("1.24: edits the trigger effects of the layout in the editor; a preset replaces L2 and R2 only; the save bar writes it", async () => {
     const { dongle } = await page();
-    // 1.24: Without a set is picked first (nothing runs); an empty slot offers the starters.
+    expect(container!.textContent).not.toMatch(/\bsets?\b/i);
+    act(() => button(i18n.t("desktop.tension.starters.bow")).click());
+    // No layout runs yet: the first free slot takes it and runs it from power-on, staged.
+    expect(seen.drafts!.staged).toBe(true);
+    expect(seen.drafts!.tension.choice).toBe(0);
+    expect(tensionSets(dongle)).toEqual([]);
+    await act(async () => void (await seen.drafts!.saveStaged()));
+    const saved = decodeSetWire(dongle.tension.slots[0]!)!;
+    expect([saved.l2, saved.r2]).toEqual([STARTERS.bow.l2, STARTERS.bow.r2]);
+    expect(saved.buttons).toEqual(emptyButtonPart()); // today's table had no changes
+    expect(dongle.tension.saved).toBe(0);
+  });
+
+  it("1.23: its own slots: stages a starter and the saved choice; only Save writes them, Revert drops them", async () => {
+    const { dongle } = await page(23);
     const edit = container!.querySelector<HTMLSelectElement>("select")!;
-    expect(edit.value).toBe("");
-    expect(edit.options[0].textContent).toBe(i18n.t("desktop.sets.without"));
-    expect(container!.textContent).toContain(i18n.t("desktop.sets.editInSets"));
-    choose(edit, "0");
+    expect(edit.value).toBe("0");
     act(() => button(i18n.t("desktop.tension.starters.bow")).click());
     expect(seen.drafts!.staged).toBe(true);
     expect(tensionSets(dongle)).toEqual([]); // nothing on the board yet
@@ -190,13 +251,13 @@ describe("the Sets section and Adaptive triggers' Tension group (Controller page
     await act(async () => void (await seen.drafts!.saveStaged()));
     expect(decodeSetBody(dongle.tension.slots[0]!)).toEqual(STARTERS.bow);
     expect(seen.drafts!.staged).toBe(false);
-    // Which set runs from power-on: staged too (the first row once a set is saved).
+    // What runs from power-on: staged too (the first row once a slot is saved).
     choose(container!.querySelector<HTMLSelectElement>("select")!, "0");
     expect(seen.drafts!.staged).toBe(true);
     expect(dongle.tension.saved).toBe(0xff);
     await act(async () => void (await seen.drafts!.saveStaged()));
     expect(dongle.tension.saved).toBe(0);
-    // Delete is staged as well, and Revert brings the set back.
+    // Clearing is staged as well, and Revert brings it back.
     act(() => button(i18n.t("desktop.tension.delete")).click());
     expect(seen.drafts!.staged).toBe(true);
     act(() => seen.drafts!.revertStaged());

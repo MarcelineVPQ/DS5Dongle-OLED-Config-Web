@@ -25,6 +25,8 @@ import { causeText } from "../shownError";
 import { useRemap, type Remap } from "./useRemap";
 import { sameBoard, showDraftsDropped, useSlotSettings, type SlotRead } from "./slotSettings";
 import { useTensionDraft, type TensionDraft } from "./tensionDraft";
+import { useLayoutEditor, type LayoutEditor } from "./layoutEditor";
+import type { ButtonLayout } from "../games/library";
 
 export const supportsCalibration = (identity: UseDs5BridgeResult["identity"]) => supportsFeature2(identity, 5, FEATURES2.calibration);
 export const supportsStickCurves = (identity: UseDs5BridgeResult["identity"]) => supportsFeature2(identity, 10, FEATURES2.stickCurves);
@@ -147,6 +149,8 @@ export interface BoardDrafts {
   curves: SlotDraft<StickCurvePair>;
   power: PowerDraft;
   tension: TensionDraft;
+  // Protocol 1.24: the button layout in the editor (layoutEditor.ts).
+  layout: LayoutEditor;
   // A game's profile is on: buttons and curves go to it, not to the board.
   inProfile: boolean;
   // Anything staged for the board's Save (buttons and curves only outside a profile).
@@ -156,13 +160,20 @@ export interface BoardDrafts {
   revertStaged: () => void;
 }
 
-export function useBoardDraftsState(bridge: UseDs5BridgeResult, { inProfile, appliedStamp }: { inProfile: boolean; appliedStamp: string | null }): BoardDrafts {
+// The game whose profile is on (its stored button layout, if any): the editor edits that layout.
+export type ProfileLayout = { key: string; title: string; layout: ButtonLayout | null } | null;
+
+export function useBoardDraftsState(
+  bridge: UseDs5BridgeResult,
+  { inProfile, appliedStamp, profileLayout = null }: { inProfile: boolean; appliedStamp: string | null; profileLayout?: ProfileLayout },
+): BoardDrafts {
   const { t } = useTranslation();
   const remap = useRemap(bridge.client, bridge.identity?.remapTemporary ?? null, appliedStamp);
   const calibration = useSlotDraft(bridge, supportsCalibration(bridge.identity), DEFAULT_CALIBRATION, readCal, writeCal, sameCal);
   const curves = useSlotDraft(bridge, supportsStickCurves(bridge.identity), DEFAULT_CURVES, readCurves, writeCurves, sameCurves, t("desktop.curves.readFailed"));
   const power = usePowerDraft(bridge);
   const tension = useTensionDraft(bridge);
+  const layout = useLayoutEditor(tension, remap, inProfile ? profileLayout : null);
   const remapStaged = !inProfile && remap.dirty;
   const curvesStaged = !inProfile && curves.dirty;
   const staged = remapStaged || curvesStaged || calibration.dirty || power.dirty || tension.dirty;
@@ -190,8 +201,8 @@ export function useBoardDraftsState(bridge: UseDs5BridgeResult, { inProfile, app
     tension.revert();
   }, [inProfile, remap, curves, calibration, power, tension]);
   return useMemo(
-    () => ({ remap, calibration, curves, power, tension, inProfile, staged, saveStaged, revertStaged }),
-    [remap, calibration, curves, power, tension, inProfile, staged, saveStaged, revertStaged],
+    () => ({ remap, calibration, curves, power, tension, layout, inProfile, staged, saveStaged, revertStaged }),
+    [remap, calibration, curves, power, tension, layout, inProfile, staged, saveStaged, revertStaged],
   );
 }
 

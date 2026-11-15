@@ -98,7 +98,15 @@ export default function DesktopApp() {
   // The board's staged settings (buttons, curves, calibration, PC sleep): kept
   // here, saved by the one save bar (SaveBar.tsx, IA audit Q1).
   const profileGame = profileTarget(profiles.editing, profiles.active);
-  const drafts = useBoardDraftsState(bridge, { inProfile: !!(profileGame && profiles.library.games[profileGame.gameKey]?.profile), appliedStamp: profiles.appliedStamp });
+  const profileSettings = profileGame ? profiles.library.games[profileGame.gameKey]?.profile?.settings : undefined;
+  const layoutId = profileSettings?.buttonLayout;
+  const profileLayoutValue = layoutId ? (profiles.library.layouts?.[layoutId] ?? null) : null;
+  // The game's layout for the editor while its profile is on (memoized on what it is, so the editor's draft keeps).
+  const profileLayout = useMemo(
+    () => (profileGame && profileSettings ? { key: profileGame.gameKey, title: profileGame.title, layout: profileLayoutValue } : null),
+    [profileGame, profileSettings, profileLayoutValue],
+  );
+  const drafts = useBoardDraftsState(bridge, { inProfile: !!profileSettings, appliedStamp: profiles.appliedStamp, profileLayout });
 
   const openPanel = (view: PanelView) => {
     setMain("controller");

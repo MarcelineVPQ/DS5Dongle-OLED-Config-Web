@@ -331,7 +331,7 @@ export const ROADMAP: RoadmapItem[] = [
   {
     column: "progress",
     title: "Tension",
-    text: "Your own adaptive trigger effects: L2 and R2 as one named set, effects that build with how far you pull and how long you hold, run by {{device}} with or without the app, and picked per game.",
+    text: "Your own adaptive trigger effects, part of a button layout: effects that build with how far you pull and how long you hold, run by {{device}} with or without the app, and picked per game.",
     areas: ["controller"],
   },
   { column: "planned", title: "Per-controller settings", text: "Each paired controller keeps its own haptic feedback, light bar, button assignments and speaker settings.", areas: ["controller"] },

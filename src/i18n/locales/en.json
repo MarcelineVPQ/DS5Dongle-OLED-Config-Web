@@ -177,7 +177,7 @@
       "keysMouse": "Keys and mouse from the controller",
       "keysMouseShort": "Keys and mouse",
       "keysMouseSub": "Starts the next time {{device}} connects.",
-      "keysMouseInfo": "On: {{device}} also shows up on the PC as a keyboard and mouse, so a set's buttons can press keys (key targets come with a later firmware). Off: the PC sees only the controller, exactly as before. Not yet tested on every system: on Linux the keyboard may get no driver, and macOS may ask you to set up a new keyboard."
+      "keysMouseInfo": "On: {{device}} also shows up on the PC as a keyboard and mouse, so a button layout's buttons can press keys (key targets come with a later firmware). Off: the PC sees only the controller, exactly as before. Not yet tested on every system: on Linux the keyboard may get no driver, and macOS may ask you to set up a new keyboard."
     },
     "lightbar": {
       "mode": "Mode",
@@ -227,16 +227,16 @@
     },
     "tension": {
       "title": "Tension",
-      "info": "Tension: your own adaptive trigger effects. A set holds L2 and R2 together; each trigger has up to 4 stages that change the effect with how far you pull and how long you hold. The board runs them, with or without this app.",
+      "info": "Tension: your own adaptive trigger effects. L2 and R2 each have up to 4 stages that change the effect with how far you pull and how long you hold. The board runs them, with or without this app.",
       "needsFirmware": "Tension (your own trigger effects) needs newer firmware.",
-      "needsFirmwareGame": "Tension sets need newer firmware ({{deviceName}} → Firmware).",
+      "needsFirmwareGame": "Trigger effects for a game need newer firmware ({{deviceName}} → Firmware).",
       "retry": "Read again",
-      "reading": "Reading the saved sets…",
-      "readOnly": "These sets come from newer firmware: update to change them.",
+      "reading": "Reading the board's layouts…",
+      "readOnly": "These layouts come from newer firmware: update to change them.",
       "runs": "Runs from power-on",
-      "runsInfo": "The set the board runs on its own from power-on, with or without the app. A game's profile can pick another while the game runs.",
+      "runsInfo": "What the board runs on its own from power-on, with or without the app. A game's profile can pick another while the game runs.",
       "none": "None",
-      "edit": "Edit set",
+      "edit": "Slot to edit",
       "slot": "{{slot}} · {{name}}",
       "empty": "empty",
       "startFrom": "An empty slot. Start from:",
@@ -245,14 +245,14 @@
         "heavy": "Heavy trigger",
         "brake": "Brake pedal",
         "machineGun": "Machine gun",
-        "empty": "Empty set"
+        "empty": "Empty"
       },
       "name": "Name",
       "nameSub": "16 characters, English letters only",
       "feel": "Feel it",
       "feelStop": "Stop feeling it",
-      "feelHint": "Runs this set now, unsaved, until you stop it",
-      "delete": "Delete set",
+      "feelHint": "Runs these effects now, unsaved, until you stop it",
+      "delete": "Clear this slot",
       "useInfo": "Game: the game's own effects. Fill in: yours only while the game sends nothing on this trigger. Replace: always yours.",
       "use": {
         "game": "Game",
@@ -319,30 +319,33 @@
       "pictureCaption": "Strength over the pull · dashed: after its hold time",
       "liveTitle": "Tension now",
       "livePaused": "Paused while the trigger test runs",
-      "liveFeel": "Feel it: the set you're editing runs",
+      "liveFeel": "Feel it: what you're editing runs",
       "liveGame": "A game's profile runs {{name}}",
       "liveSet": "{{name}} runs",
-      "liveNone": "No set runs",
+      "liveNone": "Nothing runs",
       "owner": {
         "none": "not used",
         "tension": "Tension",
         "game": "the game's effect",
         "waiting": "the game's, for a moment"
       },
-      "gameLabel": "Tension set",
+      "gameLabel": "Trigger effects",
       "gameInfo": "Runs while this game does, then the board's own choice again. Never saved on the board.",
       "boardChoice": "The board's choice",
       "gone": "deleted",
-      "noneForGame": "Make Tension sets on the Controller page (Adaptive triggers).",
+      "noneForGame": "Make trigger effects on the Controller page (Adaptive triggers).",
       "errors": {
         "notOn": "This firmware has no Tension: update it first.",
-        "changed": "A set changed while it was being read. Read again.",
-        "unreadable": "A saved set is in a layout this app can't read: update the app.",
-        "invalid": "{{device, capitalize}} didn't accept that set. Nothing was saved.",
+        "changed": "A layout changed while it was being read. Read again.",
+        "unreadable": "A layout on {{deviceName}} is in a form this app can't read: update the app.",
+        "invalid": "{{device, capitalize}} didn't accept that layout. Nothing was saved.",
         "failed": "{{device, capitalize}} couldn't save that to its memory. Try again.",
-        "notValid": "Set {{slot}} has no name yet. Nothing was saved.",
-        "setGone": "This game's Tension set (slot {{slot}}) isn't on {{deviceName}} any more: pick another on the game's page."
-      }
+        "notValid": "The layout in slot {{slot}} has no name yet. Nothing was saved.",
+        "setGone": "This game's trigger effects (slot {{slot}}) aren't on {{deviceName}} any more: pick others on the game's page."
+      },
+      "infoLayout": "Tension: your own adaptive trigger effects, part of the button layout being edited. L2 and R2 each have up to 4 stages that change the effect with how far you pull and how long you hold. The board runs them, with or without this app.",
+      "presets": "Trigger effects: start from",
+      "presetsInfo": "Replaces L2 and R2 of this layout; its buttons stay as they are."
     },
     "diag": {
       "core1Frozen": "Core1 stopped: the audio path is dead until {{device}} restarts.",
@@ -1805,7 +1808,20 @@
         "edited": "Changed since you loaded it: Update saves the changes into the layout; Save to {{device}} makes them your normal buttons.",
         "applied": "Applied: these are your normal buttons on {{device}} now."
       },
-      "extraSelf": "Itself (default)"
+      "extraSelf": "Itself (default)",
+      "hintBoard": "Every button layout once: the ones kept on this PC and the ones on {{device}}. A layout on {{device}} works without the app; the one that runs from power-on is the one Button assignments edits. A game's profile can use any layout while the game runs.",
+      "loadHintBoard": "Put this layout into the editor (Save to {{device}} makes it run from power-on)",
+      "onBoard": "On the board",
+      "runs": "Runs from power-on",
+      "putOnBoard": "Put on the board",
+      "putOnBoardHint": "Keep a copy on {{device}}, so it works without the app (Save to {{device}} writes it)",
+      "takeOff": "Take off the board",
+      "runFromPowerOn": "Run from power-on",
+      "boardFull": "The board holds 8 layouts: take one off first.",
+      "layers_one": "{{count}} layer",
+      "layers_other": "{{count}} layers",
+      "triggerEffects": "trigger effects",
+      "needsBoard": "Put this layout on the board to use all of it in this game."
     },
     "editing": {
       "title": "Editing: {{title}} profile",
@@ -2071,8 +2087,7 @@
       "oled": "OLED screen",
       "usb": "Connection to the PC",
       "lights": "Status lights",
-      "diagnostics": "Diagnostics",
-      "sets": "Sets"
+      "diagnostics": "Diagnostics"
     },
     "boardBusy": {
       "title": "{{device, capitalize}} is in use by another program.",
@@ -2134,12 +2149,6 @@
       "identifyTip": "In use. Click to flash THIS ONE on its screen",
       "switchTip": "Click to show this board (it flashes THIS ONE on its screen)"
     },
-    "sets": {
-      "without": "Without a set",
-      "status": "Runs: {{name}}",
-      "info": "A set holds L2, R2 and the buttons together under a name. Your board keeps up to 8 and runs them with or without the app. Edit set picks the set that the drawing, Adaptive triggers and Button assignments show; Without a set edits the buttons used while no set changes them.",
-      "editInSets": "Start or choose a set under Sets to edit its triggers."
-    },
     "buttons": {
       "warn": {
         "reconnect": "Reconnect to start keys and mouse.",
@@ -2147,9 +2156,21 @@
         "noCircle": "Nothing presses ○ now: you may get stuck in menus.",
         "duplicate": "{{other}} already does this.",
         "promptsInfo": "Games still show their own button icons: they don't know about this layout.",
-        "triggerEffectInfo": "Trigger effects stay on the trigger you pull."
+        "triggerEffectInfo": "Trigger effects stay on the trigger you pull.",
+        "holdCost": "Hold on {{button}}: its press waits until you let go.",
+        "holdCostInfo": "A short press now goes out when you let go, as a quick tap, so it can't be held. Hold it {{time}} for the Hold action.",
+        "doubleCost": "Double press on {{button}} delays its press by {{time}}.",
+        "doubleCostInfo": "The board waits {{time}} after you let go to see whether a second press comes.",
+        "psCost": "With PS holds back the PS button until you let go.",
+        "psCostInfo": "The PS button goes out when you let go, or after half a second. Steam also uses PS with other buttons.",
+        "needsKeys": "Keys and mouse are off on {{device}}.",
+        "paused": "Keys and mouse pause while this window is in front.",
+        "layerNoEntry": "No button enters this layer yet.",
+        "layerNoEntryInfo": "Choose a button and pick this layer as one of its targets.",
+        "full": "This layout has no room for more changes.",
+        "sixKeys": "Only six keys can be held at once."
       },
-      "status": "{{set}} · {{count}} changed",
+      "status": "{{name}} · {{count}} changed",
       "pick": "Button",
       "pickHint": "Click a part, or press it on the controller.",
       "pickNone": "Changed buttons",
@@ -2158,27 +2179,168 @@
       "noneChanged": "Every button is itself in this layer.",
       "does": "{{button}} does",
       "row": {
-        "press": "Press"
+        "press": "Press",
+        "hold": "Hold",
+        "double": "Double press",
+        "withPs": "With PS",
+        "toggle": "Toggle",
+        "turbo": "Turbo"
       },
       "psFixed": "PS button (always)",
       "swap": "Swap with…",
       "resetButton": "Reset this button",
-      "legacyHint": "Hold, double press and layers need a set.",
-      "makeSet": "Make a set from these buttons",
-      "makeSetReplace": "Replace set",
-      "emptySlot": "An empty slot: start a set under Sets.",
       "needsFirmware": "Hold, double press and layers need an update.",
-      "setLeaves": "This set leaves the buttons as they are.",
-      "useInSet": "Change buttons in this set",
       "target": {
         "title": "{{row}}: what it does",
-        "gridHint": "Arrow keys move, Enter picks."
+        "gridHint": "Arrow keys move, Enter picks.",
+        "pressKey": "Press a key…",
+        "pressKeyArmed": "Press the key now (Esc cancels)",
+        "showAll": "Show all keys",
+        "mods": "Modifiers",
+        "modsOnly": "Only the modifiers",
+        "keyText": "Key {{key}}",
+        "layerText": "{{name}} ({{mode}})"
       },
       "badge": {
         "create": "Create",
         "options": "Options",
-        "touchpad": "Touch"
+        "touchpad": "Touch",
+        "mouse": "Mouse"
+      },
+      "statusLayers_one": "{{name}} · {{changed}} changed · {{count}} layer",
+      "statusLayers_other": "{{name}} · {{changed}} changed · {{count}} layers",
+      "name": "Name",
+      "nameSub": "16 characters, English letters only",
+      "saveInto": "Saves into",
+      "saveIntoInfo": "All 8 places on the board hold a layout and none runs from power-on. Pick the one this layout replaces when you save.",
+      "saveIntoPick": "Pick one",
+      "holdTime": "Hold time",
+      "turboRate": "Presses a second",
+      "notSet": "not set",
+      "clearRow": "Clear {{row}}",
+      "presets": "Start from",
+      "presetsInfo": "Starting points to try and change, not tested designs. One hand replaces the buttons of this layout; Toggle instead of hold makes L2, L1 and L3 latch.",
+      "preset": {
+        "oneLeft": "One hand (left)",
+        "oneRight": "One hand (right)",
+        "toggle": "Toggle instead of hold"
+      },
+      "tab": {
+        "controller": "Controller",
+        "key": "Key",
+        "mouse": "Mouse",
+        "layer": "Layer",
+        "gyro": "Gyro"
+      },
+      "keyGroup": {
+        "letters": "Letters",
+        "digits": "Digits",
+        "function": "Function keys",
+        "navigation": "Navigation",
+        "editing": "Editing",
+        "keypad": "Keypad"
+      },
+      "mod": {
+        "ctrl": "Ctrl",
+        "shift": "Shift",
+        "alt": "Alt",
+        "gui": "Win / ⌘"
+      },
+      "mouse": {
+        "left": "Mouse left",
+        "right": "Mouse right",
+        "middle": "Mouse middle",
+        "back": "Mouse back",
+        "forward": "Mouse forward"
+      },
+      "move": {
+        "up": "Move up",
+        "down": "Move down",
+        "left": "Move left",
+        "right": "Move right",
+        "wheelUp": "Wheel up",
+        "wheelDown": "Wheel down"
+      },
+      "speed": "Speed",
+      "wheelSpeed": "Wheel speed",
+      "layerMode": {
+        "held": "while held",
+        "switch": "switch"
+      },
+      "gyro": {
+        "held": "Gyro on while held",
+        "offHeld": "Gyro off while held",
+        "switch": "Gyro on / off"
+      },
+      "turnOn": "Turn on",
+      "live": {
+        "title": "Live from the board",
+        "line": "{{from}} → {{layer}} · {{type}} → PC got {{to}}",
+        "wouldSend": "{{from}} → {{layer}} · {{type}} → would send {{to}}",
+        "idle": "Press a button on the controller.",
+        "noController": "Connect the controller to see it live.",
+        "nothing": "nothing",
+        "type": {
+          "deciding": "deciding",
+          "press": "Press",
+          "hold": "Hold",
+          "double": "Double press",
+          "withPs": "With PS",
+          "toggleOn": "Toggle on",
+          "toggleOff": "Toggle off",
+          "turbo": "Turbo",
+          "tap": "tap"
+        }
       }
+    },
+    "layers": {
+      "base": "Base",
+      "defaultName": "Layer {{n}}",
+      "add": "+ Layer",
+      "tabs": "Layers",
+      "title": "Layer: {{name}}",
+      "sameAsBase": "Same as base",
+      "switchBack": "Here it switches back to Base.",
+      "name": "Layer name",
+      "nameSub": "10 characters, English letters only",
+      "colour": "Colour",
+      "colourN": "Colour {{n}}",
+      "enteredBy": "Entered by",
+      "enteredLine": "{{button}} · {{row}} · {{mode}}",
+      "gyro": "Gyro in this layer",
+      "gyroMode": {
+        "same": "Same as base",
+        "on": "On",
+        "off": "Off"
+      },
+      "reset": "Reset this layer",
+      "delete": "Delete layer"
+    },
+    "gyroMouse": {
+      "title": "Gyro as mouse",
+      "mode": "Gyro",
+      "modes": {
+        "off": "Off",
+        "on": "On",
+        "button": "With a button"
+      },
+      "buttonHint": "Give a button the Gyro target to use it.",
+      "use": "Moves",
+      "uses": {
+        "mouse": "Mouse",
+        "stick": "Right stick"
+      },
+      "axis": "Turn with",
+      "axes": {
+        "yaw": "Yaw",
+        "roll": "Roll"
+      },
+      "speedH": "Speed across",
+      "speedV": "Speed up and down",
+      "invertH": "Invert across",
+      "invertV": "Invert up and down",
+      "steadiness": "Steadiness",
+      "steadinessInfo": "Small movements are softened below this, so the aim holds still while your hands rest. 0 = off."
     }
   },
   "ad": {

@@ -88,6 +88,7 @@ export function encodeCurve(c: StickCurve): number[] {
 // out of range, custom points decreasing).
 export function strictCurve(b: ArrayLike<number>): StickCurve | null {
   const type = CURVE_TYPES[b[0]] as CurveType | undefined;
+  // loop: HOT-PATH-OK — N = 4 points per curve read
   const points = [0, 1, 2, 3].map((i) => [b[1 + 2 * i], b[2 + 2 * i]]) as StickCurve["points"];
   const c: StickCurve | null = type ? { type, points } : null;
   return c && isValidCurve(c) ? c : null;

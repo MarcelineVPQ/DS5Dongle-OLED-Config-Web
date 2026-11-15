@@ -27,7 +27,8 @@ import { drawBattery, drawPad, kBattTextX, kBattY, kEtaX, packedCanvas } from ".
 import { SCREEN_NAMES } from "../oled/screenNames";
 import { type SimBoard, SimOledScreens } from "../oled/simScreens";
 import { crc32, decodeSetBody, decodeSetWire, SET_BODY_BYTES, SET_WIRE_BYTES, TENSION_CHUNK_AT, TENSION_CHUNK_REPLY_BYTES, TENSION_REPORT, TENSION_SLOTS, type TensionProgram } from "./tension";
-import { BUTTON_PART_BYTES, BUTTONS_CHUNK_AT, BUTTONS_CHUNKS, buttonsChunkReplyBytes } from "./buttons";
+import { BUTTON_PART_BYTES, BUTTONS_CHUNK_AT, BUTTONS_CHUNKS, buttonsChunkReplyBytes, decodeButtonPart, effectiveEntry, itself, LIVE_TRUTH_BYTES, LIVE_TRUTH_REPORT, SOURCE } from "./buttons";
+import { decodeInputReport } from "../oled/inputReport";
 import { CTRL_FIRMWARE_BYTES, CTRL_HEADER_BYTES, CTRL_INFO_REPORT, CTRL_MAX_PAGES, CTRL_PAGE_BYTES, CTRL_PAGE_REPLY_BYTES, CTRL_SEL, CTRL_TEST, telemetryPages } from "./controllerInfo";
 
 const DEFERRED = new Set([0x02, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0e]);
@@ -49,6 +50,9 @@ const SIM_TIMINGS: [number, number][] = [
 export interface SimulatedDongleOptions {
   protoMajor?: number;
   protoMinor?: number; // default PROTOCOL_MINOR_KNOWN (the firmware's current minor)
+  // Protocol 1.24: identity [58], the pieces of button layouts on the board
+  // (FEATURES5); default every piece (0x7F). A test pins 0x01 for build step 2.
+  features5?: number;
   // How many identity reads a deferred command stays PENDING for.
   pendingPolls?: number;
   saveFails?: boolean;
@@ -250,6 +254,12 @@ export class SimulatedDongle implements Ds5Transport {
   private get v24() {
     return this.minor >= 24;
   }
+  private get features5() {
+    return this.opts.features5 ?? 0x7f;
+  }
+  private get keysPaused() {
+    return this.keysPausedUntil > Date.now();
+  }
   // Keys and mouse (1.24): the interface is on the bus (identity [59] bit 0)
   // from the USB connect (0xF6 0x03) after keys_mouse was saved on.
   keysMouseUp = false;
@@ -300,7 +310,13 @@ export class SimulatedDongle implements Ds5Transport {
     feel: null as Uint8Array | null,
     newerStore: false, // the sets were saved by newer firmware: read-only
     paused: false,
+    forNow: null as Uint8Array | null, // 1.24: a layout sent by the app for now (0x22), shown as slot 0xFD
   };
+  // 1.24: keys and mouse paused (0xF6 0x21) until this time (ms, Date.now()).
+  keysPausedUntil = 0;
+  // 1.24 (GET 0xE8): the sources down in the last reading and the last event.
+  private liveDown = 0;
+  private liveLast: Uint8Array = new Uint8Array([0xff, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
 
   constructor(private readonly opts: SimulatedDongleOptions = {}) {
     this.oledScreen = opts.live ? 0 : 2;
@@ -434,6 +450,7 @@ export class SimulatedDongle implements Ds5Transport {
     if (this.gone) throw new DeviceGoneError();
     if ((reportId & 0xff) === CTRL_INFO_REPORT && this.minor >= 12) return this.controllerInfo(reportId >> 8).subarray(0, length);
     if ((reportId & 0xff) === TENSION_REPORT && this.minor >= 23) return this.tensionGet(reportId >> 8, length);
+    if (reportId === LIVE_TRUTH_REPORT && this.v24 && (this.features5 & 0x08) !== 0) return this.liveTruth().subarray(0, length);
     switch (reportId) {
       case 0xf0:
         return (this.opts.live ? this.liveInput() : this.input).slice(0, length);
@@ -615,6 +632,7 @@ export class SimulatedDongle implements Ds5Transport {
       }
     } else if (func === 0x11 && this.minor >= 8) {
       const table = [...payload.subarray(4, 20)];
+      // loop: HOT-PATH-OK — dev/test fake only; N = 16 table entries per SET
       if (payload[1] !== 0x52 || payload[2] !== 0x4d || payload[3] !== 1 || payload.length < 20 || table.some((v) => v > 15 && v !== 0xff)) this.lastResult = RESULT.invalid;
       else {
         this.remap = table;
@@ -623,6 +641,7 @@ export class SimulatedDongle implements Ds5Transport {
       }
     } else if (func === 0x13 && this.minor >= 9) {
       const e = [...payload.subarray(4, 8)];
+      // loop: HOT-PATH-OK — dev/test fake only; N = 4 extra entries per SET
       if (payload[1] !== 0x52 || payload[2] !== 0x58 || payload[3] !== 1 || payload.length < 9 || payload[8] > 1 || e.some((v) => v > 15 && v !== 0xfe && v !== 0xff)) this.lastResult = RESULT.invalid;
       else {
         this.extra = e;
@@ -631,10 +650,12 @@ export class SimulatedDongle implements Ds5Transport {
         this.remapRevision++;
       }
     } else if (func === 0x14 && this.minor >= 10) {
+      // loop: HOT-PATH-OK — dev/test fake only; N = 2 curves per SET
       const pair = [0, 1].map((i) => [...payload.subarray(5 + i * CURVE_BYTES, 5 + (i + 1) * CURVE_BYTES)]);
       const temporary = payload[5 + 2 * CURVE_BYTES];
       // As the firmware: framing, slot, temporary flag, and each curve valid (type 0..5, custom points non-decreasing).
       const ok =
+        // loop: HOT-PATH-OK — dev/test fake only; N = 2 curves per SET
         payload.length >= 6 + 2 * CURVE_BYTES && payload[1] === 0x43 && payload[2] === 0x56 && payload[3] === 1 && payload[4] <= 3 && temporary <= 1 && pair.every((b) => strictCurve(b) !== null);
       if (!ok) this.lastResult = RESULT.invalid;
       else if (temporary === 1) this.tempCurves = { slot: payload[4], pair };
@@ -660,6 +681,7 @@ export class SimulatedDongle implements Ds5Transport {
         this.tension.now = this.tension.saved;
         this.tension.temporary = false;
       }
+      this.tension.forNow = null; // 1.24 (§3.8): it also ends a layout sent for now (0x22)
       this.extra = this.flashExtra.slice();
       this.remap = this.flashRemap.slice();
       this.remapTemporary = false;
@@ -674,6 +696,17 @@ export class SimulatedDongle implements Ds5Transport {
         this.pending = { func, arg, arg2, polls: this.opts.pendingPolls ?? 1 };
         this.lastResult = RESULT.pending;
       }
+    } else if (func === 0x21 && this.v24) {
+      // 1.24 (§6.2): [1, seconds 0..10]; only with keys and mouse ([58] bit 4).
+      if ((this.features5 & 0x10) === 0 || payload.length < 3 || payload[1] !== 1 || payload[2] > 10) this.lastResult = RESULT.invalid;
+      else this.keysPausedUntil = payload[2] === 0 ? 0 : Date.now() + payload[2] * 1000;
+    } else if (func === 0x22 && this.v24) {
+      // 1.24 (§6.2): [2, 1, crc32] runs the staged layout for now (RAM only); [2, 0] ends it.
+      const a = payload.subarray(1);
+      const t = this.tension;
+      if ((this.features5 & 0x40) === 0 || a.length < 2 || a[0] !== 2 || a[1] > 1 || (a[1] === 1 && (a.length < 6 || !this.tensionCrcOk(a.subarray(2), 2)))) this.lastResult = RESULT.invalid;
+      else if (a[1] === 0) t.forNow = null;
+      else t.forNow = t.staged.slice();
     } else if (func >= 0x1c && func <= 0x20 && this.minor >= 23) {
       this.tensionSet(func, payload);
     } else if (func === 0x1b && this.minor >= 21) {
@@ -815,7 +848,7 @@ export class SimulatedDongle implements Ds5Transport {
   // The set that runs (Feel it, then the choice now), decoded.
   private tensionRunning(): { l2: TensionProgram; r2: TensionProgram } | null {
     const t = this.tension;
-    const body = t.feel ?? (t.now < TENSION_SLOTS ? t.slots[t.now] : null);
+    const body = t.feel ?? t.forNow ?? (t.now < TENSION_SLOTS ? t.slots[t.now] : null);
     return body ? decodeSetBody(body) : null;
   }
 
@@ -849,7 +882,7 @@ export class SimulatedDongle implements Ds5Transport {
       if (length < 38) return new Uint8Array(0);
       const out = new Uint8Array(38);
       const v = new DataView(out.buffer);
-      out.set([1, TENSION_SLOTS, 0, t.saved, t.now, flags]);
+      out.set([1, TENSION_SLOTS, 0, t.saved, t.forNow ? 0xfd : t.now, flags]);
       // loop: NOT-WORTH — dev/test fake only; N = 8 slots per list read
       t.slots.forEach((body, i) => {
         if (!body) return;
@@ -881,6 +914,59 @@ export class SimulatedDongle implements Ds5Transport {
     const out = new Uint8Array(want);
     out.set([1, slot, chunk, t.slots[slot] ? 1 : 0]);
     out.set(body.subarray(TENSION_CHUNK_AT(chunk), TENSION_CHUNK_AT(chunk) + want - 4), 4);
+    return out;
+  }
+
+  // GET 0xE8 (1.24, §6.4): what the board sends, worked out here from the raw
+  // input and the layout that runs, base layer, Press rows only (the
+  // simulation keeps no timers): the sources down, the last press, and the
+  // pad bits the PC would get.
+  private liveTruth(): Uint8Array {
+    const t = this.tension;
+    const out = new Uint8Array(LIVE_TRUTH_BYTES);
+    const wire = t.feel ?? t.forNow ?? (t.now < TENSION_SLOTS ? t.slots[t.now] : null);
+    const part = wire ? decodeButtonPart(wire.subarray(SET_BODY_BYTES)) : undefined;
+    const raw = this.controllerConnected ? decodeInputReport(this.opts.live ? this.liveInput() : this.input) : null;
+    const S = SOURCE;
+    const dpad = raw?.dpad ?? 8;
+    const downs: Array<[number, boolean]> = raw
+      ? [
+          [S.l2, raw.l2],
+          [S.l1, raw.l1],
+          [S.create, raw.create],
+          [S.up, dpad === 7 || dpad <= 1],
+          [S.left, dpad >= 5 && dpad <= 7],
+          [S.down, dpad >= 3 && dpad <= 5],
+          [S.right, dpad >= 1 && dpad <= 3],
+          [S.l3, raw.l3],
+          [S.r2, raw.r2],
+          [S.r1, raw.r1],
+          [S.options, raw.options],
+          [S.triangle, raw.triangle],
+          [S.circle, raw.circle],
+          [S.cross, raw.cross],
+          [S.square, raw.square],
+          [S.r3, raw.r3],
+          [S.touchpad, raw.pad],
+          [S.ps, raw.home],
+        ]
+      : [];
+    let down = 0;
+    // loop: HOT-PATH-OK — dev/test fake only; N = 18 sources per live-truth read
+    for (const [src, on] of downs) if (on) down |= 1 << src;
+    const rising = down & ~this.liveDown;
+    this.liveDown = down;
+    if (rising) {
+      const src = Math.log2(rising & -rising);
+      const e = part ? effectiveEntry(part, 0, src) : null;
+      const to = e?.press ?? itself(src)!;
+      this.liveLast = new Uint8Array([src, 1, 1, 0, 0, 0, 0, to.kind, to.a, to.b, 0]);
+    } else if (this.liveLast[0] !== 0xff && !(down & (1 << this.liveLast[0]))) this.liveLast[2] = 2;
+    const flags = (wire ? 0x01 : 0) | (wire && part ? 0x02 : 0) | (t.feel ? 0x04 : 0) | (this.keysMouseUp ? 0x08 : 0) | (this.keysPaused ? 0x20 : 0);
+    out.set([0x42, 0x54, 1, flags, t.feel ? t.now : t.forNow ? 0xfd : t.now < TENSION_SLOTS ? t.now : 0xfe, 0]);
+    out.set([down & 0xff, (down >> 8) & 0xff, (down >> 16) & 0xff], 6);
+    out.set([down & 0xff, (down >> 8) & 0xff, (down >> 16) & 0xff], 9);
+    out.set(this.liveLast, 12);
     return out;
   }
 
@@ -1092,8 +1178,8 @@ export class SimulatedDongle implements Ds5Transport {
       for (let i = 0; i < 8; i++) out[50 + i] = parseInt(this.boardId.slice(i * 2, i * 2 + 2), 16) || 0;
     }
     if (minor >= 24) {
-      out[58] = 0x01; // FEATURES5: button layouts in sets (1.24, build step 2); the keys-and-mouse switch is the 54-byte body (step 1)
-      out[59] = (this.keysMouseUp ? 0x01 : 0) | (this.keysMouseSaved ? 0x04 : 0); // [59]: interface up, saved on
+      out[58] = this.features5; // FEATURES5: the pieces of button layouts on the board (1.24); the keys-and-mouse switch is the 54-byte body (step 1)
+      out[59] = (this.keysMouseUp ? 0x01 : 0) | (this.keysPaused ? 0x02 : 0) | (this.keysMouseSaved ? 0x04 : 0); // [59]: interface up, paused, saved on
     }
     return out;
   }

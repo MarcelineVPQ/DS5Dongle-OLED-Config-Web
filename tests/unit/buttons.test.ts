@@ -24,8 +24,21 @@ import {
   SOURCE,
   swapBase,
   withBasePress,
+  addLayer,
+  deleteLayer,
+  decodeLiveTruth,
+  enteredBy,
+  legacyFromPart,
+  oneHand,
+  TARGET_KIND,
+  toggleInsteadOfHold,
+  withGyro,
+  withRow,
+  withSameAsBase,
+  withSwitch,
   type ButtonPart,
 } from "../../src/protocol/buttons";
+import { keyForCode, keyName } from "../../src/protocol/keys";
 import { crc32, decodeSetWire, encodeSetBody, encodeSetWire, SET_WIRE_BYTES, STARTERS } from "../../src/protocol/tension";
 
 // A ButtonPart's bytes: header [bflags, layers, window], then the pool.
@@ -222,7 +235,7 @@ describe("the board's checks, rule by rule (§3.5)", () => {
   });
 });
 
-describe("Press-only editing (build step 2)", () => {
+describe("editing a layout: Press", () => {
   it("a Press back to the button itself removes its entry", () => {
     const p = withBasePress(emptyButtonPart(), SOURCE.cross, buttonTarget(SOURCE.circle));
     expect(withBasePress(p, SOURCE.cross, buttonTarget(SOURCE.cross)).entries).toEqual([]);
@@ -238,7 +251,7 @@ describe("Press-only editing (build step 2)", () => {
     expect(swapBase(p, SOURCE.cross, SOURCE.circle).entries).toEqual([]); // swapped back: nothing changed
   });
 
-  it("Make a set from these buttons: every changed legacy button and Edge extra as a Press entry", () => {
+  it("today's table as a layout: every changed legacy button and Edge extra as a Press entry", () => {
     const table = Array.from({ length: 16 }, (_, i) => i);
     table[13] = 12;
     table[12] = 13;
@@ -289,5 +302,104 @@ describe("the 494-byte wire and its reads (§3.1, §6.3)", () => {
     expect(decodeButtonsChunk(reply, 5, 6)).toEqual({ used: true, bytes: reply.slice(4) });
     expect(decodeButtonsChunk(reply, 4, 6)).toBeNull(); // another slot's
     expect(decodeButtonsChunk(reply.subarray(0, 27), 5, 6)).toBeNull();
+  });
+});
+
+describe("editing a layout: press types, layers, gyro (every result valid, §3.5)", () => {
+  const valid = (p: ButtonPart) => buttonPartBytesValid(encodeButtonPart(p));
+  const layerT = (a: number, b: number) => ({ kind: TARGET_KIND.layer, a, b });
+
+  it("Hold gets its default time; Toggle and Turbo drop when the Press can't take them (rule 5)", () => {
+    let p = withRow(emptyButtonPart(), 0, SOURCE.r1, "hold", buttonTarget(SOURCE.triangle));
+    expect(p.entries).toEqual([{ source: SOURCE.r1, layer: 0, hold: buttonTarget(SOURCE.triangle), holdTime: 30 }]);
+    p = withSwitch(p, 0, SOURCE.r1, "turbo", true);
+    expect(p.entries[0]).toMatchObject({ turbo: true, turboRate: 10 });
+    p = withRow(p, 0, SOURCE.r1, "press", layerT(1, 0)); // no layer yet: the editor never offers it, but Turbo must drop with it
+    expect(p.entries[0].turbo).toBeUndefined();
+    expect(withRow(emptyButtonPart(), 0, SOURCE.ps, "press", buttonTarget(SOURCE.cross)).entries).toEqual([]); // the PS button keeps its Press (rule 6)
+  });
+
+  it("a layer button is same as base until switched off; a copy keeps an explicit Press; switching into a layer keeps switch-back there (rule 7)", () => {
+    let p = addLayer(withBasePress(emptyButtonPart(), SOURCE.square, buttonTarget(SOURCE.circle)));
+    expect(p.layers).toEqual([{ name: "", colour: 0, gyro: 0 }]);
+    p = withSameAsBase(p, 1, SOURCE.cross, false);
+    expect(p.entries.find((e) => e.layer === 1)).toEqual({ source: SOURCE.cross, layer: 1, press: buttonTarget(SOURCE.cross) });
+    p = withSameAsBase(p, 1, SOURCE.square, false);
+    expect(p.entries.find((e) => e.layer === 1 && e.source === SOURCE.square)!.press).toEqual(buttonTarget(SOURCE.circle));
+    p = withRow(p, 0, SOURCE.cross, "press", layerT(1, 1)); // ✕ switches into layer 1: its entry there goes
+    expect(p.entries.some((e) => e.layer === 1 && e.source === SOURCE.cross)).toBe(false);
+    expect(enteredBy(p, 1)).toEqual([{ source: SOURCE.cross, row: "press", mode: "switch", from: 0 }]);
+    expect(valid(p)).toBe(true);
+    // Deleting the layer drops its entries and the rows that entered it.
+    const gone = deleteLayer(p, 1);
+    expect(gone.layers).toEqual([]);
+    expect(gone.entries).toEqual([{ source: SOURCE.square, layer: 0, press: buttonTarget(SOURCE.circle) }]);
+  });
+
+  it("the starting points are valid layouts: one hand left and right, toggle instead of hold", () => {
+    const left = oneHand("left", null);
+    expect(valid(left)).toBe(true);
+    expect(left.entries.find((e) => e.layer === 0 && e.source === SOURCE.l1)).toMatchObject({ press: buttonTarget(SOURCE.r1), hold: layerT(1, 0) });
+    expect(valid(oneHand("right", null))).toBe(true);
+    const tog = toggleInsteadOfHold(emptyButtonPart());
+    expect(tog.entries.map((e) => [e.source, e.toggle])).toEqual([
+      [SOURCE.l2, true],
+      [SOURCE.l1, true],
+      [SOURCE.l3, true],
+    ]);
+    expect(valid(tog)).toBe(true);
+  });
+
+  it("gyro off drops every Gyro target (rule 8)", () => {
+    const on = withRow(withGyro(emptyButtonPart(), { mode: 1, axis: 0, flags: 4, speedH: 64, speedV: 64, steadiness: 8 }), 0, SOURCE.l1, "hold", { kind: TARGET_KIND.gyro, a: 0, b: 0 });
+    expect(valid(on)).toBe(true);
+    const off = withGyro(on, null);
+    expect(off.entries).toEqual([]);
+    expect(valid(off)).toBe(true);
+  });
+
+  it("a layout's Press part as today's table: whole only when nothing else is in it", () => {
+    const swap = swapBase(emptyButtonPart(), SOURCE.cross, SOURCE.circle);
+    expect(legacyFromPart(swap)).toMatchObject({ whole: true, extra: [0xff, 0xff, 0xff, 0xff] });
+    expect(legacyFromPart(swap).table[SOURCE.cross]).toBe(SOURCE.circle);
+    const held = withRow(swap, 0, SOURCE.r1, "hold", buttonTarget(SOURCE.triangle));
+    expect(legacyFromPart(held).whole).toBe(false);
+    expect(legacyFromPart(withBasePress(emptyButtonPart(), SOURCE.fnLeft, DISABLE)).extra).toEqual([0xfe, 0xff, 0xff, 0xff]);
+  });
+
+  it("warns on With PS, keys, more than six keys and a full pool (§7.6)", () => {
+    let p = withRow(emptyButtonPart(), 0, SOURCE.cross, "withPs", buttonTarget(SOURCE.options));
+    expect(pressWarnings(p)).toMatchObject({ psCost: true, needsKeys: false, sixKeys: false, full: false });
+    // loop: test — seven buttons sending keys
+    for (const s of [0, 1, 2, 3, 4, 5, 6]) p = withBasePress(p, s, { kind: TARGET_KIND.key, a: 0x04 + s, b: 0 });
+    expect(pressWarnings(p)).toMatchObject({ needsKeys: true, sixKeys: true });
+  });
+});
+
+describe("live truth: GET 0xE8 (§6.4)", () => {
+  it("decodes the flags, what runs, the sources and the last press with its target", () => {
+    const b = new Uint8Array(63);
+    b.set([0x42, 0x54, 1, 0x01 | 0x02 | 0x20, 3, 1]);
+    b.set([1 << 5, 0x20, 0], 6); // sources 5 and 13 down
+    b.set([13, 2, 0, 200, 0, 0x2c, 1, 1, 12, 0, 1], 12); // ✕, Hold, deciding, 200 of 300 ms, → ○, in layer 1
+    const v = decodeLiveTruth(b)!;
+    expect(v).toMatchObject({ running: true, paused: true, what: 3, layer: 1, down: (1 << 5) | (1 << 13) });
+    expect(v.last).toEqual({ source: 13, type: "hold", phase: "deciding", heldMs: 200, needsMs: 300, target: buttonTarget(SOURCE.circle), layer: 1 });
+    b[12] = 0xff;
+    expect(decodeLiveTruth(b)!.last).toBeNull();
+    expect(decodeLiveTruth(b.subarray(0, 40))).toBeNull();
+    b[0] = 0;
+    expect(decodeLiveTruth(b)).toBeNull();
+  });
+});
+
+describe("keys (HID usages, §3.4)", () => {
+  it("names usages by the US layout and maps the pressed key's code", () => {
+    expect(keyName(0x3e)).toBe("F5");
+    expect(keyName(0x2c)).toBe("Space");
+    expect(keyName(0xa0)).toBe("0xA0"); // a newer usage still reads
+    expect(keyForCode("KeyW")?.usage).toBe(0x1a);
+    expect(keyForCode("Digit0")?.usage).toBe(0x27);
+    expect(keyForCode("Numpad0")?.usage).toBe(0x62);
   });
 });

@@ -5669,10 +5669,10 @@ main.dk-body:focus:not(:focus-visible),
   stroke-dasharray: 2 2;
 }
 
-/* Tension buttons (Button assignments for a set, SetButtons.tsx): the
-   Changed list as links, the Press row's target button, and its picker, a
-   top-layer popover with the controller on a 7 x 5 grid. Static, no
-   animation (idle cost 0). */
+/* Button layouts (Button assignments, ButtonEditor.tsx / TargetPicker.tsx):
+   the Changed list as links, each row's target button, and its picker, a
+   top-layer popover with tabs and the controller on a 7 x 5 grid. Static, no
+   animation (idle cost 0), except the live hold ring and chip below. */
 .bt-changed {
   display: grid;
   gap: 2px;
@@ -5770,4 +5770,242 @@ main.dk-body:focus:not(:focus-visible),
   fill: var(--text-strong);
   font-family: var(--font-mono);
   font-weight: 600;
+}
+
+.live-ctl .badges .badge.dim {
+  opacity: 0.5;
+}
+.live-ctl .badges .badge[class*="layer-c"] rect {
+  stroke: var(--layer);
+  stroke-width: 2;
+}
+.live-ctl .badges circle {
+  fill: var(--dk-accent);
+}
+
+/* The six layer colours: indexes stored on the board (0..5), drawn from the
+   theme's own tokens, so every theme and Color vision setting carries them. */
+.layer-c0 {
+  --layer: var(--dk-accent);
+}
+.layer-c1 {
+  --layer: var(--status-good);
+}
+.layer-c2 {
+  --layer: var(--status-warn);
+}
+.layer-c3 {
+  --layer: var(--status-bad);
+}
+.layer-c4 {
+  --layer: var(--accent);
+}
+.layer-c5 {
+  --layer: var(--text-muted);
+}
+
+/* The layer tabs above the drawing (navigation): a tablist; static. */
+.bt-layers {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 6px;
+}
+.bt-layers [role="tablist"] {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.bt-layer-tab,
+.bt-tab {
+  padding: 3px 10px;
+  border: 1px solid var(--border-default);
+  border-radius: var(--dk-radius);
+  background: var(--bg-inset);
+  color: var(--text-body);
+  font: inherit;
+  cursor: pointer;
+}
+.bt-layer-tab[class*="layer-c"] {
+  border-left: 4px solid var(--layer);
+}
+.bt-layer-tab.on,
+.bt-tab.on {
+  border-color: var(--dk-accent);
+  box-shadow: inset 0 0 0 1px var(--dk-accent);
+  color: var(--text-strong);
+}
+.bt-layer-tab:focus-visible,
+.bt-tab:focus-visible,
+.bt-key:focus-visible,
+.bt-swatch:focus-visible {
+  outline: 2px solid var(--dk-focus);
+  outline-offset: 1px;
+}
+.bt-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  margin-left: 6px;
+  border-radius: 50%;
+  background: var(--dk-accent);
+  vertical-align: middle;
+}
+.bt-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+}
+.bt-row-ctl {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+}
+.bt-list {
+  display: grid;
+  gap: 6px;
+}
+.bt-list-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.bt-list-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.bt-swatches {
+  display: flex;
+  gap: 4px;
+}
+.bt-swatch {
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border: 1px solid var(--border-default);
+  border-radius: 50%;
+  background: var(--layer);
+  cursor: pointer;
+}
+span.bt-swatch {
+  width: 10px;
+  height: 10px;
+  cursor: default;
+}
+.bt-swatch.on {
+  box-shadow: 0 0 0 2px var(--bg-panel), 0 0 0 4px var(--layer);
+}
+.bt-keys {
+  display: grid;
+  gap: 6px;
+}
+.bt-capture.on {
+  border-color: var(--dk-accent);
+  box-shadow: inset 0 0 0 1px var(--dk-accent);
+}
+.bt-allkeys {
+  display: grid;
+  gap: 6px;
+  max-height: 240px;
+  overflow: auto;
+}
+.bt-keygrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+}
+.bt-key {
+  min-width: 26px;
+  padding: 2px 5px;
+  border: 1px solid var(--border-default);
+  border-radius: calc(var(--dk-radius) - 2px);
+  background: var(--bg-inset);
+  color: var(--text-body);
+  font-family: var(--font-mono);
+  font-size: var(--dk-small);
+  cursor: pointer;
+}
+.bt-key.on {
+  border-color: var(--dk-accent);
+  color: var(--text-strong);
+}
+.bt-speed {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.bt-speed input {
+  flex: 1;
+  min-width: 0;
+}
+.bt-entered {
+  display: grid;
+  gap: 2px;
+  justify-items: start;
+}
+
+/* Live from the board (LiveTruth.tsx): the hold ring fills by one stepped
+   CSS animation (10 steps: at most 10 repaints a second, only during a hold,
+   also on the CPU fallback); the chip fades 1.5 s after release by one CSS
+   animation. 0 frames a second idle; the root's data-window-hidden pauses
+   every animation while hidden. */
+.bt-live {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.bt-ring {
+  display: inline-block;
+  flex: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: conic-gradient(var(--dk-accent) calc(var(--fill, var(--from, 0)) * 360deg), var(--border-default) 0);
+  animation-name: bt-ring-fill;
+  animation-timing-function: steps(10, end);
+  animation-fill-mode: forwards;
+}
+@property --fill {
+  syntax: "<number>";
+  inherits: false;
+  initial-value: 0;
+}
+@keyframes bt-ring-fill {
+  from {
+    --fill: var(--from, 0);
+  }
+  to {
+    --fill: 1;
+  }
+}
+.live-hero .bt-chip {
+  position: absolute;
+  top: 8px;
+  left: 50%;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 90%;
+  padding: 3px 10px;
+  border: 1px solid var(--layer, var(--border-default));
+  border-radius: var(--dk-radius);
+  background: var(--bg-panel);
+  color: var(--text-strong);
+  font-family: var(--font-mono);
+  font-size: var(--dk-small);
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+.live-hero .bt-chip.gone {
+  animation: bt-chip-fade 0.3s ease-out 1.5s forwards;
+}
+@keyframes bt-chip-fade {
+  to {
+    opacity: 0;
+  }
 }

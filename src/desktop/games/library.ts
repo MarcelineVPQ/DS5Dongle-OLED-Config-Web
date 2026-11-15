@@ -18,6 +18,13 @@ export const ButtonLayoutSchema = z.strictObject({
     .array(z.union([z.number().int().min(0).max(15), z.literal(0xfe), z.literal(0xff)]))
     .length(4)
     .optional(),
+  // Protocol 1.24 (docs/design/button-layouts-2026-11.md): the whole layout as
+  // the board keeps it, its 494-byte record (trigger effects + buttons) in
+  // lowercase hex; table / extra stay its Press part for older firmware.
+  set: z
+    .string()
+    .regex(/^[0-9a-f]{988}$/)
+    .optional(),
   updated: z.number(),
 });
 export type ButtonLayout = z.infer<typeof ButtonLayoutSchema>;

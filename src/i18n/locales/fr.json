@@ -178,7 +178,7 @@
       "keysMouse": "Clavier et souris depuis la manette",
       "keysMouseShort": "Clavier et souris",
       "keysMouseSub": "Actif à la prochaine connexion.",
-      "keysMouseInfo": "Activé : {{device}} apparaît aussi sur le PC comme clavier et souris, pour que les touches d'un set puissent taper des touches (elles arrivent avec un prochain firmware). Désactivé : le PC ne voit que la manette, exactement comme avant. Pas encore testé partout : sous Linux, le clavier risque de n'avoir aucun pilote, et macOS peut proposer de configurer un nouveau clavier."
+      "keysMouseInfo": "Activé : {{device}} apparaît aussi sur le PC comme clavier et souris, pour que les touches d'une disposition puissent taper des touches (elles arrivent avec un prochain firmware). Désactivé : le PC ne voit que la manette, exactement comme avant. Pas encore testé partout : sous Linux, le clavier risque de n'avoir aucun pilote, et macOS peut proposer de configurer un nouveau clavier."
     },
     "lightbar": {
       "mode": "Mode",
@@ -228,16 +228,16 @@
     },
     "tension": {
       "title": "Tension",
-      "info": "Tension : tes propres effets de gâchettes adaptatives. Un set réunit L2 et R2 ; chaque gâchette a jusqu'à 4 étapes qui changent l'effet selon la force d'appui et la durée de maintien. La carte les exécute, avec ou sans cette app.",
+      "info": "Tension : tes propres effets de gâchettes adaptatives. L2 et R2 ont chacune jusqu'à 4 étapes qui changent l'effet selon la force d'appui et la durée de maintien. La carte les exécute, avec ou sans cette app.",
       "needsFirmware": "Tension (tes effets de gâchette) nécessite un firmware plus récent.",
-      "needsFirmwareGame": "Les sets Tension nécessitent un firmware plus récent ({{deviceName}} → Firmware).",
+      "needsFirmwareGame": "Les effets de gâchette pour un jeu nécessitent un firmware plus récent ({{deviceName}} → Firmware).",
       "retry": "Relire",
-      "reading": "Lecture des sets enregistrés…",
-      "readOnly": "Ces sets viennent d'un firmware plus récent : mets à jour pour les modifier.",
+      "reading": "Lecture des dispositions de la carte…",
+      "readOnly": "Ces dispositions viennent d'un firmware plus récent : mets à jour pour les modifier.",
       "runs": "Actif dès l'allumage",
-      "runsInfo": "Le set que la carte exécute seule dès l'allumage, avec ou sans l'app. Le profil d'un jeu peut en choisir un autre pendant que le jeu tourne.",
+      "runsInfo": "Ce que la carte exécute seule dès l'allumage, avec ou sans l'app. Le profil d'un jeu peut choisir autre chose pendant que le jeu tourne.",
       "none": "Aucun",
-      "edit": "Modifier le set",
+      "edit": "Emplacement à modifier",
       "slot": "{{slot}} · {{name}}",
       "empty": "vide",
       "startFrom": "Un emplacement vide. Partir de :",
@@ -246,14 +246,14 @@
         "heavy": "Gâchette lourde",
         "brake": "Pédale de frein",
         "machineGun": "Mitrailleuse",
-        "empty": "Set vide"
+        "empty": "Vide"
       },
       "name": "Nom",
       "nameSub": "16 caractères, lettres anglaises uniquement",
       "feel": "Essayer",
       "feelStop": "Arrêter l'essai",
-      "feelHint": "Exécute ce set maintenant, sans l'enregistrer, jusqu'à l'arrêt",
-      "delete": "Supprimer le set",
+      "feelHint": "Lance ces effets sans enregistrer, jusqu'à ce que tu arrêtes",
+      "delete": "Vider cet emplacement",
       "useInfo": "Jeu : les effets du jeu. Compléter : les tiens seulement quand le jeu n'envoie rien sur cette gâchette. Remplacer : toujours les tiens.",
       "use": {
         "game": "Jeu",
@@ -320,30 +320,33 @@
       "pictureCaption": "Force selon l'appui · pointillés : après le maintien",
       "liveTitle": "Tension maintenant",
       "livePaused": "En pause pendant le test des gâchettes",
-      "liveFeel": "Essai : le set en cours de modification s'exécute",
+      "liveFeel": "Essai : ce que tu modifies s'exécute",
       "liveGame": "Le profil d'un jeu exécute {{name}}",
       "liveSet": "{{name}} s'exécute",
-      "liveNone": "Aucun set actif",
+      "liveNone": "Rien ne s'exécute",
       "owner": {
         "none": "inutilisée",
         "tension": "Tension",
         "game": "l'effet du jeu",
         "waiting": "le jeu, encore un instant"
       },
-      "gameLabel": "Set Tension",
+      "gameLabel": "Effets de gâchette",
       "gameInfo": "Actif pendant ce jeu, puis à nouveau le choix de la carte. Jamais enregistré sur la carte.",
       "boardChoice": "Le choix de la carte",
       "gone": "supprimé",
-      "noneForGame": "Crée des sets Tension sur la page Manette (Gâchettes adaptatives).",
+      "noneForGame": "Crée des effets de gâchette sur la page Manette (Gâchettes adaptatives).",
       "errors": {
         "notOn": "Ce firmware n'a pas Tension : mets-le à jour d'abord.",
-        "changed": "Un set a changé pendant sa lecture. Relis-le.",
-        "unreadable": "Un set enregistré a un format que cette app ne sait pas lire : mets l'app à jour.",
-        "invalid": "{{device, capitalize}} n'a pas accepté ce set. Rien n'a été enregistré.",
+        "changed": "Une disposition a changé pendant sa lecture. Relis-la.",
+        "unreadable": "Une disposition sur {{deviceName}} a un format que cette app ne sait pas lire : mets l'app à jour.",
+        "invalid": "{{device, capitalize}} n'a pas accepté cette disposition. Rien n'a été enregistré.",
         "failed": "{{device, capitalize}} n'a pas pu l'enregistrer dans sa mémoire. Réessaie.",
-        "notValid": "Le set {{slot}} n'a pas encore de nom. Rien n'a été enregistré.",
-        "setGone": "Le set Tension de ce jeu (emplacement {{slot}}) n'est plus sur {{deviceName}} : choisis-en un autre sur la page du jeu."
-      }
+        "notValid": "La disposition de l'emplacement {{slot}} n'a pas encore de nom. Rien n'a été enregistré.",
+        "setGone": "Les effets de gâchette de ce jeu (emplacement {{slot}}) ne sont plus sur {{deviceName}} : choisis-en d'autres sur la page du jeu."
+      },
+      "infoLayout": "Tension : tes propres effets de gâchettes adaptatives, qui font partie de la disposition en cours de modification. L2 et R2 ont chacune jusqu'à 4 étapes qui changent l'effet selon la force d'appui et la durée de maintien. La carte les exécute, avec ou sans cette app.",
+      "presets": "Effets de gâchette : partir de",
+      "presetsInfo": "Remplace L2 et R2 de cette disposition ; ses touches restent telles quelles."
     },
     "diag": {
       "core1Frozen": "Core1 arrêté : l'audio ne fonctionnera plus jusqu'au redémarrage {{device_de}}.",
@@ -854,6 +857,12 @@
       "remapResetHint": "Chaque bouton redevient lui-même",
       "pull": "Enfoncement",
       "effect": "Effet",
+      "effects": {
+        "0": "aucun",
+        "1": "résistance",
+        "2": "arme",
+        "3": "vibration"
+      },
       "touchHint": "Touche le pavé tactile pour voir tes doigts ici. Il n'y a rien à régler.",
       "finger": "Doigt {{n}}",
       "speakerLevel": "Niveau du haut-parleur",
@@ -871,12 +880,6 @@
         "fn": "La touche Fn de la DualSense Edge. Maintenue avec d'autres touches, elle change les profils personnalisés de la manette. Elle s'allume ici quand tu appuies dessus.",
         "paddle": "Une des touches arrière de la DualSense Edge. Les profils personnalisés de la manette peuvent lui attribuer n'importe quelle touche. Elle s'allume ici quand tu appuies dessus.",
         "soon": "Pour leur attribuer une touche, il faut le dernier firmware sur {{device}} ({{deviceName}} → Mettre à jour)."
-      },
-      "effects": {
-        "0": "aucun",
-        "1": "résistance",
-        "2": "arme",
-        "3": "vibration"
       },
       "autoInstall": "Installer les mises à jour automatiquement",
       "autoInstallSub": "Elles sont téléchargées et vérifiées en arrière-plan ; la nouvelle version démarre à la prochaine ouverture de l'app",
@@ -1806,7 +1809,20 @@
         "edited": "Modifiée depuis son chargement : « Mettre à jour » enregistre les changements dans la disposition ; « Enregistrer sur {{device}} » en fait tes boutons habituels.",
         "applied": "Appliquée : ce sont maintenant tes boutons habituels sur {{device}}."
       },
-      "extraSelf": "Lui-même (par défaut)"
+      "extraSelf": "Lui-même (par défaut)",
+      "hintBoard": "Chaque disposition une seule fois : celles gardées sur ce PC et celles sur {{device}}. Une disposition sur {{device}} fonctionne sans l'app ; celle qui s'exécute dès l'allumage est celle que modifie « Attribution des touches ». Le profil d'un jeu peut utiliser n'importe quelle disposition pendant que le jeu tourne.",
+      "loadHintBoard": "Mettre cette disposition dans l'éditeur (« Enregistrer sur {{device}} » la lance dès l'allumage)",
+      "onBoard": "Sur la carte",
+      "runs": "Active dès l'allumage",
+      "putOnBoard": "Mettre sur la carte",
+      "putOnBoardHint": "Garder une copie sur {{device}} pour qu'elle marche sans l'app (« Enregistrer sur {{device}} » l'écrit)",
+      "takeOff": "Retirer de la carte",
+      "runFromPowerOn": "Lancer dès l'allumage",
+      "boardFull": "La carte contient 8 dispositions : retires-en une d'abord.",
+      "layers_one": "{{count}} calque",
+      "layers_other": "{{count}} calques",
+      "triggerEffects": "effets de gâchette",
+      "needsBoard": "Mets cette disposition sur la carte pour l'utiliser en entier dans ce jeu."
     },
     "editing": {
       "title": "Modification : profil {{title}}",
@@ -2072,8 +2088,7 @@
       "oled": "Écran OLED",
       "usb": "Connexion au PC",
       "lights": "Voyants d'état",
-      "diagnostics": "Diagnostic",
-      "sets": "Sets"
+      "diagnostics": "Diagnostic"
     },
     "boardBusy": {
       "title": "Un autre programme utilise {{device}}.",
@@ -2135,12 +2150,6 @@
       "identifyTip": "Utilisée. Clique pour faire clignoter THIS ONE sur son écran",
       "switchTip": "Clique pour afficher cette carte (THIS ONE clignote sur son écran)"
     },
-    "sets": {
-      "without": "Sans set",
-      "status": "Actif : {{name}}",
-      "info": "Un set réunit L2, R2 et les touches sous un nom. Ta carte en garde jusqu'à 8 et les exécute avec ou sans l'application. « Modifier le set » choisit le set affiché par le dessin, Gâchettes adaptatives et Attribution des touches ; « Sans set » modifie les touches utilisées quand aucun set ne les change.",
-      "editInSets": "Crée ou choisis un set dans Sets pour ses gâchettes."
-    },
     "buttons": {
       "warn": {
         "reconnect": "Reconnecte pour activer clavier et souris.",
@@ -2148,9 +2157,21 @@
         "noCircle": "Rien n'appuie sur ○ : tu risques d'être bloqué.",
         "duplicate": "{{other}} le fait déjà.",
         "promptsInfo": "Les jeux affichent toujours leurs propres icônes de touches : ils ne connaissent pas cette disposition.",
-        "triggerEffectInfo": "Les effets de gâchette restent sur la gâchette que tu presses."
+        "triggerEffectInfo": "Les effets de gâchette restent sur la gâchette que tu presses.",
+        "holdCost": "Maintien sur {{button}} : l'appui attend que tu relâches.",
+        "holdCostInfo": "Un appui court part maintenant au relâchement, comme une pression brève, et ne peut donc pas être maintenu. Maintiens {{time}} pour l'action Maintien.",
+        "doubleCost": "Double appui sur {{button}} retarde son appui de {{time}}.",
+        "doubleCostInfo": "La carte attend {{time}} après le relâchement pour voir si un second appui arrive.",
+        "psCost": "Avec PS retient la touche PS jusqu'au relâchement.",
+        "psCostInfo": "La touche PS part au relâchement, ou après une demi-seconde. Steam utilise aussi PS avec d'autres touches.",
+        "needsKeys": "Clavier et souris sont désactivés sur {{device}}.",
+        "paused": "Clavier et souris en pause quand cette fenêtre est devant.",
+        "layerNoEntry": "Aucune touche n'entre encore dans ce calque.",
+        "layerNoEntryInfo": "Choisis une touche et prends ce calque comme l'une de ses cibles.",
+        "full": "Cette disposition n'a plus de place pour des changements.",
+        "sixKeys": "Six touches au plus peuvent être tenues à la fois."
       },
-      "status": "{{set}} · {{count}} modifiée(s)",
+      "status": "{{name}} · {{count}} modifiée(s)",
       "pick": "Touche",
       "pickHint": "Clique une pièce ou appuie dessus sur la manette.",
       "pickNone": "Touches modifiées",
@@ -2159,27 +2180,168 @@
       "noneChanged": "Chaque touche est elle-même dans ce calque.",
       "does": "{{button}} fait",
       "row": {
-        "press": "Appui"
+        "press": "Appui",
+        "hold": "Maintien",
+        "double": "Double appui",
+        "withPs": "Avec PS",
+        "toggle": "Bascule",
+        "turbo": "Turbo"
       },
       "psFixed": "Touche PS (toujours)",
       "swap": "Échanger avec…",
       "resetButton": "Réinitialiser cette touche",
-      "legacyHint": "Maintien, double appui et calques : il faut un set.",
-      "makeSet": "Créer un set avec ces touches",
-      "makeSetReplace": "Remplacer le set",
-      "emptySlot": "Emplacement vide : crée un set dans Sets.",
       "needsFirmware": "Maintien, double appui et calques : mise à jour requise.",
-      "setLeaves": "Ce set laisse les touches telles quelles.",
-      "useInSet": "Changer les touches dans ce set",
       "target": {
         "title": "{{row}} : ce que ça fait",
-        "gridHint": "Flèches pour bouger, Entrée pour choisir."
+        "gridHint": "Flèches pour bouger, Entrée pour choisir.",
+        "pressKey": "Appuie sur une touche…",
+        "pressKeyArmed": "Appuie sur la touche (Échap annule)",
+        "showAll": "Afficher toutes les touches",
+        "mods": "Modificateurs",
+        "modsOnly": "Seulement les modificateurs",
+        "keyText": "Touche {{key}}",
+        "layerText": "{{name}} ({{mode}})"
       },
       "badge": {
         "create": "Créer",
         "options": "Options",
-        "touchpad": "Pavé"
+        "touchpad": "Pavé",
+        "mouse": "Souris"
+      },
+      "statusLayers_one": "{{name}} · {{changed}} modifiée(s) · {{count}} calque",
+      "statusLayers_other": "{{name}} · {{changed}} modifiée(s) · {{count}} calques",
+      "name": "Nom",
+      "nameSub": "16 caractères, lettres anglaises uniquement",
+      "saveInto": "Enregistre dans",
+      "saveIntoInfo": "Les 8 emplacements de la carte contiennent tous une disposition et aucune ne s'exécute dès l'allumage. Choisis celle que cette disposition remplace à l'enregistrement.",
+      "saveIntoPick": "Choisir",
+      "holdTime": "Durée de maintien",
+      "turboRate": "Appuis par seconde",
+      "notSet": "non défini",
+      "clearRow": "Effacer {{row}}",
+      "presets": "Partir de",
+      "presetsInfo": "Des points de départ à essayer et modifier, pas des designs testés. « Une main » remplace les touches de cette disposition ; « Bascule au lieu de maintien » fait verrouiller L2, L1 et L3.",
+      "preset": {
+        "oneLeft": "Une main (gauche)",
+        "oneRight": "Une main (droite)",
+        "toggle": "Bascule au lieu de maintien"
+      },
+      "tab": {
+        "controller": "Manette",
+        "key": "Clavier",
+        "mouse": "Souris",
+        "layer": "Calque",
+        "gyro": "Gyro"
+      },
+      "keyGroup": {
+        "letters": "Lettres",
+        "digits": "Chiffres",
+        "function": "Touches de fonction",
+        "navigation": "Navigation",
+        "editing": "Édition",
+        "keypad": "Pavé numérique"
+      },
+      "mod": {
+        "ctrl": "Ctrl",
+        "shift": "Maj",
+        "alt": "Alt",
+        "gui": "Win / ⌘"
+      },
+      "mouse": {
+        "left": "Clic gauche",
+        "right": "Clic droit",
+        "middle": "Clic du milieu",
+        "back": "Souris précédent",
+        "forward": "Souris suivant"
+      },
+      "move": {
+        "up": "Vers le haut",
+        "down": "Vers le bas",
+        "left": "Vers la gauche",
+        "right": "Vers la droite",
+        "wheelUp": "Molette haut",
+        "wheelDown": "Molette bas"
+      },
+      "speed": "Vitesse",
+      "wheelSpeed": "Vitesse de la molette",
+      "layerMode": {
+        "held": "tant que maintenu",
+        "switch": "bascule"
+      },
+      "gyro": {
+        "held": "Gyro actif tant que maintenu",
+        "offHeld": "Gyro coupé tant que maintenu",
+        "switch": "Gyro activé / désactivé"
+      },
+      "turnOn": "Activer",
+      "live": {
+        "title": "En direct de la carte",
+        "line": "{{from}} → {{layer}} · {{type}} → le PC a reçu {{to}}",
+        "wouldSend": "{{from}} → {{layer}} · {{type}} → enverrait {{to}}",
+        "idle": "Appuie sur une touche de la manette.",
+        "noController": "Connecte la manette pour la voir en direct.",
+        "nothing": "rien",
+        "type": {
+          "deciding": "décision",
+          "press": "Appui",
+          "hold": "Maintien",
+          "double": "Double appui",
+          "withPs": "Avec PS",
+          "toggleOn": "Bascule activée",
+          "toggleOff": "Bascule désactivée",
+          "turbo": "Turbo",
+          "tap": "pression brève"
+        }
       }
+    },
+    "layers": {
+      "base": "Base",
+      "defaultName": "Calque {{n}}",
+      "add": "+ Calque",
+      "tabs": "Calques",
+      "title": "Calque : {{name}}",
+      "sameAsBase": "Comme la base",
+      "switchBack": "Ici, retour à la base.",
+      "name": "Nom du calque",
+      "nameSub": "10 caractères, lettres anglaises uniquement",
+      "colour": "Couleur",
+      "colourN": "Couleur {{n}}",
+      "enteredBy": "Accès par",
+      "enteredLine": "{{button}} · {{row}} · {{mode}}",
+      "gyro": "Gyro dans ce calque",
+      "gyroMode": {
+        "same": "Comme la base",
+        "on": "Activé",
+        "off": "Désactivé"
+      },
+      "reset": "Réinitialiser ce calque",
+      "delete": "Supprimer le calque"
+    },
+    "gyroMouse": {
+      "title": "Gyro en souris",
+      "mode": "Gyro",
+      "modes": {
+        "off": "Désactivé",
+        "on": "Activé",
+        "button": "Avec une touche"
+      },
+      "buttonHint": "Donne la cible Gyro à une touche pour l'utiliser.",
+      "use": "Déplace",
+      "uses": {
+        "mouse": "Souris",
+        "stick": "Joystick droit"
+      },
+      "axis": "Tourner avec",
+      "axes": {
+        "yaw": "Lacet",
+        "roll": "Roulis"
+      },
+      "speedH": "Vitesse horizontale",
+      "speedV": "Vitesse verticale",
+      "invertH": "Inverser l'horizontale",
+      "invertV": "Inverser la verticale",
+      "steadiness": "Stabilité",
+      "steadinessInfo": "Les petits mouvements sous ce seuil sont adoucis, pour que la visée reste immobile quand tes mains se reposent. 0 = désactivé."
     }
   },
   "ad": {

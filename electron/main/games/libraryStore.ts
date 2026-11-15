@@ -177,8 +177,9 @@ export class LibraryStore {
   }
 
   // Add or update a saved button layout.
-  setLayout(id: string, name: string, table: number[], extra?: number[]): LibraryFile {
-    (this.data.layouts ??= {})[id] = { name: name.trim(), table, ...(extra ? { extra } : {}), updated: Date.now() };
+  // `set` (protocol 1.24): the whole layout as the board keeps it, in hex.
+  setLayout(id: string, name: string, table: number[], extra?: number[], set?: string): LibraryFile {
+    (this.data.layouts ??= {})[id] = { name: name.trim(), table, ...(extra ? { extra } : {}), ...(set ? { set } : {}), updated: Date.now() };
     return this.save();
   }
 

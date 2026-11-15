@@ -178,7 +178,7 @@
       "keysMouse": "由控制器发送键盘和鼠标",
       "keysMouseShort": "键盘和鼠标",
       "keysMouseSub": "下次连接时生效。",
-      "keysMouseInfo": "开启：{{device}}在电脑上还会显示为键盘和鼠标，组合的按键就能按下键盘按键（按键目标将随以后的固件提供）。关闭：电脑只看到控制器，与以前完全相同。尚未在所有系统上测试：在 Linux 上键盘可能没有驱动，macOS 可能会要求设置新键盘。"
+      "keysMouseInfo": "开启：{{device}}在电脑上还会显示为键盘和鼠标，按键布局中的按键就能按下键盘按键（按键目标将随以后的固件提供）。关闭：电脑只看到控制器，与以前完全相同。尚未在所有系统上测试：在 Linux 上键盘可能没有驱动，macOS 可能会要求设置新键盘。"
     },
     "lightbar": {
       "mode": "模式",
@@ -228,16 +228,16 @@
     },
     "tension": {
       "title": "Tension",
-      "info": "Tension：你自己的自适应扳机效果。一个组合同时包含 L2 和 R2；每个扳机最多有 4 个阶段，根据按压深度和按住时间改变效果。由开发板运行，无论是否打开此应用。",
+      "info": "Tension：你自己的自适应扳机效果。L2 和 R2 各最多有 4 个阶段，根据按压深度和按住时间改变效果。由开发板运行，无论是否打开此应用。",
       "needsFirmware": "Tension（自定义扳机效果）需要更新的固件。",
-      "needsFirmwareGame": "Tension 组合需要更新的固件（{{deviceName}} → 固件）。",
+      "needsFirmwareGame": "按游戏设置扳机效果需要更新的固件（{{deviceName}} → 固件）。",
       "retry": "重新读取",
-      "reading": "正在读取已保存的组合…",
-      "readOnly": "这些组合来自更新的固件：更新后才能修改。",
+      "reading": "正在读取开发板上的布局…",
+      "readOnly": "这些布局来自更新的固件：更新后才能修改。",
       "runs": "开机即运行",
-      "runsInfo": "开发板从开机起自行运行的组合，无论是否打开应用。游戏的配置文件可以在游戏运行时选择另一个。",
+      "runsInfo": "开发板从开机起自行运行的内容，无论是否打开应用。游戏的配置文件可以在游戏运行时选择其他的。",
       "none": "无",
-      "edit": "编辑组合",
+      "edit": "要编辑的位置",
       "slot": "{{slot}} · {{name}}",
       "empty": "空",
       "startFrom": "空位。从以下开始：",
@@ -246,14 +246,14 @@
         "heavy": "重扳机",
         "brake": "刹车踏板",
         "machineGun": "机枪",
-        "empty": "空组合"
+        "empty": "空"
       },
       "name": "名称",
       "nameSub": "16 个字符，仅限英文字母",
       "feel": "试用",
       "feelStop": "停止试用",
-      "feelHint": "立即运行此组合（不保存），直到你停止",
-      "delete": "删除组合",
+      "feelHint": "立即运行这些效果（不保存），直到你停止",
+      "delete": "清空此位置",
       "useInfo": "游戏：游戏自己的效果。补充：仅当游戏在此扳机上没有发送效果时使用你的。替换：始终使用你的。",
       "use": {
         "game": "游戏",
@@ -320,30 +320,33 @@
       "pictureCaption": "随按压的强度 · 虚线：按住时间之后",
       "liveTitle": "Tension 当前",
       "livePaused": "扳机测试运行时已暂停",
-      "liveFeel": "试用：正在运行你编辑的组合",
+      "liveFeel": "试用：正在运行你编辑的内容",
       "liveGame": "游戏配置文件正在运行 {{name}}",
       "liveSet": "正在运行 {{name}}",
-      "liveNone": "没有运行的组合",
+      "liveNone": "没有在运行",
       "owner": {
         "none": "未使用",
         "tension": "Tension",
         "game": "游戏的效果",
         "waiting": "游戏的，稍等片刻"
       },
-      "gameLabel": "Tension 组合",
+      "gameLabel": "扳机效果",
       "gameInfo": "在此游戏运行时运行，之后恢复开发板自己的选择。从不保存在开发板上。",
       "boardChoice": "开发板的选择",
       "gone": "已删除",
-      "noneForGame": "在控制器页面（自适应扳机）创建 Tension 组合。",
+      "noneForGame": "在控制器页面（自适应扳机）创建扳机效果。",
       "errors": {
         "notOn": "此固件没有 Tension：请先更新。",
-        "changed": "读取时组合发生了变化。请重新读取。",
-        "unreadable": "已保存的组合格式此应用无法读取：请更新应用。",
-        "invalid": "{{device, capitalize}} 未接受该组合。没有保存任何内容。",
+        "changed": "读取时布局发生了变化。请重新读取。",
+        "unreadable": "{{deviceName}} 上有布局的格式此应用无法读取：请更新应用。",
+        "invalid": "{{device, capitalize}} 未接受该布局。没有保存任何内容。",
         "failed": "{{device, capitalize}} 无法将其保存到内存。请重试。",
-        "notValid": "组合 {{slot}} 还没有名称。没有保存任何内容。",
-        "setGone": "此游戏的 Tension 组合（位置 {{slot}}）已不在 {{deviceName}} 上：请在游戏页面选择另一个。"
-      }
+        "notValid": "位置 {{slot}} 的布局还没有名称。没有保存任何内容。",
+        "setGone": "此游戏的扳机效果（位置 {{slot}}）已不在 {{deviceName}} 上：请在游戏页面选择其他的。"
+      },
+      "infoLayout": "Tension：你自己的自适应扳机效果，属于正在编辑的按键布局。L2 和 R2 各最多有 4 个阶段，根据按压深度和按住时间改变效果。由开发板运行，无论是否打开此应用。",
+      "presets": "扳机效果：起点",
+      "presetsInfo": "替换此布局的 L2 和 R2；按键保持不变。"
     },
     "diag": {
       "core1Frozen": "Core1 已停止：音频通路在 {{device}} 重启前将无法工作。",
@@ -847,6 +850,12 @@
       "remapResetHint": "所有按键恢复原样",
       "pull": "按压",
       "effect": "效果",
+      "effects": {
+        "0": "无",
+        "1": "阻力",
+        "2": "武器",
+        "3": "振动"
+      },
       "touchHint": "触摸触摸板即可在这里看到手指位置。触摸板没有可设置的项目。",
       "finger": "手指 {{n}}",
       "speakerLevel": "当前扬声器电平",
@@ -864,12 +873,6 @@
         "fn": "DualSense Edge 的 Fn 键。与其他按键一起按可切换控制器的自定义配置文件。按下时这里会亮起。",
         "paddle": "DualSense Edge 的背面键之一。控制器的自定义配置文件可以把它设为任意按键。按下时这里会亮起。",
         "soon": "按键配置需要 {{device}} 的最新固件（{{deviceName}} 页面 → 更新）。"
-      },
-      "effects": {
-        "0": "无",
-        "1": "阻力",
-        "2": "武器",
-        "3": "振动"
       },
       "autoInstall": "自动安装更新",
       "autoInstallSub": "在后台下载并校验；下次打开应用时启动新版本",
@@ -1791,7 +1794,19 @@
         "edited": "载入后有改动：“更新”会把改动存入布局；“保存到 {{device}}”会使其成为常用按键。",
         "applied": "已应用：现在是 {{device}} 上的常用按键。"
       },
-      "extraSelf": "保持原样（默认）"
+      "extraSelf": "保持原样（默认）",
+      "hintBoard": "每个按键布局只列一次：保存在此电脑上的和 {{device}} 上的。{{device}} 上的布局无需应用即可使用；开机即运行的那个就是“按键配置”所编辑的。游戏的配置文件可在游戏运行时使用任意布局。",
+      "loadHintBoard": "将此布局载入编辑器（“保存到 {{device}}”后开机即运行）",
+      "onBoard": "在开发板上",
+      "runs": "开机即运行",
+      "putOnBoard": "放到开发板上",
+      "putOnBoardHint": "在 {{device}} 上保留一份副本，无需应用也能使用（“保存到 {{device}}”时写入）",
+      "takeOff": "从开发板移除",
+      "runFromPowerOn": "设为开机运行",
+      "boardFull": "开发板最多存 8 个布局：请先移除一个。",
+      "layers_other": "{{count}} 个层",
+      "triggerEffects": "扳机效果",
+      "needsBoard": "将此布局放到开发板上，才能在此游戏中完整使用。"
     },
     "editing": {
       "title": "正在编辑：{{title}} 配置",
@@ -2055,8 +2070,7 @@
       "oled": "OLED 屏幕",
       "usb": "与电脑的连接",
       "lights": "状态指示灯",
-      "diagnostics": "诊断",
-      "sets": "组合"
+      "diagnostics": "诊断"
     },
     "boardBusy": {
       "title": "{{device}} 正被其他程序使用。",
@@ -2118,12 +2132,6 @@
       "identifyTip": "使用中。点击后其屏幕会闪烁 THIS ONE",
       "switchTip": "点击以显示这块开发板（其屏幕会闪烁 THIS ONE）"
     },
-    "sets": {
-      "without": "不使用组合",
-      "status": "运行：{{name}}",
-      "info": "一个组合以一个名称保存 L2、R2 和按键。你的开发板最多保存 8 个，有没有本应用都会运行。“编辑组合”选择图示、自适应扳机和按键配置显示的组合；“不使用组合”编辑没有组合改动时使用的按键。",
-      "editInSets": "在“组合”中新建或选择一个组合以编辑其扳机。"
-    },
     "buttons": {
       "warn": {
         "reconnect": "重新连接以启用键盘和鼠标。",
@@ -2131,9 +2139,21 @@
         "noCircle": "现在没有按键会按下 ○：可能无法退出菜单。",
         "duplicate": "{{other}} 已经有此作用。",
         "promptsInfo": "游戏仍会显示它们自己的按键图标：它们不知道这个布局。",
-        "triggerEffectInfo": "扳机效果仍在你按下的那个扳机上。"
+        "triggerEffectInfo": "扳机效果仍在你按下的那个扳机上。",
+        "holdCost": "{{button}} 设了长按：按下要等松开后才发出。",
+        "holdCostInfo": "短按现在会在松开时作为一次轻点发出，因此无法按住。按住 {{time}} 触发长按动作。",
+        "doubleCost": "{{button}} 的双击会让按下延迟 {{time}}。",
+        "doubleCostInfo": "松开后，开发板会等待 {{time}}，看是否有第二次按下。",
+        "psCost": "“配合 PS 键”会扣住 PS 键直到你松开。",
+        "psCostInfo": "PS 键在松开时或半秒后发出。Steam 也会将 PS 键与其他按键一起使用。",
+        "needsKeys": "{{device}} 上的键盘和鼠标已关闭。",
+        "paused": "此窗口在前台时，键盘和鼠标暂停。",
+        "layerNoEntry": "还没有按键能进入此层。",
+        "layerNoEntryInfo": "选择一个按键，并将此层设为它的目标之一。",
+        "full": "此布局没有空间再加更改了。",
+        "sixKeys": "最多只能同时按住六个键。"
       },
-      "status": "{{set}} · 已改 {{count}} 个",
+      "status": "{{name}} · 已改 {{count}} 个",
       "pick": "按键",
       "pickHint": "点击部件，或在控制器上按下它。",
       "pickNone": "已更改的按键",
@@ -2142,27 +2162,167 @@
       "noneChanged": "此层中每个按键都保持原样。",
       "does": "{{button}} 的作用",
       "row": {
-        "press": "按下"
+        "press": "按下",
+        "hold": "长按",
+        "double": "双击",
+        "withPs": "配合 PS 键",
+        "toggle": "切换",
+        "turbo": "连发"
       },
       "psFixed": "PS键（始终）",
       "swap": "与…互换",
       "resetButton": "重置此按键",
-      "legacyHint": "长按、双击和层需要组合。",
-      "makeSet": "用这些按键新建组合",
-      "makeSetReplace": "替换组合",
-      "emptySlot": "空位：请在“组合”中新建组合。",
       "needsFirmware": "长按、双击和层需要更新固件。",
-      "setLeaves": "此组合不改动按键。",
-      "useInSet": "在此组合中更改按键",
       "target": {
         "title": "{{row}}：作用",
-        "gridHint": "方向键移动，回车选择。"
+        "gridHint": "方向键移动，回车选择。",
+        "pressKey": "按一个键…",
+        "pressKeyArmed": "现在按下该键（Esc 取消）",
+        "showAll": "显示所有按键",
+        "mods": "修饰键",
+        "modsOnly": "仅修饰键",
+        "keyText": "按键 {{key}}",
+        "layerText": "{{name}}（{{mode}}）"
       },
       "badge": {
         "create": "创建",
         "options": "选项",
-        "touchpad": "触摸板"
+        "touchpad": "触摸板",
+        "mouse": "鼠标"
+      },
+      "statusLayers_other": "{{name}} · 已改 {{changed}} 个 · {{count}} 个层",
+      "name": "名称",
+      "nameSub": "16 个字符，仅限英文字母",
+      "saveInto": "保存到",
+      "saveIntoInfo": "开发板上的 8 个位置都存有布局，且没有开机即运行的布局。请选择保存时由此布局替换的那个。",
+      "saveIntoPick": "选择一个",
+      "holdTime": "长按时间",
+      "turboRate": "每秒次数",
+      "notSet": "未设置",
+      "clearRow": "清除{{row}}",
+      "presets": "起点",
+      "presetsInfo": "供你试用和修改的起点，并非经过测试的设计。“单手”会替换此布局的按键；“切换代替按住”会让 L2、L1 和 L3 保持锁定。",
+      "preset": {
+        "oneLeft": "单手（左）",
+        "oneRight": "单手（右）",
+        "toggle": "切换代替按住"
+      },
+      "tab": {
+        "controller": "控制器",
+        "key": "键盘",
+        "mouse": "鼠标",
+        "layer": "层",
+        "gyro": "陀螺仪"
+      },
+      "keyGroup": {
+        "letters": "字母",
+        "digits": "数字",
+        "function": "功能键",
+        "navigation": "导航",
+        "editing": "编辑",
+        "keypad": "小键盘"
+      },
+      "mod": {
+        "ctrl": "Ctrl",
+        "shift": "Shift",
+        "alt": "Alt",
+        "gui": "Win / ⌘"
+      },
+      "mouse": {
+        "left": "鼠标左键",
+        "right": "鼠标右键",
+        "middle": "鼠标中键",
+        "back": "鼠标后退",
+        "forward": "鼠标前进"
+      },
+      "move": {
+        "up": "向上移动",
+        "down": "向下移动",
+        "left": "向左移动",
+        "right": "向右移动",
+        "wheelUp": "滚轮向上",
+        "wheelDown": "滚轮向下"
+      },
+      "speed": "速度",
+      "wheelSpeed": "滚轮速度",
+      "layerMode": {
+        "held": "按住时",
+        "switch": "切换"
+      },
+      "gyro": {
+        "held": "按住时开启陀螺仪",
+        "offHeld": "按住时关闭陀螺仪",
+        "switch": "陀螺仪 开 / 关"
+      },
+      "turnOn": "开启",
+      "live": {
+        "title": "开发板实时信息",
+        "line": "{{from}} → {{layer}} · {{type}} → 电脑收到 {{to}}",
+        "wouldSend": "{{from}} → {{layer}} · {{type}} → 将发送 {{to}}",
+        "idle": "在控制器上按一个按键。",
+        "noController": "连接控制器以查看实时信息。",
+        "nothing": "无",
+        "type": {
+          "deciding": "判断中",
+          "press": "按下",
+          "hold": "长按",
+          "double": "双击",
+          "withPs": "配合 PS 键",
+          "toggleOn": "切换开",
+          "toggleOff": "切换关",
+          "turbo": "连发",
+          "tap": "轻点"
+        }
       }
+    },
+    "layers": {
+      "base": "基础层",
+      "defaultName": "层 {{n}}",
+      "add": "+ 层",
+      "tabs": "层",
+      "title": "层：{{name}}",
+      "sameAsBase": "同基础层",
+      "switchBack": "在此切回基础层。",
+      "name": "层名称",
+      "nameSub": "10 个字符，仅限英文字母",
+      "colour": "颜色",
+      "colourN": "颜色 {{n}}",
+      "enteredBy": "进入方式",
+      "enteredLine": "{{button}} · {{row}} · {{mode}}",
+      "gyro": "此层的陀螺仪",
+      "gyroMode": {
+        "same": "同基础层",
+        "on": "开",
+        "off": "关"
+      },
+      "reset": "重置此层",
+      "delete": "删除层"
+    },
+    "gyroMouse": {
+      "title": "陀螺仪作鼠标",
+      "mode": "陀螺仪",
+      "modes": {
+        "off": "关",
+        "on": "开",
+        "button": "用按键"
+      },
+      "buttonHint": "给某个按键设置陀螺仪目标即可使用。",
+      "use": "移动",
+      "uses": {
+        "mouse": "鼠标",
+        "stick": "右操作杆"
+      },
+      "axis": "转动方式",
+      "axes": {
+        "yaw": "偏航",
+        "roll": "横滚"
+      },
+      "speedH": "水平速度",
+      "speedV": "垂直速度",
+      "invertH": "水平反转",
+      "invertV": "垂直反转",
+      "steadiness": "稳定度",
+      "steadinessInfo": "低于此值的小动作会被柔化，手部静止时准星保持不动。0 = 关。"
     }
   },
   "ad": {

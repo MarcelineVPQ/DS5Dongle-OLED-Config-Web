@@ -623,15 +623,13 @@ const live = async (view: "overview" | "dongle" | "app") => {
 // The plan's table (MAPPING.md, "Controller page" and "Pico 2 W page"), by
 // what each section shows: its rows' labels, headings and buttons.
 const CONTROLLER_INVENTORY: Record<string, string[]> = {
-  // Sets first (protocol 1.24, TENSION_BUTTONS.md §7.1): which set the part sections show.
-  sets: ["desktop.tension.edit"],
   lightbar: ["desktop.lightbar.mode", "desktop.lightbar.modes.rainbow", "desktop.lightbar.favorites"],
   triggers: [
     "desktop.live.pull",
     "desktop.settings.triggerReduce",
     "desktop.calib.triggersTitle",
     "desktop.tension.title",
-    "desktop.sets.editInSets",
+    "desktop.tension.presets",
     "desktop.tension.liveTitle",
     "desktop.triggers.title",
     "desktop.triggers.presets.weapon",
@@ -646,10 +644,19 @@ const CONTROLLER_INVENTORY: Record<string, string[]> = {
     "desktop.audioTest.speakerTitle",
   ],
   mic: ["haptics.btMicLabel", "desktop.settings.micInput", "desktop.settings.micLevel", "desktop.settings.echoCancel", "desktop.audioTest.micTitle"],
-  // Without a set (the simulated board's sets are empty): today's list, and Make a set from these buttons.
-  buttons: ["desktop.live.remapReset", "desktop.buttons.legacyHint", "desktop.buttons.makeSet", "desktop.layouts.title", "desktop.layouts.saveAs"],
+  // Protocol 1.24: the button layout editor opens at once (docs/design/button-layouts-2026-11.md §2.1).
+  buttons: [
+    "desktop.buttons.name",
+    "desktop.buttons.pick",
+    "desktop.buttons.changed",
+    "desktop.buttons.presets",
+    "desktop.buttons.live.title",
+    "desktop.layouts.title",
+    "desktop.layouts.saveAs",
+    "desktop.live.remapReset",
+  ],
   sticks: ["desktop.calib.sticksTitle", "desktop.calib.start", "desktop.calib.leftStick", "desktop.curves.title"],
-  gyro: ["desktop.calib.gyroTitle", "desktop.calib.start"],
+  gyro: ["desktop.gyroMouse.title", "desktop.calib.gyroTitle", "desktop.calib.start"],
   slots: ["desktop.slots.wipe"],
 };
 // The Pico 2 W page's panel (IA audit Q10): the OLED first, the danger zone last.

@@ -28,7 +28,12 @@ import type { FirmwareUpdate } from "../useUpdates";
 import { colorway } from "./colorways";
 import { useControllerColors } from "./customColors";
 import LiveController, { pressedParts } from "./LiveController";
-import { newlyPressed, PART_SOURCE, SOURCE_PART, setBadges } from "./SetButtons";
+import { PART_SOURCE, SOURCE_PART, layoutBadges } from "./buttonWords";
+import { LayerTabs, newlyPressed } from "./ButtonEditor";
+import { LiveChip, useKeysMousePause, useLiveTruth } from "./LiveTruth";
+import { FEATURES5, KEYS_MOUSE_FLAGS } from "../../protocol/bridgeClient";
+import { emptyButtonPart } from "../../protocol/buttons";
+import { layoutRecord } from "./layoutEditor";
 import LiveData from "./LiveData";
 import ControllerInfo, { controllerInfoStatus, useControllerInfo } from "./ControllerInfo";
 import { MainBlock, useMainBlock } from "../accordion/MainBlock";
@@ -118,33 +123,49 @@ export default function ControllerView({ bridge, fw, view, onView }: Props) {
   const oled = useOledFrame(client, shown && dongleView && supportsOledMirror(bridge.identity));
   const { library, setButtonsDraft } = useLibrary();
   // The button assignments: the app's one draft (boardDrafts.tsx), saved by the save bar.
-  const { remap, tension: tn } = useBoardDrafts();
-  // Protocol 1.24: a Tension set being edited, with its buttons in use (TENSION_BUTTONS.md §7.1-§7.2).
-  const editedSet = tn.buttons && tn.loaded && !tn.readOnly && tn.editing !== null ? tn.sets[tn.editing] : null;
-  const setButtons = editedSet?.buttons ?? null;
+  const { remap, layout: editor } = useBoardDrafts();
+  // Protocol 1.24: the button layout in the editor (layoutEditor.ts, docs/design/button-layouts-2026-11.md).
+  const layoutReady = editor.ready;
+  const editorButtons = editor.layout.buttons;
+  // The same object while the layout doesn't change (the badges redraw only then, not per live frame).
+  const layoutButtons = useMemo(() => (layoutReady ? (editorButtons ?? emptyButtonPart()) : null), [layoutReady, editorButtons]);
   // A game's profile on: button changes are part of what "Save to profile" saves.
   const profileKey = useProfileTarget()?.gameKey;
   const inProfile = !!(profileKey && library.games[profileKey]?.profile);
   const { dirty: remapDirty, draft: remapDraft, extraDraft, extraDevice, revert: remapRevert } = remap;
+  const { dirty: layoutDirty, layout: editorLayout, revert: layoutRevert, mode: editorMode } = editor;
   // lifetime: OK — acquires nothing (hands the button draft to the library)
   useEffect(() => {
-    setButtonsDraft(inProfile && remapDirty ? { table: remapDraft, ...(extraDevice ? { extra: extraDraft } : {}), revert: remapRevert } : null);
-  }, [setButtonsDraft, inProfile, remapDirty, remapDraft, extraDraft, extraDevice, remapRevert]);
+    // 1.24: the whole layout (its Press part as today's table too); older firmware: today's table.
+    const whole = layoutReady && editorMode === "profile";
+    const record = whole && layoutDirty ? layoutRecord("", "", editorLayout) : null;
+    const fromTable = !whole && remapDirty ? { table: remapDraft, ...(extraDevice ? { extra: extraDraft } : {}), revert: remapRevert } : null;
+    const fromLayout = record ? { table: record.table, extra: record.extra, ...(record.set ? { set: record.set } : {}), revert: layoutRevert } : null;
+    setButtonsDraft(inProfile ? (fromLayout ?? fromTable) : null);
+  }, [setButtonsDraft, inProfile, layoutReady, editorMode, layoutDirty, editorLayout, layoutRevert, remapDirty, remapDraft, extraDraft, extraDevice, remapRevert]);
   // lifetime: OK — cleanup: clears the button draft on unmount
   useEffect(() => () => setButtonsDraft(null), [setButtonsDraft]);
 
-  // The set's badges replace the remapped marks for a set (§7.2).
-  const badges = useMemo(() => (setButtons ? setBadges(t, setButtons) : null), [setButtons, t]);
+  // The accordion: pins per board and pairing slot.
+  const acc = useAccordion("controller", pinScope("controller", bridge.identity?.boardName ?? null, bridge.identity?.currentSlot ?? null));
+  const buttonsOpen = view === "overview" && acc.isOpen("buttons");
+  // The layer shown (the tabs above the drawing while Button assignments is open; navigation, never a setting).
+  const [layerTab, setLayerTab] = useState(0);
+  const layers = client?.has5(FEATURES5.layers) ? (layoutButtons?.layers.length ?? 0) : 0;
+  const layer = buttonsOpen && layerTab <= layers ? layerTab : 0;
+  // The layout's badges replace the remapped marks (the design's §2.1): changed buttons only, in the layer shown.
+  const badges = useMemo(() => (layoutButtons ? layoutBadges(t, layoutButtons, layer) : null), [layoutButtons, layer, t]);
   const remapped = useMemo(() => {
     const set = new Set<PartId>();
-    if (setButtons) return set;
+    if (layoutButtons) return set;
     // loop: HOT-PATH-OK — N = 16 remap slots, useMemo on the device table
     for (const [part, index] of Object.entries(REMAP_INDEX)) if (remap.device[index!] !== index) set.add(part as PartId);
     return set;
-  }, [remap.device, setButtons]);
-
-  // The accordion: pins per board and pairing slot.
-  const acc = useAccordion("controller", pinScope("controller", bridge.identity?.boardName ?? null, bridge.identity?.currentSlot ?? null));
+  }, [remap.device, layoutButtons]);
+  // Live from the board (0xE8), one poll for the chip and the section's line, only while Button assignments is open.
+  const live = useLiveTruth(client, layoutReady && buttonsOpen);
+  // Keys and mouse pause while this page is in front ([58] bit 4, the board's interface up).
+  useKeysMousePause(client, !!client?.has5(FEATURES5.keysMouse) && ((bridge.identity?.keysMouseFlags ?? 0) & KEYS_MOUSE_FLAGS.up) !== 0);
   // Controller info: a readout, so a block in the main view under the drawing (not the accordion).
   const infoBlock = useMainBlock("controller", "info");
   const infoStatus = controllerInfoStatus(t, info);
@@ -157,8 +178,7 @@ export default function ControllerView({ bridge, fw, view, onView }: Props) {
   // A set's editor: the button picked (a source, TENSION_BUTTONS.md §3.3).
   const [sourcePick, setSourcePick] = useState<number | null>(null);
   const listPart = (i: number | null) => (i === null ? null : partForRemapIndex(i));
-  const buttonsOpen = view === "overview" && acc.isOpen("buttons");
-  const inSet = !!setButtons;
+  const inSet = !!layoutButtons;
   const selected = buttonsOpen
     ? inSet
       ? sourcePick === null
@@ -262,6 +282,10 @@ export default function ControllerView({ bridge, fw, view, onView }: Props) {
 
   const main = (
     <div className="live-stage">
+      {/* The layer tabs above the drawing (the design's §2.1), only while Button assignments is open. */}
+      {layoutButtons && buttonsOpen && client?.has5(FEATURES5.layers) && (
+        <LayerTabs part={layoutButtons} layer={layer} onLayer={setLayerTab} onChange={(buttons) => editor.edit({ ...editor.layout, buttons })} />
+      )}
       {/* Magazine-cover title: the model in big caps behind the drawing,
                 which overlaps its lower part; "Model:" small above it. */}
       <div ref={heroRef} className={`live-hero${on && id?.model ? " titled" : ""}`} style={{ ["--title-size" as string]: `${titleSize}px` }}>
@@ -287,6 +311,7 @@ export default function ControllerView({ bridge, fw, view, onView }: Props) {
           onSelect={pickPart}
         />
         {hdr && <HdrGlow hero={heroRef} model={shownModel} nits={hdrNits} />}
+        {layoutButtons && buttonsOpen && <LiveChip truth={live.truth} part={layoutButtons} />}
       </div>
       {/* The drawing's own hints, right under it (IA audit C3): how to connect, why it doesn't move, what a click does. */}
       {/* hint: MUST-SHOW — the empty state: how to connect the controller now */}
@@ -396,6 +421,9 @@ export default function ControllerView({ bridge, fw, view, onView }: Props) {
           onButtonHover={setButtonHover}
           sourcePick={sourcePick}
           onSourcePick={setSourcePick}
+          layer={layer}
+          onLayer={setLayerTab}
+          live={live}
           edge={id?.model === "edge"}
           trigger={picked === "l2" ? "l2" : "r2"}
         />

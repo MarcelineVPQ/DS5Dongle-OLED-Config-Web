@@ -9,6 +9,8 @@ import { settingsFrom } from "../../src/desktop/library/profileValues";
 import type { ProfileSettings } from "../../src/desktop/games/library";
 import { FakeDongle } from "../support/fakeDongle";
 import { STARTERS } from "../../src/protocol/tension";
+import { buttonTarget, emptyButtonPart, SOURCE, withBasePress, withRow } from "../../src/protocol/buttons";
+import { FakeDongle as Board } from "../support/fakeDongle";
 
 const FLASH_WRITES = new Set([0x02, 0x04, 0x09, 0x0b, 0x0d, 0x10]); // save, slot switch (saves), factory reset, narrator, calibration, saved remap
 
@@ -47,7 +49,7 @@ const profile: ProfileSettings = {
   lightbarMode: 6,
   btMicEnable: false,
 };
-const parts: GameParts = { layout: { table: Array.from({ length: 16 }, (_, i) => (i === 3 ? 0xff : i)), extra: [5, 0xff, 0xfe, 0xff] }, curves: [precise, undefined], tension: null };
+const parts: GameParts = { layout: { table: Array.from({ length: 16 }, (_, i) => (i === 3 ? 0xff : i)), extra: [5, 0xff, 0xfe, 0xff] }, curves: [precise, undefined], set: null, tension: null };
 
 describe("game profiles on the dongle (RAM only)", () => {
   it("puts every part of a profile on without a save, and leaving restores exactly the saved state", async () => {
@@ -105,7 +107,7 @@ describe("game profiles on the dongle (RAM only)", () => {
       config: s.config(),
       normal: s.normal,
       profile: { format: 2, hapticsGain: 3 },
-      parts: { layout: null, curves: null, tension: null },
+      parts: { layout: null, set: null, curves: null, tension: null },
     });
     const ram = decodeConfigBody(s.dongle.config);
     expect(ram.hapticsGain).toBe(3);
@@ -170,5 +172,50 @@ describe("a game's Tension set (protocol 1.23)", () => {
     expect((failure as ProfileNotApplied).left).toBe("normal");
     expect((failure as Error).message).toContain("desktop.tension.errors.setGone");
     expect(s.dongle.tension.temporary).toBe(false);
+  });
+});
+
+describe("a game's whole button layout (protocol 1.24, docs/design/button-layouts-2026-11.md §1)", () => {
+  const held = { ...STARTERS.bow, name: "Racing", buttons: withRow(withBasePress(emptyButtonPart(), SOURCE.cross, buttonTarget(SOURCE.circle)), 0, SOURCE.r1, "hold", buttonTarget(SOURCE.triangle)) };
+  const at = async (features5: number) => {
+    const dongle = new Board({ features5 });
+    const client = new Ds5BridgeClient(dongle);
+    await client.checkCompatible();
+    const identity = await client.identity();
+    const config = await client.readConfig();
+    const applyConfig = async (c: ConfigBody) => {
+      await client.applyConfig(normalizeConfig(c));
+      return true;
+    };
+    return { dongle, client, caps: profileCaps(identity), applyConfig, config, normal: settingsFrom(config) };
+  };
+  const game = (set: typeof held) => ({ layout: { table: Array.from({ length: 16 }, (_, i) => i) }, set, curves: null, tension: null });
+
+  it("its copy on the board runs for now (0x20 temporary); never a flash write", async () => {
+    const s = await at(0x7f);
+    await s.client.saveTensionSet(3, held);
+    s.dongle.sets = [];
+    await applyGameProfile({ client: s.client, caps: s.caps, applyConfig: s.applyConfig, config: s.config, normal: s.normal, profile, parts: game(held) });
+    expect(s.dongle.tension).toMatchObject({ now: 3, temporary: true });
+    expect(s.dongle.sets.some((p) => p[0] === 0x1d || p[0] === 0x22)).toBe(false);
+    await restoreNormal({ client: s.client, caps: s.caps, applyConfig: s.applyConfig, config: s.config, normal: s.normal });
+    expect(s.dongle.tension).toMatchObject({ now: 0xff, temporary: false });
+  });
+
+  it("not on the board: sent for now (0x22) with [58] bit 6, ended by 0x12", async () => {
+    const s = await at(0x7f);
+    await applyGameProfile({ client: s.client, caps: s.caps, applyConfig: s.applyConfig, config: s.config, normal: s.normal, profile, parts: game(held) });
+    expect(s.dongle.tension.forNow).not.toBeNull();
+    expect(s.dongle.tension.slots.every((x) => x === null)).toBe(true);
+    await restoreNormal({ client: s.client, caps: s.caps, applyConfig: s.applyConfig, config: s.config, normal: s.normal });
+    expect(s.dongle.tension.forNow).toBeNull();
+  });
+
+  it("not on the board, no 0x22: its Press part as the temporary table, no board layout running meanwhile", async () => {
+    const s = await at(0x01);
+    await applyGameProfile({ client: s.client, caps: s.caps, applyConfig: s.applyConfig, config: s.config, normal: s.normal, profile, parts: game(held) });
+    expect(s.dongle.remapTemporary).toBe(true);
+    expect(s.dongle.remap[SOURCE.cross]).toBe(SOURCE.circle);
+    expect(s.dongle.tension).toMatchObject({ now: 0xff, temporary: true });
   });
 });

@@ -114,7 +114,7 @@ export const RestoreSchema = LibraryFileSchema.shape.restore.unwrap().nullable()
 // Developer card → Fake games (dev builds only): the switch, the game shown
 // as running (a fake game's key, or null), the fake computer's HDR setup.
 export const DevFakeGamesSchema = z.strictObject({ on: z.boolean().optional(), running: GameKeySchema.nullable().optional(), hdr: z.enum(FAKE_GAMES_HDR).optional() });
-export const SetLayoutSchema = z.strictObject({ id: LayoutIdSchema, name: ButtonLayoutSchema.shape.name, table: ButtonLayoutSchema.shape.table, extra: ButtonLayoutSchema.shape.extra });
+export const SetLayoutSchema = z.strictObject({ id: LayoutIdSchema, name: ButtonLayoutSchema.shape.name, table: ButtonLayoutSchema.shape.table, extra: ButtonLayoutSchema.shape.extra, set: ButtonLayoutSchema.shape.set });
 
 export interface IpcHandlers {
   gamesDetails: () => Record<string, GameInfo>;
@@ -124,7 +124,7 @@ export interface IpcHandlers {
   libraryDeleteProfile: (gameKey: string) => LibraryFile;
   librarySetMine: (u: { gameKey: string; title: string; mine: Mine }) => LibraryFile;
   librarySetRestore: (r: LibraryFile["restore"] | null) => LibraryFile;
-  librarySetLayout: (u: { id: string; name: string; table: number[]; extra?: number[] }) => LibraryFile;
+  librarySetLayout: (u: { id: string; name: string; table: number[]; extra?: number[]; set?: string }) => LibraryFile;
   libraryDeleteLayout: (id: string) => LibraryFile;
   gameAction: (u: { gameKey: string; action: GameAction }) => Promise<boolean>;
   gameArtColor: (gameKey: string) => string | null | Promise<string | null>;

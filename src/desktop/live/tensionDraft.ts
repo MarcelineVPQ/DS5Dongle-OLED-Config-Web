@@ -6,27 +6,28 @@
 // set saved in the same Save); Revert drops them. Feel it is not a save: it
 // runs the set being edited, unsaved, from the section (Tension.tsx).
 //
-// Protocol 1.24 (the firmware's docs/TENSION_BUTTONS.md §7.1): a set is
-// triggers and buttons, and which set is being edited (or Without a set, the
-// legacy button table) is shared by the Sets, Adaptive triggers and Button
-// assignments sections and the drawing's badges, so it lives here too.
+// Protocol 1.24: a slot is a whole button layout (trigger effects and
+// buttons); the layout in the editor (layoutEditor.ts) is the one that runs
+// from power-on, and the layouts list puts layouts on the board and takes
+// them off here. On 1.23 firmware (trigger effects only) Adaptive triggers
+// picks the slot it edits (`editing`).
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import i18n from "../../i18n";
 import type { UseDs5BridgeResult } from "../../hooks/useDs5Bridge";
 import { CommandError, supportsSetButtons, supportsTension, type Ds5BridgeClient } from "../../protocol/bridgeClient";
-import { encodeSetWire, setValid, TENSION_SLOTS, type TensionSet } from "../../protocol/tension";
+import { setValid, TENSION_SLOTS, type TensionSet } from "../../protocol/tension";
+import { sameLayout } from "./layoutEditor";
 import { causeText } from "../shownError";
 import { KeyedError, logged } from "../../errorText";
 import { sameBoard, showDraftsDropped } from "./slotSettings";
 
 export interface TensionDraft {
   supported: boolean;
-  // Protocol 1.24 (identity [58] bit 0): sets hold buttons too.
+  // Protocol 1.24 (identity [58] bit 0): a slot holds buttons too (a whole layout).
   buttons: boolean;
-  // The set the Sets, Adaptive triggers and Button assignments sections show:
-  // a slot 0..7, or null = Without a set (the legacy table; with `buttons` only).
-  editing: number | null;
-  setEditing: (slot: number | null) => void;
+  // 1.23: the slot Adaptive triggers edits (0..7).
+  editing: number;
+  setEditing: (slot: number) => void;
   loaded: boolean; // the board's sets were read on this connection
   readOnly: boolean; // saved by newer firmware: shown, never written over
   // error: SHOWN — desktop.tension.errors.* and the board's keyed errors (causeText) in the Tension section's error line, and the save bar's notice
@@ -58,16 +59,6 @@ interface Staged {
   choice?: number | null;
 }
 
-// Two sets the same, byte for byte as the board would hold them.
-function sameSet(a: TensionSet | null, b: TensionSet | null): boolean {
-  if (!a || !b) return a === b;
-  if (!setValid(a) || !setValid(b)) return JSON.stringify(a) === JSON.stringify(b);
-  const x = encodeSetWire(a);
-  const y = encodeSetWire(b);
-  // loop: HOT-PATH-OK — N = 494 bytes, per render of a changed slot
-  return x.every((v, i) => v === y[i]);
-}
-
 // A board result in Tension's words (the board answers INVALID or FAILED).
 export function tensionErrorText(cause: unknown): string {
   if (cause instanceof CommandError && cause.result === "invalid") return i18n.t("desktop.tension.errors.invalid");
@@ -79,9 +70,8 @@ export function useTensionDraft(bridge: UseDs5BridgeResult): TensionDraft {
   const { client } = bridge;
   const supported = supportsTension(bridge.identity);
   const buttons = supportsSetButtons(bridge.identity);
-  // undefined until the user picks one: then the saved choice (or, with
-  // buttons, Without a set; slot 0 before 1.24), fixed at the first read.
-  const [picked, setPicked] = useState<number | null | undefined>(undefined);
+  // 1.23's slot to edit: undefined until the user picks one, then the saved choice (or slot 0), fixed at the first read.
+  const [picked, setPicked] = useState<number | undefined>(undefined);
   const [board, setBoard] = useState<Board | null>(null);
   const [staged, setStaged] = useState<Staged | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -152,7 +142,7 @@ export function useTensionDraft(bridge: UseDs5BridgeResult): TensionDraft {
       // loop: NOT-WORTH — N = 8 slots, when the board's sets or the staged ones change
       sets: boardSets.map((s, slot) => (mine && slot in mine.sets ? mine.sets[slot] : s)),
       // loop: NOT-WORTH — N = 8 slots, when the board's sets or the staged ones change
-      changedSlots: boardSets.map((s, slot) => !!mine && slot in mine.sets && !sameSet(mine.sets[slot], s)),
+      changedSlots: boardSets.map((s, slot) => !!mine && slot in mine.sets && !sameLayout(mine.sets[slot], s)),
     };
   }, [loadedBoard, mine]);
   const boardChoice = loadedBoard ? loadedBoard.choice : null;
@@ -209,10 +199,10 @@ export function useTensionDraft(bridge: UseDs5BridgeResult): TensionDraft {
   }, [dirty, client, mine, changedSlots, sets, choiceChanged, choice, read]);
 
   const changed = useCallback((slot: number) => changedSlots[slot] ?? false, [changedSlots]);
-  // The first read fixes the default (adjusted while rendering): the set that runs, if any.
-  if (picked === undefined && current) setPicked(boardChoice ?? (buttons ? null : 0));
-  const editing = picked === undefined ? (buttons ? null : 0) : picked === null && !buttons ? 0 : picked;
-  const setEditing = useCallback((slot: number | null) => setPicked(slot), []);
+  // The first read fixes the default (adjusted while rendering): the slot that runs, if any.
+  if (picked === undefined && current) setPicked(boardChoice ?? 0);
+  const editing = picked ?? 0;
+  const setEditing = useCallback((slot: number) => setPicked(slot), []);
   return useMemo(
     () => ({ supported, buttons, editing, setEditing, loaded: current, readOnly: !!loadedBoard?.readOnly, error, sets, choice, changed, dirty, load, retry, edit, choose, save, revert }),
     [supported, buttons, editing, setEditing, current, loadedBoard, error, sets, choice, changed, dirty, load, retry, edit, choose, save, revert],

@@ -1,13 +1,18 @@
 // Tension (protocol 1.23): your own adaptive trigger effects, run by the
-// board: the Controller page's Sets section (which set, its name, Feel it)
-// and the Adaptive triggers section (its two triggers). A set holds L2
-// and R2 together; each trigger is left to the game, filled in (ours only
-// while the game sends nothing on it) or replaced (always ours), with up to 4
-// stages that switch effects by pull position and hold time. Edits are staged
-// drafts saved by the one save bar (tensionDraft.ts, page rule 4); Feel it
-// runs the set being edited, unsaved, until it's stopped or the section closes.
+// board, in the Controller page's Adaptive triggers section. Each trigger is
+// left to the game, filled in (ours only while the game sends nothing on it)
+// or replaced (always ours), with up to 4 stages that switch effects by pull
+// position and hold time. Edits are staged drafts saved by the one save bar
+// (page rule 4). Feel it runs what's being edited, unsaved, until it's
+// stopped or the section closes.
 //
-// The picture (TensionPicture) is a static SVG drawn only when the set
+// Protocol 1.24 (docs/design/button-layouts-2026-11.md §2.5): the trigger
+// effects belong to a button layout, so the section edits those of the layout
+// in the editor (layoutEditor.ts), with the starting points labelled as
+// trigger effects. On 1.23 firmware (trigger effects only) it keeps its own
+// slot editor (TensionSlots).
+//
+// The picture (TensionPicture) is a static SVG drawn only when the program
 // changes: 0 frames per second while shown and idle, nothing while hidden,
 // the same on the CPU fallback (no animation, no canvas).
 import { ArrowDown, ArrowUp, X } from "lucide-react";
@@ -49,24 +54,35 @@ import { tensionErrorText } from "./tensionDraft";
 type T = ReturnType<typeof useTranslation>["t"];
 const pct = (raw: number) => Math.round((raw * 100) / 255);
 const raw = (percent: number) => Math.round((percent * 255) / 100);
-// A set's name in the lists: "0 · Bow" (slots 0–7, like the OLED's zero-based names).
+// A slot's name in the lists: "0 · Bow" (slots 0–7, like the OLED's zero-based names).
 const slotLabel = (t: T, slot: number, set: TensionSet | null) => t("desktop.tension.slot", { slot, name: set ? set.name : t("desktop.tension.empty") });
+// The starting points that are trigger effects (not the empty one).
+// loop: NOT-WORTH — N = 5 starters, once at load
+const PRESET_KEYS = STARTER_KEYS.filter((k) => k !== "empty");
 
-// Protocol 1.24 (the firmware's docs/TENSION_BUTTONS.md §7.1, approved by the
-// owner 2026-11-15): a set is triggers and buttons, so its own controls are a
-// Sets section first in the panel (Runs, Editing, Name, Feel it, the starters,
-// Delete last); Adaptive triggers keeps the edited set's L2 / R2 programs
-// (TensionSection) and Button assignments its buttons (SetButtons.tsx).
-
-// The Sets section's body.
-export function SetsSection({ bridge }: { bridge: UseDs5BridgeResult }) {
+// Adaptive triggers' Tension group.
+export function TensionSection({ bridge }: { bridge: UseDs5BridgeResult }) {
   const { t } = useTranslation();
-  const { tension: tn } = useBoardDrafts();
+  const { tension: tn, layout: editor } = useBoardDrafts();
+  const { goTo } = useNoticeTasks();
   const [error, setError] = useState<string | null>(null);
   const { load } = tn;
-  // lifetime: OK — acquires nothing (reads the board's sets once per connection; the read is the draft's)
+  // lifetime: OK — acquires nothing (reads the board's layouts once per connection; the read is the draft's)
   useEffect(() => load(), [load]);
-  if (!bridge.identity || !tn.supported) return null;
+
+  if (!bridge.identity) return null;
+  if (!tn.supported)
+    return (
+      <SectionGroup title={t("desktop.tension.title")}>
+        {/* hint: MUST-SHOW — why Tension isn't here: the firmware to update, with the link to it (page rules 7 and 9) */}
+        <p className="dk-hint">{t("desktop.tension.needsFirmware")}</p>
+        <div className="dk-row-btns">
+          <button type="button" className="dk-btn" onClick={() => goTo("dongle", "firmware")}>
+            {t("desktop.settings2.firmwareLink")}
+          </button>
+        </div>
+      </SectionGroup>
+    );
   const shownError = tn.error ?? error;
   const header = shownError && (
     <Notice
@@ -86,31 +102,103 @@ export function SetsSection({ bridge }: { bridge: UseDs5BridgeResult }) {
   );
   if (!tn.loaded)
     return (
-      <>
+      <SectionGroup title={t("desktop.tension.title")} info={t("desktop.tension.info")}>
         {header}
         {!shownError && <p className="dk-hint">{t("desktop.tension.reading")}</p>}
-      </>
+      </SectionGroup>
     );
   if (tn.readOnly)
     return (
-      <>
+      <SectionGroup title={t("desktop.tension.title")} info={t("desktop.tension.info")}>
         {header}
-        {/* hint: MUST-SHOW — why the sets can't be changed here (a newer firmware's sets are kept safe) */}
+        {/* hint: MUST-SHOW — why the trigger effects can't be changed here (a newer firmware's layouts are kept safe) */}
         <p className="dk-hint">{t("desktop.tension.readOnly")}</p>
-      </>
+      </SectionGroup>
     );
+  // 1.24: the layout in the editor's trigger effects.
+  if (editor.ready) {
+    const set = editor.layout;
+    return (
+      <SectionGroup title={t("desktop.tension.title")} info={t("desktop.tension.infoLayout")}>
+        {header}
+        <Row label={t("desktop.tension.presets")} info={t("desktop.tension.presetsInfo")} stack>
+          <div className="dk-row-btns">
+            {/* loop: HOT-PATH-OK — N = 4 trigger presets */}
+            {PRESET_KEYS.map((k) => (
+              <button key={k} type="button" className="dk-btn" onClick={() => editor.edit({ ...set, l2: copySet(STARTERS[k]).l2, r2: copySet(STARTERS[k]).r2 })}>
+                {t(`desktop.tension.starters.${k}`)}
+              </button>
+            ))}
+          </div>
+        </Row>
+        <div className="tn-pair">
+          <TriggerEditor label="L2" program={set.l2} onChange={(l2) => editor.edit({ ...set, l2 })} />
+          <TriggerEditor label="R2" program={set.r2} onChange={(r2) => editor.edit({ ...set, r2 })} />
+        </div>
+        <FeelIt bridge={bridge} set={set} onError={setError} />
+      </SectionGroup>
+    );
+  }
+  // 1.23: the slot editor.
   const editing = tn.editing;
-  const set = editing === null ? null : tn.sets[editing];
+  const set = tn.sets[editing];
+  return (
+    <SectionGroup title={t("desktop.tension.title")} info={t("desktop.tension.info")}>
+      {header}
+      <TensionSlots />
+      {set ? (
+        <>
+          <Row label={t("desktop.tension.name")} sub={t("desktop.tension.nameSub")} invalid={!set.name}>
+            <input
+              className="dk-input tn-name"
+              type="text"
+              maxLength={16}
+              value={set.name}
+              aria-label={t("desktop.tension.name")}
+              onChange={(e) => tn.edit(editing, { ...set, name: cleanName(e.target.value) })}
+            />
+          </Row>
+          <div className="tn-pair">
+            <TriggerEditor label="L2" program={set.l2} onChange={(l2) => tn.edit(editing, { ...set, l2 })} />
+            <TriggerEditor label="R2" program={set.r2} onChange={(r2) => tn.edit(editing, { ...set, r2 })} />
+          </div>
+          <FeelIt key={editing} bridge={bridge} set={set} onError={setError} />
+          <div className="dk-row-btns">
+            <button type="button" className="dk-btn danger" onClick={() => tn.edit(editing, null)}>
+              {t("desktop.tension.delete")}
+            </button>
+          </div>
+        </>
+      ) : (
+        <>
+          <p className="dk-hint">{t("desktop.tension.startFrom")}</p>
+          <div className="dk-row-btns">
+            {/* loop: HOT-PATH-OK — N = 5 starters */}
+            {STARTER_KEYS.map((k) => (
+              <button key={k} type="button" className="dk-btn" onClick={() => tn.edit(editing, copySet(STARTERS[k]))}>
+                {t(`desktop.tension.starters.${k}`)}
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+    </SectionGroup>
+  );
+}
+
+// 1.23's slots: which one runs from power-on, and which one is edited.
+function TensionSlots() {
+  const { t } = useTranslation();
+  const { tension: tn } = useBoardDrafts();
   // loop: HOT-PATH-OK — N = 8 slots per render of the section
   const used = tn.sets.map((s, i) => [i, s] as const).filter(([, s]) => s);
   return (
     <>
-      {header}
       {used.length > 0 && (
         <Row label={t("desktop.tension.runs")} info={t("desktop.tension.runsInfo")}>
           <select className="dk-select" value={tn.choice ?? ""} onChange={(e) => tn.choose(e.target.value === "" ? null : Number(e.target.value))}>
             <option value="">{t("desktop.tension.none")}</option>
-            {/* loop: HOT-PATH-OK — N ≤ 8 saved sets */}
+            {/* loop: HOT-PATH-OK — N ≤ 8 saved slots */}
             {used.map(([i, s]) => (
               <option key={i} value={i}>
                 {slotLabel(t, i, s)}
@@ -119,9 +207,8 @@ export function SetsSection({ bridge }: { bridge: UseDs5BridgeResult }) {
           </select>
         </Row>
       )}
-      <Row label={t("desktop.tension.edit")} info={t(tn.buttons ? "desktop.sets.info" : "desktop.tension.info")}>
-        <select className="dk-select" value={editing ?? ""} onChange={(e) => tn.setEditing(e.target.value === "" ? null : Number(e.target.value))}>
-          {tn.buttons && <option value="">{t("desktop.sets.without")}</option>}
+      <Row label={t("desktop.tension.edit")}>
+        <select className="dk-select" value={tn.editing} onChange={(e) => tn.setEditing(Number(e.target.value))}>
           {/* loop: HOT-PATH-OK — N = 8 slots */}
           {Array.from({ length: TENSION_SLOTS }, (_, i) => (
             <option key={i} value={i}>
@@ -131,95 +218,17 @@ export function SetsSection({ bridge }: { bridge: UseDs5BridgeResult }) {
           ))}
         </select>
       </Row>
-      {editing !== null &&
-        (set ? (
-          <SetEditor key={editing} bridge={bridge} set={set} onChange={(next) => tn.edit(editing, next)} onDelete={() => tn.edit(editing, null)} onError={setError} />
-        ) : (
-          <>
-            <p className="dk-hint">{t("desktop.tension.startFrom")}</p>
-            <div className="dk-row-btns">
-              {/* loop: HOT-PATH-OK — N = 5 starter sets */}
-              {STARTER_KEYS.map((k) => (
-                <button key={k} type="button" className="dk-btn" onClick={() => tn.edit(editing, copySet(STARTERS[k]))}>
-                  {t(`desktop.tension.starters.${k}`)}
-                </button>
-              ))}
-            </div>
-          </>
-        ))}
     </>
   );
 }
 
-// The Sets section's status: which set runs from power-on.
-export function setsStatus(t: T, tn: { loaded: boolean; choice: number | null; sets: (TensionSet | null)[] }): string {
-  if (!tn.loaded) return t("desktop.tension.reading");
-  const set = tn.choice === null ? null : tn.sets[tn.choice];
-  return t("desktop.sets.status", { name: set ? set.name : t("desktop.tension.none") });
-}
-
-// Adaptive triggers' Tension group: the edited set's two triggers side by side.
-export function TensionSection({ bridge }: { bridge: UseDs5BridgeResult }) {
-  const { t } = useTranslation();
-  const { tension: tn } = useBoardDrafts();
-  const { goTo } = useNoticeTasks();
-  const { load } = tn;
-  // lifetime: OK — acquires nothing (reads the board's sets once per connection; the read is the draft's)
-  useEffect(() => load(), [load]);
-
-  if (!bridge.identity) return null;
-  if (!tn.supported)
-    return (
-      <SectionGroup title={t("desktop.tension.title")}>
-        {/* hint: MUST-SHOW — why Tension isn't here: the firmware to update, with the link to it (page rules 7 and 9) */}
-        <p className="dk-hint">{t("desktop.tension.needsFirmware")}</p>
-        <div className="dk-row-btns">
-          <button type="button" className="dk-btn" onClick={() => goTo("dongle", "firmware")}>
-            {t("desktop.settings2.firmwareLink")}
-          </button>
-        </div>
-      </SectionGroup>
-    );
-  // Reading, a read error or a newer store: the Sets section says so (one fact, one place).
-  if (!tn.loaded || tn.readOnly) return null;
-  const editing = tn.editing;
-  const set = editing === null ? null : tn.sets[editing];
-  if (editing === null || !set)
-    return (
-      <SectionGroup title={t("desktop.tension.title")} info={t("desktop.tension.info")}>
-        <p className="dk-hint">{t("desktop.sets.editInSets")}</p>
-      </SectionGroup>
-    );
-  return (
-    <SectionGroup title={t("desktop.tension.title")} info={t("desktop.tension.info")}>
-      <div className="tn-pair">
-        <TriggerEditor label="L2" program={set.l2} onChange={(l2) => tn.edit(editing, { ...set, l2 })} />
-        <TriggerEditor label="R2" program={set.r2} onChange={(r2) => tn.edit(editing, { ...set, r2 })} />
-      </div>
-    </SectionGroup>
-  );
-}
-
-// The edited set's own controls (the Sets section): Name, Feel it, Delete
-// (last). Feel it runs the whole set, triggers and (from 1.24) buttons.
-function SetEditor({
-  bridge,
-  set,
-  onChange,
-  onDelete,
-  onError,
-}: {
-  bridge: UseDs5BridgeResult;
-  set: TensionSet;
-  onChange: (s: TensionSet) => void;
-  onDelete: () => void;
-  onError: (e: string | null) => void;
-}) {
+// Feel it: runs what's being edited (from 1.24 the whole layout, triggers and
+// buttons), unsaved; it follows the edits (debounced) and stops when the
+// editor goes (the section folds, another slot is picked, the page changes).
+function FeelIt({ bridge, set, onError }: { bridge: UseDs5BridgeResult; set: TensionSet; onError: (e: string | null) => void }) {
   const { t } = useTranslation();
   const client = bridge.client;
   const [feeling, setFeeling] = useState(false);
-  // Feel it follows the edits (debounced), and stops when the editor goes
-  // (the section folds, another set is picked, the page changes).
   // lifetime: OK — cleanup: clears the debounce timer (next edit / Feel it off / unmount)
   useEffect(() => {
     if (!feeling || !client) return;
@@ -237,32 +246,17 @@ function SetEditor({
   // lifetime: OK — acquires nothing; the cleanup stops Feel it on the board (unmount / board change)
   useEffect(
     () => () => {
-      // error: LOGGED-OK — leaving the editor; a failed stop leaves the unsaved set running until the board restarts or Feel it is used again
+      // error: LOGGED-OK — leaving the editor; a failed stop leaves the unsaved effects running until the board restarts or Feel it is used again
       if (client && feeling) client.feelTension(null).catch(logged("stopping Feel it on leaving the editor"));
     },
     [client, feeling],
   );
   return (
-    <>
-      <Row label={t("desktop.tension.name")} sub={t("desktop.tension.nameSub")} invalid={!set.name}>
-        <input
-          className="dk-input tn-name"
-          type="text"
-          maxLength={16}
-          value={set.name}
-          aria-label={t("desktop.tension.name")}
-          onChange={(e) => onChange({ ...set, name: cleanName(e.target.value) })}
-        />
-      </Row>
-      <div className="dk-row-btns">
-        <button type="button" className={`dk-btn${feeling ? " on" : ""}`} aria-pressed={feeling} title={t("desktop.tension.feelHint")} onClick={() => setFeeling((f) => !f)}>
-          {feeling ? t("desktop.tension.feelStop") : t("desktop.tension.feel")}
-        </button>
-        <button type="button" className="dk-btn danger" onClick={onDelete}>
-          {t("desktop.tension.delete")}
-        </button>
-      </div>
-    </>
+    <div className="dk-row-btns">
+      <button type="button" className={`dk-btn${feeling ? " on" : ""}`} aria-pressed={feeling} title={t("desktop.tension.feelHint")} onClick={() => setFeeling((f) => !f)}>
+        {feeling ? t("desktop.tension.feelStop") : t("desktop.tension.feel")}
+      </button>
+    </div>
   );
 }
 

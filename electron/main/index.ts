@@ -492,7 +492,7 @@ function start(): void {
     libraryDeleteProfile: (key) => lib().deleteProfile(key),
     librarySetMine: (u) => lib().setMine(u.gameKey, u.title, u.mine),
     librarySetRestore: (r) => lib().setRestore(r ?? undefined),
-    librarySetLayout: (u) => lib().setLayout(u.id, u.name, u.table, u.extra),
+    librarySetLayout: (u) => lib().setLayout(u.id, u.name, u.table, u.extra, u.set),
     libraryDeleteLayout: (id) => lib().deleteLayout(id),
     gameArtColor: (key) => fakeGames()?.artColor(key) ?? withGames((g) => g.artColor(key)),
     // Dev builds only: the Developer card's Fake games switch, running game and HDR setup.

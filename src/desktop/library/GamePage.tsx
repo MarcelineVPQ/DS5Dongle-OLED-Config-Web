@@ -14,7 +14,9 @@ import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 import { BadgeCheck, Info, Layers, MessageSquareText, NotebookPen, SlidersHorizontal, Sun, Wrench } from "lucide-react";
 import { useLibrary } from "./libraryContext";
 import { layoutSummary } from "../live/layoutSummary";
-import { FEATURES2, supportsFeature2, supportsTension } from "../../protocol/bridgeClient";
+import { FEATURES2, FEATURES5, supportsFeature2, supportsFeature5, supportsSetButtons, supportsTension } from "../../protocol/bridgeClient";
+import { emptyButtonPart, legacyFromPart } from "../../protocol/buttons";
+import { layoutSet, slotOnBoard } from "../live/layoutEditor";
 import { useBoardDraftsIfAny } from "../live/boardDrafts";
 import { LauncherIcon } from "./LauncherIcon";
 import { protonApplies } from "../games/platform";
@@ -354,9 +356,10 @@ function ProfileBody({
   return (
     <>
       <ProfileSummary draft={draft} normal={normal} split={!!bridge.client?.splitHaptics} onChange={set} />
-      <LayoutPicker value={draft.buttonLayout} bridge={bridge} onChange={(id) => edit({ buttonLayout: id })} />
+      <LayoutPicker value={draft.buttonLayout} bridge={bridge} onChange={(id) => edit({ buttonLayout: id })} onEdit={() => editProfile(game.key, game.title)} />
       <CurvePicker value={draft.stickCurves} bridge={bridge} onChange={(stickCurves) => edit({ stickCurves })} />
-      <TensionPicker value={draft.tensionSet} bridge={bridge} onChange={(tensionSet) => edit({ tensionSet })} />
+      {/* 1.24: the layout carries the trigger effects; the slot row stays only to clear an older choice. */}
+      {(!supportsSetButtons(bridge.identity) || draft.tensionSet !== undefined) && <TensionPicker value={draft.tensionSet} bridge={bridge} onChange={(tensionSet) => edit({ tensionSet })} />}
       <div className="dk-row-btns">
         {/* These need the board: shown only while it's connected. */}
         {bridge.isConnected && (
@@ -489,9 +492,23 @@ function ProfileSummary({ draft, normal, split, onChange }: { draft: ProfileSett
 
 // A saved button layout for this game (switched in while it runs; never
 // written to the dongle's flash, so it needs protocol 1.8).
-function LayoutPicker({ value, bridge, onChange }: { value: string | undefined; bridge: UseDs5BridgeResult; onChange: (id: string | undefined) => void }) {
+function LayoutPicker({ value, bridge, onChange, onEdit }: { value: string | undefined; bridge: UseDs5BridgeResult; onChange: (id: string | undefined) => void; onEdit: () => void }) {
   const { t } = useTranslation();
   const { library } = useLibrary();
+  const tn = useBoardDraftsIfAny()?.tension ?? null;
+  const loadLayouts = tn?.load;
+  // lifetime: OK — acquires nothing (reads the board's layouts once per connection; the read is the draft's)
+  useEffect(() => loadLayouts?.(), [loadLayouts]);
+  // 1.24 (docs/design/button-layouts-2026-11.md §1): a layout that isn't on the
+  // board, on firmware that can't take one for now (0x22), reaches the game as
+  // its Press part only; say what doesn't come along, with the way to fix it.
+  const chosen = value ? library.layouts?.[value] : undefined;
+  const partial = (() => {
+    if (!chosen || !tn?.loaded || !supportsSetButtons(bridge.identity) || supportsFeature5(bridge.identity, FEATURES5.setForNow)) return false;
+    const set = layoutSet(chosen);
+    if (slotOnBoard(tn.sets, set) >= 0) return false;
+    return !legacyFromPart(set.buttons ?? emptyButtonPart()).whole || set.l2.stages.length > 0 || set.r2.stages.length > 0;
+  })();
   // loop: HOT-PATH-OK — N = saved button layouts (a few)
   const layouts = Object.entries(library.layouts ?? {}).sort(([, a], [, b]) => a.name.localeCompare(b.name));
   const oldFirmware = !!bridge.identity && !supportsFeature2(bridge.identity, 8, FEATURES2.temporaryRemap);
@@ -530,6 +547,17 @@ function LayoutPicker({ value, bridge, onChange }: { value: string | undefined; 
             )}
           </p>
         )
+      )}
+      {partial && (
+        <Notice
+          action={
+            <button type="button" className="dk-btn" onClick={onEdit}>
+              {t("desktop.editing.open")}
+            </button>
+          }
+        >
+          {t("desktop.layouts.needsBoard")}
+        </Notice>
       )}
     </>
   );

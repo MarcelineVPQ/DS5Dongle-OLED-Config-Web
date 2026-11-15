@@ -36,7 +36,7 @@ import {
   type TensionSet,
   type TensionStatus,
 } from "./tension";
-import { BUTTON_PART_BYTES, BUTTONS_CHUNK_AT, BUTTONS_CHUNKS, buttonsChunkReplyBytes, buttonsChunkSel, decodeButtonsChunk } from "./buttons";
+import { BUTTON_PART_BYTES, BUTTONS_CHUNK_AT, BUTTONS_CHUNKS, buttonsChunkReplyBytes, buttonsChunkSel, decodeButtonsChunk, decodeLiveTruth, LIVE_TRUTH_BYTES, LIVE_TRUTH_REPORT, type LiveTruth } from "./buttons";
 import {
   CTRL_FIRMWARE_BYTES,
   CTRL_HEADER_BYTES,
@@ -1102,6 +1102,39 @@ export class Ds5BridgeClient {
     // error: SHOWN — desktop.tension.errors.unreadable via the section's error line: a set this app can't read (a newer layout)
     if (!set) throw new KeyedError("desktop.tension.errors.unreadable");
     return set;
+  }
+
+  // ---- Button layouts on the board (protocol 1.24, FEATURES5; TENSION_BUTTONS.md §6) ----
+
+  // A FEATURES5 piece this board has (the same test as supportsFeature5 on the last identity).
+  has5(bit: number): boolean {
+    const p = this.protocol;
+    return this.setButtons && !!p && (p.features5 & bit) !== 0;
+  }
+
+  // GET 0xE8: what the board sent and the PC fetched (live truth, [58] bit 3); null without it or on a reply this app can't read.
+  async readLiveTruth(): Promise<LiveTruth | null> {
+    if (!this.has5(FEATURES5.liveTruth)) return null;
+    return decodeLiveTruth(await this.transport.getReport(LIVE_TRUTH_REPORT, LIVE_TRUTH_BYTES));
+  }
+
+  // 0xF6 0x21: keys and mouse paused for `seconds` (0 = end now; [58] bit 4,
+  // §5.5). The board ends the pause by itself, so a closed app never leaves it on.
+  pauseKeysMouse(seconds: number): Promise<void> {
+    if (!this.has5(FEATURES5.keysMouse)) return Promise.resolve();
+    return this.command(FUNC.buttonsPause, [1, Math.max(0, Math.min(10, Math.round(seconds)))]).then(() => undefined);
+  }
+
+  // 0xF6 0x22: a layout runs for now (RAM only, a game's; [58] bit 6), or (null) ends it.
+  runLayoutForNow(set: TensionSet | null): Promise<void> {
+    return this.tensionOp(async () => {
+      if (!set) {
+        await this.command(FUNC.runSetForNow, [TENSION_WIRE_VER_BUTTONS, 0]);
+        return;
+      }
+      const crc = await this.stageTension(set);
+      await this.command(FUNC.runSetForNow, [TENSION_WIRE_VER_BUTTONS, 1, ...crcBytes(crc)]);
+    });
   }
 
   // Protocol 1.22+ (the first release with them, firmware 0.9.5-dev.21): the

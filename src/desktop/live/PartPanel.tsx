@@ -4,7 +4,7 @@
 // section bodies are functions, so a folded section renders nothing and its
 // polls (the level meters, the slot list) and tests stop.
 import { HeadsetStereo } from "./HeadsetStereo";
-import { Bluetooth, Gamepad2, Layers, Lightbulb, Mic, MoveDown, Volume2, AudioWaveform, Joystick, Rotate3d } from "lucide-react";
+import { Bluetooth, Gamepad2, Lightbulb, Mic, MoveDown, Volume2, AudioWaveform, Joystick, Rotate3d } from "lucide-react";
 import { GyroCalibration, StickCalibration, TriggerCalibration, gyroCalibrated, sticksCalibrated } from "./Calibration";
 import StickCurves from "./StickCurves";
 import StickTests from "./StickTestCards";
@@ -25,8 +25,12 @@ import LightbarPage, { LIGHTBAR_MODES } from "../pages/LightbarPage";
 import { AutoHapticsSection, HapticsSection, HapticsTest, MicSection, SpeakerSection, TriggerIntensitySection } from "../pages/SettingsPage";
 import SlotsPage from "../pages/SlotsPage";
 import TriggersPage from "../pages/TriggersPage";
-import { SetsSection, setsStatus, TensionLive, TensionSection } from "./Tension";
-import { buttonsFromLegacy, MakeSetFromButtons, SetButtonsEditor, SetButtonsNeedFirmware, setButtonsStatus, SetLeavesButtons } from "./SetButtons";
+import { TensionLive, TensionSection } from "./Tension";
+import { ButtonAssignments, ButtonsNeedFirmware, layoutStatus } from "./ButtonEditor";
+import { GyroMouse } from "./GyroMouse";
+import { DeleteLayout, SaveAsLayout, useLayoutUses } from "./LayoutList";
+import { FEATURES5 } from "../../protocol/bridgeClient";
+import { emptyButtonPart, type LiveTruth } from "../../protocol/buttons";
 import { usePoll } from "../usePoll";
 import { EDGE_REMAP_ROWS } from "./parts";
 import type { Remap } from "./useRemap";
@@ -46,16 +50,21 @@ interface Props {
   onButtonHover: (index: number | null) => void;
   edge: boolean; // a DualSense Edge (or its preview): the Buttons list adds its Fn buttons and paddles
   trigger: "l2" | "r2"; // the trigger picked last on the drawing: its pull shows first
-  // A Tension set's button editor (protocol 1.24): the button picked (a source), from the list, the drawing or the controller.
+  // The button layout editor (protocol 1.24): the button picked (a source), from the list, the drawing or the controller.
   sourcePick: number | null;
   onSourcePick: (source: number | null) => void;
+  // The layer shown (the tabs above the drawing) and the board's live truth (0xE8).
+  layer: number;
+  onLayer: (layer: number) => void;
+  // error: SHOWN — desktop.errors.board.timeout and the other keyed board errors (causeText, usePoll) in Live from the board's line (LiveLine)
+  live: { truth: LiveTruth | null; error: string | null };
 }
 
 const CHOICES = ["auto", "speaker", "headset", "off"] as const;
 const MICS = ["auto", "builtIn", "headset"] as const;
 const AH_MODES = ["off", "fallback", "mix", "replace"] as const;
 
-export default function ControllerSections({ bridge, input, remap, buttonFocus, onButtonFocus, onButtonHover, edge, trigger, sourcePick, onSourcePick }: Props) {
+export default function ControllerSections({ bridge, input, remap, buttonFocus, onButtonFocus, onButtonHover, edge, trigger, sourcePick, onSourcePick, layer, onLayer, live }: Props) {
   const { t } = useTranslation();
   const d = bridge.draft;
   // loop: HOT-PATH-OK — N = 9 light bar modes; per render of the panel
@@ -65,11 +74,10 @@ export default function ControllerSections({ bridge, input, remap, buttonFocus, 
   const { library } = useLibrary();
   const loaded = remap.loaded ? (library.layouts?.[remap.loaded.id]?.name ?? remap.loaded.name) : null;
   const slot = bridge.identity?.currentSlot;
-  const { calibration: cal, curves, tension: tn } = useBoardDrafts();
-  // Protocol 1.24: what Button assignments edits (TENSION_BUTTONS.md §7.1, §7.4, §7.11).
-  const setsReady = tn.buttons && tn.loaded && !tn.readOnly;
-  const editedSet = setsReady && tn.editing !== null ? tn.sets[tn.editing] : null;
-  // The Sets header and the drawing's badges need the board's sets: read once per connection.
+  const { calibration: cal, curves, tension: tn, layout: editor } = useBoardDrafts();
+  // Protocol 1.24: Button assignments opens on the layout editor (docs/design/button-layouts-2026-11.md).
+  const gyroMouse = editor.ready && !!bridge.client?.has5(FEATURES5.gyroMouse);
+  // The header and the drawing's badges need the board's layouts: read once per connection.
   const { load: loadSets } = tn;
   // lifetime: OK — acquires nothing (the read is the draft's, once per connection)
   useEffect(() => loadSets(), [loadSets]);
@@ -86,12 +94,6 @@ export default function ControllerSections({ bridge, input, remap, buttonFocus, 
   const gains = bridge.client?.splitHaptics ? `L ${d.hapticsGain.toFixed(1)}× · R ${d.hapticsGainRight.toFixed(1)}×` : `${d.hapticsGain.toFixed(1)}×`;
   return (
     <>
-      {/* Sets first (TENSION_BUTTONS.md §7.1, approved 2026-11-15; an exception to page rule 10's drawing order): it decides what the part sections show. */}
-      {tn.supported && (
-        <Section id="sets" icon={Layers} title={t("desktop.sections.sets")} status={setsStatus(t, tn)}>
-          {() => <SetsSection bridge={bridge} />}
-        </Section>
-      )}
       <Section id="lightbar" icon={Lightbulb} title={t("desktop.sections.lightbar")} status={mode ? t(`desktop.lightbar.modes.${mode.key}`) : null}>
         {() => <LightbarPage bridge={bridge} />}
       </Section>
@@ -162,41 +164,36 @@ export default function ControllerSections({ bridge, input, remap, buttonFocus, 
           </>
         )}
       </Section>
-      <Section id="buttons" icon={Gamepad2} title={t("desktop.sections.buttons")} status={(editedSet && setButtonsStatus(t, editedSet)) ?? legacyStatus}>
+      <Section id="buttons" icon={Gamepad2} title={t("desktop.sections.buttons")} status={editor.ready ? layoutStatus(t, editor.layout.name, editor.layout.buttons ?? emptyButtonPart()) : legacyStatus}>
         {() =>
-          !setsReady ? (
-            // Older firmware (no identity [58] bit 0), or the sets not read (yet): today's editor.
+          editor.ready ? (
+            <ButtonAssignments bridge={bridge} pick={sourcePick} onPick={onSourcePick} layer={layer} onLayer={onLayer} edge={edge} live={live} />
+          ) : tn.buttons && !tn.loaded && !tn.error ? (
+            // The board's layouts are being read (once per connection): the editor opens with them.
+            <p className="dk-hint">{t("desktop.tension.reading")}</p>
+          ) : (
+            // Older firmware (no identity [58] bit 0), a read that failed, or layouts saved by newer firmware: today's list.
             <>
-              {/* today's list (the legacy table) */}
-              <>
-                <AllButtonsList remap={remap} focus={buttonFocus} onFocus={onButtonFocus} onHover={onButtonHover} edge={edge} />
-                {edge && !remap.extraDevice && <EdgePartInfo />}
-              </>
-              {remap.supported && !tn.buttons && <SetButtonsNeedFirmware />}
+              {tn.buttons && tn.error && (
+                <Notice
+                  error
+                  action={
+                    <BusyButton className="dk-btn" onClick={tn.retry}>
+                      {t("desktop.tension.retry")}
+                    </BusyButton>
+                  }
+                >
+                  {tn.error}
+                </Notice>
+              )}
+              {/* hint: MUST-SHOW — why the layouts can't be changed here (a newer firmware's layouts are kept safe) */}
+              {tn.buttons && tn.readOnly && <p className="dk-hint">{t("desktop.tension.readOnly")}</p>}
+              <AllButtonsList remap={remap} focus={buttonFocus} onFocus={onButtonFocus} onHover={onButtonHover} edge={edge} />
+              {edge && !remap.extraDevice && <EdgePartInfo />}
+              {remap.supported && !tn.buttons && <ButtonsNeedFirmware />}
               <TouchLive input={input} />
               {remap.supported && <SavedLayouts remap={remap} />}
             </>
-          ) : tn.editing === null || !editedSet ? (
-            // Without a set (today's list, §7.4), or an empty slot being edited.
-            <>
-              {tn.editing === null ? (
-                <>
-                  <AllButtonsList remap={remap} focus={buttonFocus} onFocus={onButtonFocus} onHover={onButtonHover} edge={edge} />
-                  {edge && !remap.extraDevice && <EdgePartInfo />}
-                </>
-              ) : (
-                <p className="dk-hint">{t("desktop.buttons.emptySlot")}</p>
-              )}
-              {remap.supported && tn.editing === null && <p className="dk-hint">{t("desktop.buttons.legacyHint")}</p>}
-              {remap.supported && <MakeSetFromButtons tn={tn} remap={remap} />}
-              {tn.editing === null && <TouchLive input={input} />}
-              {tn.editing === null && remap.supported && <SavedLayouts remap={remap} />}
-            </>
-          ) : !editedSet.buttons ? (
-            // A set that leaves the buttons as they are (first run, §7.11).
-            <SetLeavesButtons onUse={() => tn.edit(tn.editing!, { ...editedSet, buttons: buttonsFromLegacy(remap) })} />
-          ) : (
-            <SetButtonsEditor set={editedSet} onChange={(next) => tn.edit(tn.editing!, next)} pick={sourcePick} onPick={onSourcePick} edge={edge} />
           )
         }
       </Section>
@@ -211,9 +208,22 @@ export default function ControllerSections({ bridge, input, remap, buttonFocus, 
         )}
       </Section>
       {/* The gyroscope's own section: its calibration, next to the Gyroscope card's subject (IA audit Q3). */}
-      {cal.supported && (
-        <Section id="gyro" icon={Rotate3d} title={t("desktop.sections.gyro")} status={t(gyroCalibrated(cal.draft) ? "desktop.calib.calibrated" : "desktop.calib.uncalibrated")}>
-          {() => <GyroCalibration bridge={bridge} input={input} />}
+      {(cal.supported || gyroMouse) && (
+        <Section
+          id="gyro"
+          icon={Rotate3d}
+          title={t("desktop.sections.gyro")}
+          // loop: NOT-WORTH — N = 2 parts of one status line
+          status={[cal.supported ? t(gyroCalibrated(cal.draft) ? "desktop.calib.calibrated" : "desktop.calib.uncalibrated") : null, gyroMouse ? onOff(t, t("desktop.gyroMouse.title"), !!editor.layout.buttons?.gyro) : null]
+            .filter(Boolean)
+            .join(" · ")}
+        >
+          {() => (
+            <>
+              {gyroMouse && <GyroMouse bridge={bridge} />}
+              {cal.supported && <GyroCalibration bridge={bridge} input={input} />}
+            </>
+          )}
         </Section>
       )}
       <Section id="slots" icon={Bluetooth} title={t("desktop.sections.slots")} status={slot !== undefined ? t("desktop.accordion.slotActive", { slot }) : null}>
@@ -391,19 +401,9 @@ function ButtonLayoutsSection({ remap }: { remap: Remap }) {
   const { t } = useTranslation();
   const desktop = window.desktop;
   const { library, setLibrary } = useLibrary();
-  const [name, setName] = useState("");
   // loop: HOT-PATH-OK — N = saved layouts (a few); once per library change (useMemo + memo)
   const layouts = useMemo(() => Object.entries(library.layouts ?? {}).sort(([, a], [, b]) => a.name.localeCompare(b.name)), [library.layouts]);
-  // How many game profiles use each layout: one pass over the games per library change.
-  const uses = useMemo(() => {
-    const m = new Map<string, number>();
-    // loop: HOT-PATH-OK — N = games with a profile (tens to hundreds); once per library change
-    for (const g of Object.values(library.games)) {
-      const id = g.profile?.settings.buttonLayout;
-      if (id) m.set(id, (m.get(id) ?? 0) + 1);
-    }
-    return m;
-  }, [library.games]);
+  const uses = useLayoutUses(library.games);
   const usedBy = (id: string) => uses.get(id) ?? 0;
   if (!desktop) return null;
   // loop: HOT-PATH-OK — N = 4 Edge names per render
@@ -447,42 +447,19 @@ function ButtonLayoutsSection({ remap }: { remap: Remap }) {
                 >
                   {t("desktop.layouts.update")}
                 </button>
-                <button
-                  type="button"
-                  className="dk-btn danger"
-                  title={t("desktop.layouts.deleteHint")}
-                  onClick={() => void desktop.libraryDeleteLayout(id).then(setLibrary).catch(shown("desktop.errors.layoutDelete"))}
-                >
-                  {t("desktop.layouts.delete")}
-                </button>
+                <DeleteLayout id={id} />
               </div>
             </li>
           ))}
         </ul>
       )}
-      <form
-        className="dk-row dk-layout-new"
-        onSubmit={(e) => {
-          e.preventDefault();
-          if (!name.trim()) return;
+      <SaveAsLayout
+        onSave={(layoutName) => {
           const id = `l-${Date.now().toString(36)}`;
-          save(id, name.trim());
-          remap.load(remap.draft, { id, name: name.trim() });
-          setName("");
+          save(id, layoutName);
+          remap.load(remap.draft, { id, name: layoutName });
         }}
-      >
-        <input
-          className="dk-input"
-          maxLength={40}
-          placeholder={t("desktop.layouts.namePlaceholder")}
-          aria-label={t("desktop.layouts.namePlaceholder")}
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-        />
-        <button type="submit" className="dk-btn primary" disabled={!name.trim()}>
-          {t("desktop.layouts.saveAs")}
-        </button>
-      </form>
+      />
     </SectionGroup>
   );
 }

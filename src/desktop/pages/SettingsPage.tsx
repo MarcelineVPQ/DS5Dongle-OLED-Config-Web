@@ -486,18 +486,24 @@ function KeysMouseToggle(props: SectionProps) {
   return (
     <>
       <Toggle label={t("desktop.settings.keysMouse")} sub={t("desktop.settings.keysMouseSub")} info={t("desktop.settings.keysMouseInfo")} value={d.keysMouse} onChange={(v) => set("keysMouse", v)} />
-      {waiting && (
-        <Notice
-          action={
-            <BusyButton disabled={!bridge.client || bridge.operation !== null} onClick={bridge.reconnectUsb}>
-              {t("actions.reconnect")}
-            </BusyButton>
-          }
-        >
-          {t("desktop.buttons.warn.reconnect")}
-        </Notice>
-      )}
+      {waiting && <KeysMouseReconnect bridge={bridge} />}
     </>
+  );
+}
+
+// "Reconnect to start keys and mouse", with Reconnect (here and in Button assignments).
+export function KeysMouseReconnect({ bridge }: { bridge: SectionProps["bridge"] }) {
+  const { t } = useTranslation();
+  return (
+    <Notice
+      action={
+        <BusyButton disabled={!bridge.client || bridge.operation !== null} onClick={bridge.reconnectUsb}>
+          {t("actions.reconnect")}
+        </BusyButton>
+      }
+    >
+      {t("desktop.buttons.warn.reconnect")}
+    </Notice>
   );
 }
 

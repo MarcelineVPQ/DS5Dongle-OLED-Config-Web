@@ -110,7 +110,7 @@ function AppSettings() {
   return createElement(mods.AppSettingsPage, { bridge, fw });
 }
 // A Controller page section opened by a deep link as the page mounts.
-const controllerAt = (section: "sticks" | "speaker" | "mic") => () => {
+const controllerAt = (section: "sticks" | "speaker" | "mic" | "buttons") => () => {
   mods.revealSection("controller", section);
   return createElement(Controller, { view: "overview" });
 };
@@ -153,6 +153,22 @@ const PAGES: Page[] = [
   { name: "About, every section opened", element: () => createElement(mods.AboutPage), use: everySection },
   { name: "Sticks & calibration", element: controllerAt("sticks") },
   { name: "Speaker section", element: controllerAt("speaker") },
+  {
+    // Protocol 1.24: the layout editor with the live truth poll (0xE8), the keys-and-mouse pause and a target popover open.
+    name: "Button assignments (layout editor) with a target picker open",
+    element: controllerAt("buttons"),
+    use: async () => {
+      const pick = [...container.querySelectorAll<HTMLSelectElement>("select")].find((x) => [...x.options].some((o) => o.value === String(13)));
+      if (!pick) throw new Error("no button picker");
+      act(() => {
+        pick.value = "13"; // Cross
+        pick.dispatchEvent(new Event("change", { bubbles: true }));
+      });
+      act(() => container.querySelector<HTMLButtonElement>(".bt-target")!.click());
+      await advance(500);
+      expect(container.querySelector(".bt-pop")).not.toBeNull();
+    },
+  },
   {
     name: "Microphone section with the mic test running",
     element: controllerAt("mic"),

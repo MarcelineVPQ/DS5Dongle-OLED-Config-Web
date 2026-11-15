@@ -21,7 +21,7 @@ import { litPlayerLights, type PlayerLightWiring } from "../../protocol/controll
 import { lineOnDark, type ColorwayColors } from "./colorways";
 import { hexToRgb, wantsLightInk } from "../theme/desktopPalette";
 import { PART_IDS, type PartId } from "./parts";
-import type { Badge } from "./SetButtons";
+import type { Badge } from "./buttonWords";
 
 const STICK_TRAVEL = 9; // viewBox units at full deflection
 const TOUCH_W = 1920;
@@ -36,7 +36,7 @@ interface Props {
   colors: ColorwayColors | null; // the connected controller's colorway, null = theme colors
   selected: PartId | null;
   remapped: ReadonlySet<PartId>;
-  // A Tension set's changed buttons (protocol 1.24): each one's new job beside it.
+  // A button layout's changed buttons (protocol 1.24): each one's new job beside it.
   badges?: ReadonlyMap<PartId, Badge> | null;
   onSelect: (part: PartId) => void;
 }
@@ -236,10 +236,12 @@ function LiveArt({ art, input, lightbar, playerLeds, playerWiring, colors, selec
     }
   }, [selected, remapped]);
 
-  // A set's badges (TENSION_BUTTONS.md §7.2): one small label per changed
-  // button, above its part, in the drawing's own coordinates (it scales with
-  // the drawing). Drawn only when the badges change: 0 frames a second idle,
-  // nothing while hidden, the same on the CPU fallback (no animation).
+  // A layout's badges (docs/design/button-layouts-2026-11.md §2.1): one small
+  // label per changed button, above its part, in the drawing's own
+  // coordinates (it scales with the drawing); dimmed when a layer shows the
+  // base's, in a layer's colour when it enters one, a dot when the button
+  // does more than a Press. Drawn only when the badges change: 0 frames a
+  // second idle, nothing while hidden, the same on the CPU fallback (no animation).
   // lifetime: OK — cleanup: removes the badge group (badges change / unmount)
   useLayoutEffect(() => {
     const root = host.current?.querySelector("svg");
@@ -258,6 +260,7 @@ function LiveArt({ art, input, lightbar, playerLeds, playerWiring, colors, selec
       const w = 8 + 7 * [...badge.text].length;
       const g = document.createElementNS(ns, "g");
       g.setAttribute("transform", `translate(${(at.x - w / 2).toFixed(1)} ${(at.y - 18).toFixed(1)})`);
+      g.setAttribute("class", `badge${badge.dim ? " dim" : ""}${badge.colour !== undefined ? ` layer-c${badge.colour}` : ""}`);
       const title = document.createElementNS(ns, "title");
       title.textContent = badge.title;
       const box = document.createElementNS(ns, "rect");
@@ -274,6 +277,12 @@ function LiveArt({ art, input, lightbar, playerLeds, playerWiring, colors, selec
       text.setAttribute("font-size", "10");
       text.textContent = badge.text;
       g.append(title, box, text);
+      if (badge.dot) {
+        const dot = document.createElementNS(ns, "circle");
+        // loop: NOT-WORTH — N = 3 attributes, per badge with a dot
+        for (const [k, v] of [["cx", w - 1], ["cy", 1], ["r", 3]] as const) dot.setAttribute(k, String(v));
+        g.append(dot);
+      }
       layer.append(g);
     }
     root.append(layer);
