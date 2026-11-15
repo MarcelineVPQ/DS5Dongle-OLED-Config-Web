@@ -1078,3 +1078,37 @@ _Re-listed 2026-10-15 against firmware branch `fw-bt-idle-mic` (52aebf9 + f2727b
 | 48 | `request` | device | USB.requestDevice | - | **OK** | opens nothing (the permission prompt returns a USBDevice) |
 | 67 | `open` | device | USBDevice.open | - | **NOT-WORTH** | one dongle handle per connection; close() is unused, freed on disconnect |
 | 70 | `open` | device | USBDevice.claimInterface | - | **NOT-WORTH** | claimed for the connection's life, freed on disconnect; re-claim is harmless |
+
+## Tension (protocol 1.23), added 2026-11-15
+
+Every acquisition in the new code with its verdict, as its verdict comments say (app commit 2a636e8 on branch `tension`, firmware branch `trigger-lab` at 3c7faab); only the lines Tension added. Not re-listed by the lister in this change (nothing was run while it was built): the next full pass re-lists them. No PARALLELIZE, BATCH, FIX-HOT-PATH, LEAK, WASTE, HOT-ALLOC, SILENT-BUG, SWALLOWED or FLOATING rows. The live view's status poll (0xE9, 10/s) runs only while Adaptive triggers is open and the window is shown (usePoll); the picture is drawn only when a set changes.
+
+The firmware half acquires nothing the lister counts: no heap, no `std::` containers, no timers or handler registrations (the store, the staged and Feel-it sets and the engine are static RAM; TENSION.md §10).
+
+### App (branch `tension`)
+
+#### src/desktop/live/tensionDraft.ts
+
+| Line | Function | Verdict | Why |
+|---|---|---|---|
+| 88 | `useTensionDraft` | **OK** | acquires nothing (the notice for staged sets another board dropped) |
+
+#### src/desktop/live/Tension.tsx
+
+| Line | Function | Verdict | Why |
+|---|---|---|---|
+| 64 | `TensionSection` | **OK** | acquires nothing (reads the board's sets once per connection; the read is the draft's) |
+| 183 | `SetEditor` | **OK** | cleanup: clears the debounce timer (next edit / Feel it off / unmount) |
+| 186 | `SetEditor` | **OK** | cleared in the cleanup |
+| 197 | `SetEditor` | **OK** | acquires nothing; the cleanup stops Feel it on the board (unmount / board change) |
+| 524 | `TensionLive` | **OK** | usePoll stops on unmount (section folded) and while hidden |
+
+#### src/desktop/library/GamePage.tsx
+
+| Line | Function | Verdict | Why |
+|---|---|---|---|
+| 584 | `TensionPicker` | **OK** | acquires nothing (reads the board's sets once per connection; the read is the draft's) |
+
+### Firmware (branch `trigger-lab`)
+
+None: see the note above.

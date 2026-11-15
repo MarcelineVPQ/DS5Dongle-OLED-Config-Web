@@ -1714,3 +1714,122 @@ Line numbers are as of this branch. If code moves, the function name finds the r
 | 84 | `voice_say_lang` | guard `offset >= (uint32_t) (voice_bank_end - voice_bank) \|\| frames` | callback+core0-loop+user | nothing | **NOT-WORTH** | an empty/out-of-range entry is a build defect of voice_bank.bin, checked by tools/build_voice_bank.py | - |
 | 132 | `take_one` | checked-call `opus_packet_pad` | core0-loop | the frame is zeroed (silence) | **NOT-WORTH** | padding a valid packet to a larger size can't fail | - |
 | 189 | `voice_task` | ignored-call `bt_disconnect` | core0-loop | nothing | **NOT-WORTH** | false only when there is no ACL, i.e. already disconnected | - |
+
+## Tension (protocol 1.23), added 2026-11-15
+
+Every failure path in the new code with its verdict, as its verdict comments say (app commit 2a636e8 on branch `tension`, firmware branch `trigger-lab` at 3c7faab); only the lines Tension added. Not re-listed by the lister in this change (nothing was run while it was built): the next full pass re-lists them. No PARALLELIZE, BATCH, FIX-HOT-PATH, LEAK, WASTE, HOT-ALLOC, SILENT-BUG, SWALLOWED or FLOATING rows. The live view's status poll (0xE9, 10/s) runs only while Adaptive triggers is open and the window is shown (usePoll); the picture is drawn only when a set changes.
+
+### App (branch `tension`)
+
+#### src/protocol/bridgeClient.ts
+
+| Line | Function | Verdict | Why |
+|---|---|---|---|
+| 942 | `tensionOp` | **SHOWN** | desktop.tension.errors.notOn via the caller's error line (the section offers Tension only when the board has it); a bug guard |
+| 945 | `tensionOp` | **NOT-WORTH** | the queue's own copy; the caller gets \`run\` with the error |
+| 1015 | `readTensionSet` | **SHOWN** | desktop.tension.errors.changed via the section's error line (Retry reads again) |
+| 1018 | `readTensionSet` | **SHOWN** | desktop.tension.errors.unreadable via the section's error line: a set this app can't read (a newer layout) |
+
+#### src/desktop/live/tensionDraft.ts
+
+| Line | Function | Verdict | Why |
+|---|---|---|---|
+| 22 | `-` | **SHOWN** | desktop.tension.errors.* and the board's keyed errors (causeText) in the Tension section's error line, and the save bar's notice |
+| 120 | `load` | **SHOWN** | desktop.tension.errors.* / the board's keyed errors in the section's error line (with Retry) |
+| 129 | `retry` | **SHOWN** | desktop.tension.errors.* / the board's keyed errors in the section's error line |
+| 189 | `save` | **SHOWN** | desktop.tension.errors.invalid / failed / notValid (tensionErrorText) in the section's error line, and the save bar's notice (desktop.errors.saveFailed) |
+| 192 | `save` | **SHOWN** | a failed read back shows in the same error line on the next load (Retry) |
+
+#### src/desktop/live/Tension.tsx
+
+| Line | Function | Verdict | Why |
+|---|---|---|---|
+| 189 | `SetEditor` | **SHOWN** | desktop.tension.errors.invalid and the board's keyed errors (tensionErrorText) in the section's error line |
+| 200 | `SetEditor` | **LOGGED-OK** | leaving the editor; a failed stop leaves the unsaved set running until the board restarts or Feel it is used again |
+
+#### src/desktop/library/profileDongle.ts
+
+| Line | Function | Verdict | Why |
+|---|---|---|---|
+| 75 | `chooseGameSet` | **SHOWN** | desktop.tension.errors.setGone, in the profile's notice (desktop.profile.applyFailed / partlyOn with its reason) |
+
+### Firmware (branch `trigger-lab`)
+
+#### src/tension.h
+
+| Line | Function | Verdict | Why |
+|---|---|---|---|
+| 131 | `params_valid` | **SHOWN** | CMD_RESULT_INVALID in 0xF1 (set_valid's caller) |
+| 152 | `rampable` | **NOT-WORTH** | a yes/no answer for set_valid, not a failure |
+| 202 | `encode` | **NOT-WORTH** | no force: the effect is Off (Nielk1), not a failure |
+| 209 | `encode` | **NOT-WORTH** | the strength is > 0 (checked above), so a zone is always active |
+| 216 | `encode` | **NOT-WORTH** | no force: the effect is Off (Nielk1), not a failure |
+| 241 | `encode` | **NOT-WORTH** | every zone 0 (or no frequency): the effect is Off (Nielk1), not a failure |
+| 248 | `encode` | **NOT-WORTH** | no force: the effect is Off (Nielk1), not a failure |
+| 254 | `encode` | **NOT-WORTH** | no frequency: the effect is Off (Nielk1), not a failure |
+| 261 | `encode` | **NOT-WORTH** | no frequency: the effect is Off (Nielk1), not a failure |
+| 293 | `stage_valid` | **SHOWN** | false = CMD_RESULT_INVALID in 0xF1 via set_valid's callers; a bad set from flash reads as an empty slot |
+| 317 | `set_valid` | **SHOWN** | false = CMD_RESULT_INVALID in 0xF1 via set_valid's callers; a bad set from flash reads as an empty slot |
+| 525 | `own_report` | **NOT-WORTH** | nothing to send yet (rate limit / paused), not a failure |
+| 535 | `own_report` | **NOT-WORTH** | nothing to send, not a failure |
+| 608 | `store_check` | **NOT-WORTH** | erased flash or another layout's bytes: no copy here (the other sector, or no sets) |
+| 610 | `store_check` | **SHOWN** | 0xE9 status [3] bit3 (the app says the sets were saved by newer firmware and can't be changed here) |
+| 612 | `store_check` | **NOT-WORTH** | a damaged or half-written copy: the other sector's copy is used (or no sets) |
+| 626 | `store_load` | **NOT-WORTH** | passed on: Empty / Newer as store_check says (store_pick decides) |
+| 631 | `store_load` | **NOT-WORTH** | a damaged slot reads as empty (the app lists it empty); the others are kept |
+| 634 | `store_load` | **NOT-WORTH** | a damaged slot reads as empty (the app lists it empty); the others are kept |
+| 656 | `store_pick` | **SHOWN** | 0xE9 status [3] bit3 (read-only: saved by newer firmware) |
+| 658 | `store_pick` | **NOT-WORTH** | a choice between the two copies (newest valid), not a failure |
+| 660 | `store_pick` | **NOT-WORTH** | no valid copy in either sector: no sets yet (erased, or both damaged) |
+| 662 | `store_pick` | **NOT-WORTH** | store_check just said Ok for this sector, so the load is Ok |
+
+#### src/tension.cpp
+
+| Line | Function | Verdict | Why |
+|---|---|---|---|
+| 92 | `save_store` | **SHOWN** | false = CMD_RESULT_FAILED in 0xF1 for 0x1D / 0x1F / 0x20 (their callers); counted in g_fse_fail |
+| 97 | `save_store` | **NOT-WORTH** | reloading what flash holds after a failed save (the failure itself is reported above) |
+| 99 | `save_store` | **SHOWN** | CMD_RESULT_FAILED in 0xF1 via the callers (0x1D / 0x1F / 0x20); counted in g_fse_fail |
+| 112 | `staged_ok` | **SHOWN** | false = CMD_RESULT_INVALID in 0xF1 for 0x1D / 0x1E (a CRC that doesn't match or a set out of range), the app's command error |
+| 134 | `tension_task` | **NOT-WORTH** | nothing; no controller, nothing to run |
+| 144 | `tension_task` | **NOT-WORTH** | nothing to send this pass (no change, rate limit, paused), not a failure |
+| 151 | `tension_task` | **LOGGED-OK** | counter bt_send_drops (0xFD, OLED Diagnostics); a full output queue drops it and Tension sends it again next pass |
+| 164 | `tension_revert` | **NOT-WORTH** | nothing temporary to end, not a failure |
+| 185 | `tension_stage_write` | **SHOWN** | CMD_RESULT_INVALID in the 0xF1 result byte: bad framing or past the record's end, the app's command error |
+| 193 | `tension_save_check` | **SHOWN** | CMD_RESULT_INVALID in the 0xF1 result byte: bad framing, slot, CRC or set, the app's command error |
+| 195 | `tension_save_check` | **SHOWN** | CMD_RESULT_FAILED in the 0xF1 result byte: the sets were saved by newer firmware (0xE9 status [3] bit3); the app says so |
+| 204 | `tension_save_staged` | **SHOWN** | false = CMD_RESULT_FAILED in 0xF1 (returned below), the app's command error |
+| 207 | `tension_save_staged` | **SHOWN** | CMD_RESULT_FAILED in the 0xF1 result byte: not saved (the slot keeps what it had), the app's command error |
+| 213 | `tension_feel` | **SHOWN** | CMD_RESULT_INVALID in the 0xF1 result byte: bad framing, the app's command error |
+| 216 | `tension_feel` | **SHOWN** | CMD_RESULT_INVALID in the 0xF1 result byte: bad CRC or set, the app's command error |
+| 227 | `tension_delete_check` | **SHOWN** | CMD_RESULT_INVALID in the 0xF1 result byte: bad framing or slot, the app's command error |
+| 229 | `tension_delete_check` | **SHOWN** | CMD_RESULT_FAILED in the 0xF1 result byte: the sets were saved by newer firmware (0xE9 status [3] bit3); the app says so |
+| 237 | `tension_delete` | **SHOWN** | false = CMD_RESULT_FAILED in 0xF1 (returned below), the app's command error |
+| 244 | `tension_delete` | **SHOWN** | CMD_RESULT_FAILED in the 0xF1 result byte: not deleted (the slot keeps its set), the app's command error |
+| 255 | `tension_select` | **SHOWN** | CMD_RESULT_INVALID in the 0xF1 result byte: bad framing, or an empty slot, the app's command error |
+| 264 | `tension_select` | **SHOWN** | CMD_RESULT_FAILED in the 0xF1 result byte: the sets were saved by newer firmware (0xE9 status [3] bit3); the app says so |
+| 277 | `tension_select_save` | **SHOWN** | false = CMD_RESULT_FAILED in 0xF1 (returned below), the app's command error |
+| 284 | `tension_select_save` | **SHOWN** | CMD_RESULT_FAILED in the 0xF1 result byte: the choice wasn't saved (the old one stays), the app's command error |
+| 296 | `tension_get` | **NOT-WORTH** | no data; a request shorter than the reply (the app always asks the full length, its transport reports a short reply) |
+| 321 | `tension_get` | **NOT-WORTH** | no data; a request shorter than the reply (the app always asks the full length, its transport reports a short reply) |
+| 343 | `tension_get` | **NOT-WORTH** | no data; a request shorter than the reply (the app always asks the full length, its transport reports a short reply) |
+| 353 | `tension_get` | **NOT-WORTH** | no data; an unknown selector (the app only asks the documented ones) |
+
+#### src/cmd.cpp
+
+| Line | Function | Verdict | Why |
+|---|---|---|---|
+| 337 | `cmd_task` | **SHOWN** | CMD_RESULT_FAILED in the 0xF1 result byte (tension_save_staged), the app's command error |
+| 341 | `cmd_task` | **SHOWN** | CMD_RESULT_FAILED in the 0xF1 result byte (tension_delete), the app's command error |
+| 345 | `cmd_task` | **SHOWN** | CMD_RESULT_FAILED in the 0xF1 result byte (tension_select_save), the app's command error |
+| 1246 | `pico_cmd_set` | **SHOWN** | CMD_RESULT_INVALID in the 0xF1 result byte (tension_stage_write), the app's command error |
+| 1250 | `pico_cmd_set` | **SHOWN** | CMD_RESULT_INVALID in the 0xF1 result byte (tension_feel), the app's command error |
+| 1257 | `pico_cmd_set` | **SHOWN** | CMD_RESULT_INVALID / FAILED in the 0xF1 result byte (the check above), the app's command error |
+| 1265 | `pico_cmd_set` | **SHOWN** | CMD_RESULT_INVALID / FAILED in the 0xF1 result byte (tension_select), the app's command error |
+
+#### src/vendor_itf.cpp
+
+| Line | Function | Verdict | Why |
+|---|---|---|---|
+| 200 | `tud_vendor_control_xfer_cb` | **NOT-WORTH** | USB STALL for a request this interface doesn't take (wrong direction/recipient/id); the app only sends the documented ones and its transport reports a STALL as an error |
+| 206 | `tud_vendor_control_xfer_cb` | **NOT-WORTH** | returned to TinyUSB (STALL on failure); queueing a ≤ 64-byte reply on endpoint 0 can't fail |

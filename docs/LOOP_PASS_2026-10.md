@@ -1584,3 +1584,134 @@ _Re-listed 2026-10-15 against firmware branch `fw-bt-idle-mic` (52aebf9 + f2727b
 | 22 | `make` | - | - | 0 | **NOT-WORTH** | constexpr version label, compile time (and host tests) |
 | 24 | `make` | - | - | 0 | **NOT-WORTH** | constexpr version label, compile time (and host tests) |
 | 27 | `make` | - | - | 1 | **NOT-WORTH** | constexpr suffix match, compile time (and host tests) |
+
+## Tension (protocol 1.23), added 2026-11-15
+
+Every loop in the new code with its verdict, as its verdict comments say (app commit 2a636e8 on branch `tension`, firmware branch `trigger-lab` at 3c7faab); only the lines Tension added. Not re-listed by the lister in this change (nothing was run while it was built): the next full pass re-lists them. No PARALLELIZE, BATCH, FIX-HOT-PATH, LEAK, WASTE, HOT-ALLOC, SILENT-BUG, SWALLOWED or FLOATING rows. The live view's status poll (0xE9, 10/s) runs only while Adaptive triggers is open and the window is shown (usePoll); the picture is drawn only when a set changes.
+
+### App (branch `tension`)
+
+#### src/protocol/tension.ts
+
+| Line | Function | Verdict | Why |
+|---|---|---|---|
+| 155 | `paramsValid` | **HOT-PATH-OK** | N = 7 parameters, validating one stage |
+| 158 | `paramsValid` | **HOT-PATH-OK** | N = 10 zones, validating one stage |
+| 161 | `paramsValid` | **HOT-PATH-OK** | N ≤ 6 parameters, validating one stage |
+| 174 | `stageValid` | **HOT-PATH-OK** | N = 3 bytes, validating one stage |
+| 194 | `setValid` | **HOT-PATH-OK** | N = 2 triggers × ≤ 4 stages, validating one set |
+| 208 | `paramRange` | **HOT-PATH-OK** | N ≤ 6 parameters |
+| 221 | `fixStage` | **HOT-PATH-OK** | N ≤ 6 parameters, after one edit |
+| 228 | `fixStage` | **HOT-PATH-OK** | N = 10 zones, after one edit |
+| 250 | `newStage` | **NOT-WORTH** | N ≤ 6 parameters, one new stage |
+| 273 | `encodeProgram` | **NOT-WORTH** | N ≤ 4 stages, encoding one set |
+| 283 | `encodeSetBody` | **NOT-WORTH** | N ≤ 16 name characters, encoding one set |
+| 297 | `decodeStage` | **NOT-WORTH** | N ≤ 16 bytes, decoding one set |
+| 304 | `decodeProgram` | **NOT-WORTH** | N = 4 stages, decoding one set |
+| 340 | `decodeSetBody` | **NOT-WORTH** | 8 bits × 256 entries, once at load |
+| 346 | `crc32` | **NOT-WORTH** | ≤ 134 bytes, on a save or Feel it |
+| 391 | `decodeTensionStatus` | **HOT-PATH-OK** | N = 2 triggers per status poll (10/s while the live view is shown) |
+| 407 | `flat` | **HOT-PATH-OK** | N = 9 fields per status poll |
+| 409 | `flat` | **HOT-PATH-OK** | N = 2 triggers per status poll |
+| 412 | `flat` | **HOT-PATH-OK** | N = 11 effect bytes per trigger per status poll |
+| 431 | `decodeTensionList` | **NOT-WORTH** | N = 8 slots, one list read |
+| 433 | `decodeTensionList` | **NOT-WORTH** | N = 8 slots, one list read |
+| 471 | `range` | **HOT-PATH-OK** | N ≤ 10 zones, drawing one stage after an edit |
+| 494 | `range` | **HOT-PATH-OK** | N = 10 zones, drawing one stage after an edit |
+| 498 | `range` | **HOT-PATH-OK** | N = 10 zones, drawing one stage after an edit |
+| 504 | `range` | **HOT-PATH-OK** | N ≤ 10 zones, drawing one stage after an edit |
+| 546 | `programPicture` | **NOT-WORTH** | N ≤ 4 stages × 65 pull steps, once per edit (useMemo), never per frame |
+| 548 | `programPicture` | **NOT-WORTH** | N ≤ 3 earlier stages, once per edit |
+| 550 | `programPicture` | **NOT-WORTH** | N ≤ 3 earlier stages per pull step, once per edit |
+| 557 | `programPicture` | **NOT-WORTH** | ≤ 65 pull steps per stage, once per edit |
+| 560 | `programPicture` | **NOT-WORTH** | ≤ 65 pull steps per stage, once per edit |
+
+#### src/protocol/bridgeClient.ts
+
+| Line | Function | Verdict | Why |
+|---|---|---|---|
+| 953 | `stageTension` | **SERIAL-REQUIRED** | one HID session: three SETs in protocol order (offsets 0, 60, 120) |
+| 1008 | `readTensionSet` | **SERIAL-REQUIRED** | one HID session: chunk reads must not interleave; 63-byte report cap |
+
+#### src/protocol/simulatedDongle.ts
+
+| Line | Function | Verdict | Why |
+|---|---|---|---|
+| 795 | `tensionGet` | **HOT-PATH-OK** | dev/test fake only; N = 2 triggers per status read |
+| 799 | `tensionGet` | **HOT-PATH-OK** | dev/test fake only; N ≤ 4 stages |
+| 812 | `tensionGet` | **NOT-WORTH** | dev/test fake only; N = 8 slots per list read |
+
+#### src/desktop/live/tensionDraft.ts
+
+| Line | Function | Verdict | Why |
+|---|---|---|---|
+| 57 | `sameSet` | **HOT-PATH-OK** | N = 134 bytes, per render of a changed slot |
+| 98 | `read` | **SERIAL-REQUIRED** | one HID session: one saved set's chunk reads after another |
+| 106 | `read` | **NOT-WORTH** | N ≤ 8 cached sets, once per read |
+| 138 | `retry` | **NOT-WORTH** | N = 8 slots, when the board's sets or the staged ones change |
+| 140 | `retry` | **NOT-WORTH** | N = 8 slots, when the board's sets or the staged ones change |
+| 147 | `retry` | **HOT-PATH-OK** | N = 8 slots |
+| 175 | `save` | **SERIAL-REQUIRED** | one HID session, protocol order: deletes, then sets, then the choice that may name one |
+| 177 | `save` | **SERIAL-REQUIRED** | one HID session: one set staged and saved after another |
+
+#### src/desktop/live/Tension.tsx
+
+| Line | Function | Verdict | Why |
+|---|---|---|---|
+| 117 | `TensionSection` | **HOT-PATH-OK** | N = 8 slots per render of the section |
+| 126 | `TensionSection` | **HOT-PATH-OK** | N ≤ 8 saved sets |
+| 137 | `TensionSection` | **HOT-PATH-OK** | N = 8 slots |
+| 152 | `TensionSection` | **HOT-PATH-OK** | N = 5 starter sets |
+| 269 | `move` | **HOT-PATH-OK** | N ≤ 4 stages |
+| 321 | `paramName` | **HOT-PATH-OK** | N ≤ 6 parameters |
+| 356 | `pickRamp` | **HOT-PATH-OK** | N = 10 effects |
+| 364 | `pickRamp` | **HOT-PATH-OK** | N ≤ 6 parameters |
+| 401 | `pickRamp` | **HOT-PATH-OK** | N ≤ 6 parameters |
+| 450 | `Zones` | **HOT-PATH-OK** | N = 10 zones |
+| 481 | `paths` | **NOT-WORTH** | ≤ 65 points per stage, when the program changes (memo) |
+| 495 | `TensionPicture` | **NOT-WORTH** | N ≤ 4 stages, when the program changes (memo) |
+| 501 | `TensionPicture` | **NOT-WORTH** | N ≤ 4 stages, when the program changes (memo) |
+| 551 | `TensionLive` | **HOT-PATH-OK** | N = 2 triggers per status poll |
+
+#### src/desktop/library/GamePage.tsx
+
+| Line | Function | Verdict | Why |
+|---|---|---|---|
+| 590 | `TensionPicker` | **HOT-PATH-OK** | N = 8 slots |
+| 598 | `TensionPicker` | **HOT-PATH-OK** | N ≤ 8 saved sets |
+
+### Firmware (branch `trigger-lab`)
+
+#### src/tension.h
+
+| Line | Function | Verdict | Why |
+|---|---|---|---|
+| 103 | `crc32_update` | **NOT-WORTH** | ≤ 1128 bytes, on a commit / save / load (never per report) |
+| 106 | `crc32_update` | **NOT-WORTH** | 8 bits per byte, on a commit / save / load |
+| 125 | `zones_valid` | **HOT-PATH-OK** | N = 10 zones, validating a set (not per report) |
+| 134 | `params_valid` | **HOT-PATH-OK** | N ≤ 7 parameters |
+| 176 | `pack_levels` | **HOT-PATH-OK** | N = 10 zones, encoding one effect |
+| 205 | `encode` | **HOT-PATH-OK** | N ≤ 10 zones, encoding one effect |
+| 227 | `encode` | **HOT-PATH-OK** | N ≤ 10 zones, encoding one effect |
+| 236 | `encode` | **HOT-PATH-OK** | N = 10 zones, encoding one effect |
+| 278 | `stage_zero` | **HOT-PATH-OK** | N = 14 bytes, validating a set (not per report) |
+| 302 | `name_valid` | **HOT-PATH-OK** | N = 16 characters, validating a set (not per report) |
+| 314 | `set_valid` | **HOT-PATH-OK** | N = 2 triggers |
+| 317 | `set_valid` | **HOT-PATH-OK** | N = 4 stages |
+| 351 | `run_step` | **HOT-PATH-OK** | N ≤ 4 stages, per main-loop pass |
+| 360 | `run_step` | **HOT-PATH-OK** | N ≤ 4 stages, per main-loop pass |
+| 456 | `forget_controller` | **HOT-PATH-OK** | N = 2 triggers |
+| 471 | `merge` | **HOT-PATH-OK** | N = 2 triggers, per forwarded host report |
+| 514 | `report_lost` | **HOT-PATH-OK** | N = 2 triggers |
+| 528 | `own_report` | **HOT-PATH-OK** | N = 2 triggers, per main-loop pass |
+| 595 | `store_seal` | **HOT-PATH-OK** | N = 8 slots, on a save |
+| 629 | `store_load` | **HOT-PATH-OK** | N = 8 slots, at boot |
+
+#### src/tension.cpp
+
+| Line | Function | Verdict | Why |
+|---|---|---|---|
+| 77 | `restart` | **HOT-PATH-OK** | N = 2 triggers, on a set change |
+| 138 | `tension_task` | **HOT-PATH-OK** | N = 2 triggers, per main-loop pass |
+| 307 | `tension_get` | **HOT-PATH-OK** | N = 2 triggers, per 0xE9 GET (~10 Hz while the app's live view is open) |
+| 326 | `tension_get` | **NOT-WORTH** | 8 slots, per 0xE9 list GET |
