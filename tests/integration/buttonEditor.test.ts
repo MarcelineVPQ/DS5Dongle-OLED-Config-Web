@@ -92,7 +92,9 @@ async function open(opts: FakeDongleOptions = {}, prepare?: (d: FakeDongle) => v
   document.body.append(container);
   root = createRoot(container);
   act(() => root!.render(createElement(BoardDraftsProvider, { bridge }, createElement(Harness, { bridge }))));
-  await wait(() => !!container!.querySelector(".bt-layers") || seen.d?.layout.ready === false);
+  // The board answers asynchronously: wait until the editor is ready (it stays
+  // not ready on firmware without layouts; the wait then simply runs out).
+  await wait(() => seen.d?.layout.ready === true);
   return { dongle, client };
 }
 const pickButton = (source: number) =>
