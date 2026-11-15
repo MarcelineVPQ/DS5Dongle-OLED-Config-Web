@@ -776,7 +776,7 @@ describe("the Controller page on the accordion", () => {
     expect(hint().getAttribute("aria-hidden")).toBe("true");
   });
 
-  it("a click on the drawing opens the part's section (a button: Button assignments at its row)", async () => {
+  it("a click on the drawing opens the part's section (a button: Button assignments with it picked, at its Press row)", async () => {
     await live("overview");
     const part = (p: string) => container.querySelector(`.live-ctl [data-part="${p}"]`)!;
     act(() => void part("lightbar").dispatchEvent(new MouseEvent("click", { bubbles: true })));
@@ -785,9 +785,16 @@ describe("the Controller page on the accordion", () => {
     expect(openIds()).toEqual(["speaker"]);
     act(() => void part("cross").dispatchEvent(new MouseEvent("click", { bubbles: true })));
     expect(openIds()).toEqual(["buttons"]);
-    expect(container.querySelector('[data-row="btn-13"]')?.classList.contains("dk-flash")).toBe(true);
+    // Protocol 1.24: the layout editor, Cross picked, its Press row flashed.
+    expect(container.textContent).toContain(m.i18n.t("desktop.buttons.does", { button: "Cross ✕" }));
+    expect(container.querySelector('[data-row="btn-press"]')?.classList.contains("dk-flash")).toBe(true);
+    // The PS button is a button of the layout too (Hold, Double press): with Button assignments open it's picked there.
     act(() => void part("ps").dispatchEvent(new MouseEvent("click", { bubbles: true })));
-    expect(openIds()).toEqual(["slots"]);
+    expect(openIds()).toEqual(["buttons"]);
+    expect(container.textContent).toContain(m.i18n.t("desktop.buttons.psFixed"));
+    // Folded, a part with a section of its own opens that one.
+    act(() => void part("lightbar").dispatchEvent(new MouseEvent("click", { bubbles: true })));
+    expect(openIds()).toEqual(["lightbar"]);
   });
 
   // Marcy, 2026-10-17: a press on a button in the drawing opens its accordion
@@ -810,19 +817,21 @@ describe("the Controller page on the accordion", () => {
     };
     expect(split().classList.contains("panel-hidden"), "starts hidden").toBe(true);
     // loop: test — the panel hidden first, then shown: the same landing
-    for (const [p, row] of [
-      ["circle", 12],
-      ["cross", 13],
-      ["circle", 12], // the same part again: lands again
+    // Protocol 1.24: the layout editor; the part is picked and its Press row is the landing.
+    for (const [p, name] of [
+      ["circle", "Circle ○"],
+      ["cross", "Cross ✕"],
+      ["circle", "Circle ○"], // the same part again: lands again
     ] as const) {
       scrolled.length = 0;
       await pick(p);
       expect(split().classList.contains("panel-hidden"), `${p}: the panel shown`).toBe(false);
       expect(openIds(), p).toEqual(["buttons"]);
-      const rowEl = container.querySelector(`[data-row="btn-${row}"]`)!;
+      expect(container.textContent, `${p}: picked`).toContain(m.i18n.t("desktop.buttons.does", { button: name }));
+      const rowEl = container.querySelector(`[data-row="btn-press"]`)!;
       expect(scrolled, `${p}: its row scrolled into view`).toContain(rowEl);
       expect(rowEl.classList.contains("dk-flash"), `${p}: its row flashed`).toBe(true);
-      expect(document.activeElement, `${p}: its picker focused`).toBe(container.querySelector(`#all-remap-${row}`));
+      expect(document.activeElement, `${p}: its picker focused`).toBe(rowEl.querySelector(".bt-target"));
     }
     // A part with a section and no row: the panel shown again, its header focused.
     vi.spyOn(Element.prototype, "getClientRects").mockImplementation(() => [{}] as unknown as DOMRectList); // jsdom lays nothing out

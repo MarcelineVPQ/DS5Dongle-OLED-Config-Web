@@ -66,6 +66,8 @@ import type { PartId } from "./parts";
 import { PAD, PadGrid, Popover, TargetPicker, type PickerCaps } from "./TargetPicker";
 
 type T = ReturnType<typeof useTranslation>["t"];
+// The chosen button's Press row: where a click on the drawing lands (a deep link, ControllerView).
+export const PRESS_ROW = "btn-press";
 const seconds = (tens: number) => (tens / 100).toFixed(2);
 
 // The sources this controller has (the Edge's four only on an Edge).
@@ -404,7 +406,7 @@ function ChosenButton({
         ) : (
           <Toggle label={t("desktop.layers.sameAsBase")} value={!own} onChange={(same) => onChange(withSameAsBase(part, layer, source, same))} />
         ))}
-      <Row label={t("desktop.buttons.row.press")} info={trigger ? t("desktop.buttons.warn.triggerEffectInfo") : undefined}>
+      <Row id={PRESS_ROW} label={t("desktop.buttons.row.press")} info={trigger ? t("desktop.buttons.warn.triggerEffectInfo") : undefined}>
         {ps ? <span className="bt-fixed">{t("desktop.buttons.psFixed")}</span> : picker("press")}
       </Row>
       {caps.pressTypes && (

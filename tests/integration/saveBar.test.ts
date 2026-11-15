@@ -32,6 +32,7 @@ let m: {
   devPreview: typeof import("../../src/desktop/devPreview");
   acc: typeof import("../../src/desktop/accordion/useAccordion");
   shownError: typeof import("../../src/desktop/shownError");
+  tension: typeof import("../../src/protocol/tension");
 };
 
 beforeAll(async () => {
@@ -47,6 +48,7 @@ beforeAll(async () => {
     devPreview: await import("../../src/desktop/devPreview"),
     acc: await import("../../src/desktop/accordion/useAccordion"),
     shownError: await import("../../src/desktop/shownError"),
+    tension: await import("../../src/protocol/tension"),
   };
   await m.i18n.changeLanguage("en");
 });
@@ -112,7 +114,7 @@ async function live(profiles?: typeof NO_PROFILE) {
   document.dispatchEvent(new Event("visibilitychange"));
   await act(async () => root.render(createElement(Page, { profiles })));
   // loop: test — until the simulated board answers and the drafts are read
-  for (let i = 0; i < 200 && !(container.querySelector(".dk-sec") && drafts?.calibration.saved && drafts.curves.saved && drafts.remap.supported); i++) await wait(10);
+  for (let i = 0; i < 200 && !(container.querySelector(".dk-sec") && drafts?.calibration.saved && drafts.curves.saved && drafts.remap.supported && drafts.layout.ready); i++) await wait(10);
   await wait(50);
 }
 const dongle = () => m.devPreview.simulatedBoard()!.dongle()!;
@@ -132,6 +134,37 @@ const change = (el: HTMLSelectElement | HTMLInputElement, value: string) =>
     // A slider commits when it's let go (Slider in controls.tsx).
     el.dispatchEvent(new Event("pointerup", { bubbles: true }));
   });
+
+// Protocol 1.24 (the simulated board's default): Button assignments is the
+// layout editor. Cross (source 13) picked, its Press row set from the
+// controller grid. jsdom can't focus inside a popover="manual" element
+// (tests/integration/popups.test.ts): the attribute is left off.
+const PART: Record<number, string> = { 11: "triangle", 12: "circle", 14: "square", 15: "stick-r" };
+const CROSS = 13;
+let popoverOff = false;
+async function stageCross(target: number) {
+  if (!popoverOff) {
+    popoverOff = true;
+    const set = Element.prototype.setAttribute;
+    vi.spyOn(Element.prototype, "setAttribute").mockImplementation(function (this: Element, name: string, value: string) {
+      if (name !== "popover") set.call(this, name, value);
+    });
+  }
+  const buttons = await open("buttons");
+  const pick = [...buttons.querySelectorAll<HTMLSelectElement>("select")].find((x) => [...x.options].some((o) => o.text === t("desktop.buttons.pickNone")))!;
+  change(pick, String(CROSS));
+  act(() => buttons.querySelector<HTMLButtonElement>('[data-row="btn-press"] .bt-target')!.click());
+  act(() => document.querySelector<HTMLButtonElement>(`.bt-cell[aria-label="${t(`desktop.live.part.${PART[target]}`)}"]`)!.click());
+}
+// Cross's Press in a layout: the button it presses (undefined = itself).
+const crossOf = (b: { entries: { source: number; layer: number; press?: { a: number } }[] } | null | undefined) => b?.entries.find((e) => e.layer === 0 && e.source === CROSS)?.press?.a;
+// What the board runs from power-on, as saved in its flash.
+const boardCross = () => {
+  const tn = dongle().tension;
+  const wire = tn.saved < 8 ? tn.slots[tn.saved] : null;
+  return wire ? crossOf(m.tension.decodeSetWire(wire)?.buttons) : undefined;
+};
+const editorCross = () => crossOf(drafts!.layout.layout.buttons);
 
 describe("the save bar", () => {
   it("shows on the controller view (the Controller and Pico 2 W pages) only", () => {
@@ -155,10 +188,10 @@ describe("the save bar", () => {
     await live();
     expect(note()).toBe(m.i18n.t("desktop.bar.saved"));
     expect(barButton(m.i18n.t("desktop.bar.save")).disabled).toBe(true);
-    // Buttons: Cross → Circle.
-    const buttons = await open("buttons");
-    change(buttons.querySelector<HTMLSelectElement>("#all-remap-13")!, "14");
-    expect(drafts!.remap.dirty).toBe(true);
+    // Buttons: Cross → Square, in the layout editor.
+    await stageCross(14);
+    expect(editorCross()).toBe(14);
+    expect(drafts!.tension.dirty).toBe(true);
     expect(note()).toBe(t("desktop.bar.staged"));
     expect(barButton(m.i18n.t("desktop.bar.save")).disabled).toBe(false);
     // Sticks: a curve, and the left stick's deadzone.
@@ -168,10 +201,10 @@ describe("the save bar", () => {
     change(sticks.querySelector<HTMLInputElement>('input[type="range"]')!, "20");
     expect(drafts!.calibration.dirty).toBe(true);
     // Nothing reached the board yet.
-    expect(dongle().remap[13]).toBe(13);
+    expect(boardCross()).toBeUndefined();
     await act(async () => barButton(m.i18n.t("desktop.bar.save")).click());
-    await wait(100);
-    expect(dongle().remap[13]).toBe(14);
+    await wait(150);
+    expect(boardCross()).toBe(14);
     expect(dongle().calibration[dongle().currentSlot][2]).toBe(20); // the left stick's deadzone byte
     expect(drafts!.staged).toBe(false);
     expect(note()).toBe(m.i18n.t("desktop.bar.saved"));
@@ -179,17 +212,16 @@ describe("the save bar", () => {
 
   it("Revert puts every staged part back (buttons, curves, calibration) and writes nothing", async () => {
     await live();
-    const buttons = await open("buttons");
-    change(buttons.querySelector<HTMLSelectElement>("#all-remap-13")!, "15");
+    await stageCross(15);
     const sticks = await open("sticks");
     act(() => [...sticks.querySelectorAll<HTMLButtonElement>(".dk-seg button")].find((b) => b.textContent === t("desktop.curves.type.digital"))!.click());
     change(sticks.querySelector<HTMLInputElement>('input[type="range"]')!, "25");
     expect(drafts!.staged).toBe(true);
     await act(async () => barButton(m.i18n.t("desktop.bar.revert")).click());
     await wait();
-    expect(drafts!.remap.dirty || drafts!.curves.dirty || drafts!.calibration.dirty).toBe(false);
-    expect(drafts!.remap.draft[13]).toBe(dongle().remap[13]); // what the board has (the previous test saved Circle there)
-    expect(dongle().remap[13]).not.toBe(15);
+    expect(drafts!.tension.dirty || drafts!.curves.dirty || drafts!.calibration.dirty).toBe(false);
+    expect(editorCross()).toBe(boardCross()); // what the board has (the previous test saved Square there)
+    expect(boardCross()).not.toBe(15);
     expect(note()).toBe(m.i18n.t("desktop.bar.saved"));
   });
 
@@ -243,16 +275,15 @@ describe("the save bar", () => {
       act(() => sim.set("dongle"));
       sim.dongle()!.serial = serial;
       // loop: test — until the new connection's drafts are read
-      for (let i = 0; i < 200 && !(bridgeNow!.isConnected && drafts!.calibration.saved && drafts!.remap.supported && container.querySelector(".dk-bar")); i++) await wait(10);
+      for (let i = 0; i < 200 && !(bridgeNow!.isConnected && drafts!.calibration.saved && drafts!.remap.supported && drafts!.layout.ready && container.querySelector(".dk-bar")); i++) await wait(10);
       await wait(100);
     };
     // A button pick and a deadzone the board doesn't have yet.
     const stage = async (button: number, deadzone: number) => {
-      const buttons = await open("buttons");
-      change(buttons.querySelector<HTMLSelectElement>("#all-remap-13")!, String(button));
+      await stageCross(button);
       const sticks = await open("sticks");
       change(sticks.querySelector<HTMLInputElement>('input[type="range"]')!, String(deadzone));
-      expect(drafts!.remap.dirty && drafts!.calibration.dirty).toBe(true);
+      expect(drafts!.tension.dirty && drafts!.calibration.dirty).toBe(true);
     };
     beforeEach(() => act(() => m.shownError.clearShownError()));
 
@@ -260,14 +291,14 @@ describe("the save bar", () => {
       await live();
       await stage(15, 22);
       await replug();
-      expect(drafts!.remap.draft[13]).toBe(15);
+      expect(editorCross()).toBe(15);
       expect(drafts!.calibration.dirty).toBe(true);
       expect(drafts!.staged).toBe(true);
       expect(notice).toBeNull();
       expect(note()).toBe(t("desktop.bar.staged"));
       await act(async () => barButton(t("desktop.bar.save")).click());
       await wait(150);
-      expect(dongle().remap[13]).toBe(15);
+      expect(boardCross()).toBe(15);
       expect(dongle().calibration[dongle().currentSlot][2]).toBe(22);
     });
 
@@ -276,9 +307,9 @@ describe("the save bar", () => {
       await stage(11, 27);
       await replug(true);
       expect(drafts!.staged).toBe(false);
-      expect(drafts!.remap.draft[13]).toBe(dongle().remap[13]);
+      expect(editorCross()).toBe(boardCross());
       expect(notice).toBe(t("desktop.errors.draftsDropped"));
-      expect(dongle().remap[13]).not.toBe(11);
+      expect(boardCross()).not.toBe(11);
       expect(dongle().calibration[dongle().currentSlot][2]).not.toBe(27);
       expect(note()).toBe(t("desktop.bar.saved"));
     });
@@ -311,21 +342,22 @@ describe("the save bar", () => {
       expect(notice).toBe(t("desktop.errors.draftsDropped"));
     });
 
-    it("a game's layout on and off: the staged button changes are set aside, then come back", async () => {
+    it("a game's layout on and off: the staged button changes stay staged, untouched", async () => {
       await live();
-      const buttons = await open("buttons");
-      change(buttons.querySelector<HTMLSelectElement>("#all-remap-13")!, "12");
-      expect(drafts!.remap.dirty).toBe(true);
+      await stageCross(12);
+      expect(drafts!.tension.dirty).toBe(true);
+      const saved = boardCross();
       const game = Array.from({ length: 16 }, (_, i) => (i === 0 ? 1 : i === 1 ? 0 : i));
       await act(async () => void (await bridgeNow!.client!.applyRemapTemporary(game)));
+      await act(async () => void (await bridgeNow!.client!.chooseTension("none", true)));
       await wait(1300);
-      expect(drafts!.remap.temporary).toBe(true);
-      expect(drafts!.remap.draft).toEqual(game); // the editor shows the game's buttons
+      expect(editorCross()).toBe(12); // the editor keeps the layout being edited
       await act(async () => void (await bridgeNow!.client!.revertRemap()));
+      await act(async () => void (await bridgeNow!.client!.chooseTension("saved", true)));
       await wait(1300);
-      expect(drafts!.remap.temporary).toBe(false);
-      expect(drafts!.remap.draft[13]).toBe(12);
-      expect(drafts!.remap.dirty).toBe(true);
+      expect(editorCross()).toBe(12);
+      expect(drafts!.tension.dirty).toBe(true);
+      expect(boardCross()).toBe(saved); // nothing written to the board meanwhile
       expect(notice).toBeNull();
     });
   });

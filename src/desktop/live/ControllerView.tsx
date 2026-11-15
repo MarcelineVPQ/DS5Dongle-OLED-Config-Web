@@ -29,7 +29,7 @@ import { colorway } from "./colorways";
 import { useControllerColors } from "./customColors";
 import LiveController, { pressedParts } from "./LiveController";
 import { PART_SOURCE, SOURCE_PART, layoutBadges } from "./buttonWords";
-import { LayerTabs, newlyPressed } from "./ButtonEditor";
+import { LayerTabs, newlyPressed, PRESS_ROW } from "./ButtonEditor";
 import { LiveChip, useKeysMousePause, useLiveTruth } from "./LiveTruth";
 import { FEATURES5, KEYS_MOUSE_FLAGS } from "../../protocol/bridgeClient";
 import { emptyButtonPart } from "../../protocol/buttons";
@@ -219,7 +219,8 @@ export default function ControllerView({ bridge, fw, view, onView }: Props) {
     if (source !== undefined && view === "overview" && (buttonsOpen || REMAP_ONLY.has(part) || EDGE_REMAP_ROWS.includes(part))) {
       setPicked(part);
       setSourcePick(source);
-      acc.reveal("buttons");
+      // Lands on its Press row (scrolled into view, flashed, its picker focused), as the old list landed on its row.
+      acc.reveal("buttons", PRESS_ROW);
       return;
     }
     const row = edgeRow >= 0 ? 16 + edgeRow : index !== undefined && (buttonsOpen || REMAP_ONLY.has(part)) ? index : null;
