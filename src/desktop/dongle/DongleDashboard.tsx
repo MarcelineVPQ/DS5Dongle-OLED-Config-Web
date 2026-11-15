@@ -5,16 +5,27 @@
 // In its Diagnostics block below them (a main-view MainBlock: readouts stay
 // out of the accordion), in the order the data flows: USB, Bluetooth, signal
 // and mic as graphs, the audio pipeline's counters (anything that went wrong
-// lit), the per-stage timings with Reset (DiagnosticsBody).
+// lit), what was lost on the way (0xFD's loss counters, protocol 1.22), the
+// per-stage timings with Reset (DiagnosticsBody).
 // Live reads (useDongleTelemetry): one poll a second while the page is shown
 // and the window is on screen (usePoll pauses while hidden; leaving the page
-// unmounts it) reads 0xFB diag, 0xFC CPU with the timings and the 0xF5 audio
-// counters. The signal and the OLED mirror come from the page's own polls
-// (no second read of either).
+// unmounts it) reads 0xFB diag, 0xFC CPU with the timings, the 0xF5 audio
+// counters and (protocol 1.22) 0xFD's loss counters. The signal and the OLED
+// mirror come from the page's own polls (no second read of either).
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { UseDs5BridgeResult } from "../../hooks/useDs5Bridge";
-import { AUDIO_COUNTER_NAMES, FEATURES2, supportsFeature2, TIMING_MAX_SATURATED, TIMING_STAGES, type AudioCounters, type CpuTimings, type OledFrame } from "../../protocol/bridgeClient";
+import {
+  AUDIO_COUNTER_NAMES,
+  FEATURES2,
+  supportsFeature2,
+  TIMING_MAX_SATURATED,
+  TIMING_STAGES,
+  type AudioCounters,
+  type CpuTimings,
+  type LossCounters,
+  type OledFrame,
+} from "../../protocol/bridgeClient";
 import { boardSpecs, OLED_MODULE } from "./boardSpecs";
 import { causeText } from "../shownError";
 import { BusyButton, InfoTip } from "../controls";
@@ -43,6 +54,7 @@ interface Sample {
   peaks: [number, number]; // speaker, haptics 0..1
   hciErrors: number;
   counters: AudioCounters | null; // null: older firmware
+  lost: LossCounters | null; // 0xFD's loss counters; null: firmware before protocol 1.22
   core1Alive: boolean;
   oled: { power: string; screen: number; contrast: number; fps: number } | null;
   timings: CpuTimings | null; // protocol 1.11
@@ -76,8 +88,8 @@ export function useDongleTelemetry(bridge: UseDs5BridgeResult, mirror: OledFrame
   const poll = usePoll(
     async () => {
       if (!client) return null;
-      // loop: NOT-WORTH — not a loop: one batch of up to 3 reads per 1 s poll (the board serializes them)
-      const [diag, cpu, counters] = await Promise.all([client.readDiag(), client.readCpu(withTimings), client.readAudioCounters()]);
+      // loop: NOT-WORTH — not a loop: one batch of up to 4 reads per 1 s poll (the board serializes them)
+      const [diag, cpu, counters, lost] = await Promise.all([client.readDiag(), client.readCpu(withTimings), client.readAudioCounters(), client.readLossCounters()]);
       // null = no reading (or none read yet): shown as "—", a gap in the graph, never as 0 (ideal).
       const { frame, changes, rssi } = latest.current;
       const at = performance.now();
@@ -99,6 +111,7 @@ export function useDongleTelemetry(bridge: UseDs5BridgeResult, mirror: OledFrame
         peaks: [diag.peakSpeaker / 255, diag.peakHaptic / 255],
         hciErrors: diag.hciErrors,
         counters,
+        lost,
         // On the first read, not known here: the app's health read says it (useBoardProblems).
         core1Alive: !counters || !p || p.loops === null || counters.core1Loops !== p.loops,
         // The redraw rate: the mirror's changed pictures (a resend of the same one is not a redraw).
@@ -239,6 +252,8 @@ export function DiagnosticsBody({ bridge, telemetry }: { bridge: UseDs5BridgeRes
         </div>
       </SectionGroup>
 
+      {s?.lost && <LossCard lost={s.lost} />}
+
       {s?.timings && <TimingCard client={bridge.client} timings={s.timings} history={longHistory} />}
     </div>
   );
@@ -340,6 +355,33 @@ function TimingRow({ label, avg, worst, bad, trend, capacity }: { label: string;
 }
 
 const BAD = new Set(["dropRaw", "dropEnc", "dropHap", "flashFailures"]);
+
+// Protocol 1.22: what the board lost on the way, as the firmware counts it
+// since its start (0xFD); the OLED Diagnostics screen's own label in each name.
+// Read with the 1 s Diagnostics poll: no animation, nothing while hidden.
+// Each count is the board's real number; one above 0 is marked, like the drops above.
+function LossCard({ lost }: { lost: LossCounters }) {
+  const { t } = useTranslation();
+  const td = (k: string) => t(`desktop.dash.lost.${k}`);
+  // The u16 counters wrap (firmware cmd.cpp: their low 16 bits): the ⓘ says so.
+  const wraps = td("wraps");
+  const rows: [string, number, boolean][] = [["btSendDrops", lost.btSendDrops, false]];
+  const inside = lost.inside;
+  if (inside) {
+    rows.push(["micInDrops", inside.micInDrops, true], ["micBufDrops", inside.micBufDrops, true], ["micUnderruns", inside.micUnderruns, true]);
+    rows.push(["usbOutOverruns", inside.usbOutOverruns, true]);
+  }
+  return (
+    <SectionGroup title={td("title")} info={td("info")}>
+      <div className="dash-counters">
+        {/* loop: HOT-PATH-OK — N ≤ 5 loss counters; the 1 s sample's render */}
+        {rows.map(([k, v, wrap]) => (
+          <Fact key={k} label={td(k)} info={wrap ? `${td(`${k}Info`)}\n${wraps}` : td(`${k}Info`)} value={v.toLocaleString()} bad={v > 0} />
+        ))}
+      </div>
+    </SectionGroup>
+  );
+}
 
 // Mic concealment is only a warning when it keeps climbing while the mic is
 // in use: right after a controller connects it sends a couple of mic packets,
@@ -467,10 +509,13 @@ function Level({ label, value }: { label: string; value: number }) {
   );
 }
 
-function Fact({ label, value, bad, title }: { label: string; value: string; bad?: boolean; title?: string }) {
+function Fact({ label, value, bad, title, info }: { label: string; value: string; bad?: boolean; title?: string; info?: string }) {
   return (
     <div className={`dash-fact${bad ? " bad" : ""}`}>
-      <span>{label}</span>
+      <span>
+        {label}
+        {info && <InfoTip text={info} />}
+      </span>
       <b title={title ?? value}>
         {bad ? "⚠ " : ""}
         {value}

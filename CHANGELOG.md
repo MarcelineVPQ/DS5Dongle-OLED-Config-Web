@@ -9,6 +9,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 ### Added
 
 - **The Waveshare RP2350B-Plus-W is a known board.** A board running the firmware built for it (firmware PR #27, built by hand for now) shows as RP2350B-Plus-W with its specs on your board's page (RP2350B, 2× Cortex-M33, 520 KB SRAM, 16 MB flash, CYW43439, Bluetooth 5.2). No firmware update is offered for it yet, and the app still refuses to write another board's firmware to it.
+- **Diagnostics shows what was lost on the way.** On your board's page, Diagnostics has a new Lost on the way group with the firmware's loss counters: Bluetooth reports dropped because the output queue was full (BT drop), mic packets and frames dropped and 1 ms gaps in the mic audio (Mic i, Mic b, Mic u), and the PC's speaker audio overruns (USB ovr, a lower bound: it is counted once per check). The names in brackets are the OLED Diagnostics screen's, and each one has an ⓘ. They show with firmware 0.9.5-dev.21 and later; older firmware shows nothing rather than zeros.
 
 ### Fixed
 

@@ -69,6 +69,9 @@ export interface SimulatedDongleOptions {
   // health), "cut" = 0.9.4 to 0.9.5-dev.5 (68 bytes wanted, cut to 63: the
   // flags' low byte at [60], no layout bit). Default: the 63-byte layout.
   audioCountersLegacy?: "none" | "cut";
+  // 0xFD's loss counters (protocol 1.22, firmware cmd.cpp [50..61]); 0 when not given.
+  // The u16 ones are sent as their low 16 bits, as the firmware does.
+  lossCounters?: { btSendDrops?: number; micInDrops?: number; micBufDrops?: number; micUnderruns?: number; usbOutOverruns?: number };
   version?: string;
   // The board's USB serial number (default: the one simulated board's).
   // The firmware makes it the paired controller's MAC, so two boards paired
@@ -517,6 +520,21 @@ export class SimulatedDongle implements Ds5Transport {
           if (stage >= 4) v.setUint16(61, this.opts.speakerEncoderFailed || this.opts.micDecoderFailed ? 12 : 184, true);
         }
         return out.slice(0, length);
+      }
+      case 0xfd: {
+        // Bridge diagnostics: 62 bytes from protocol 1.22 (firmware 0.9.5-dev.21),
+        // 50 before (0.9.5-dev.20); only the loss counters at [50..61] are simulated.
+        const out = new Uint8Array(this.minor >= 22 ? 62 : 50);
+        if (out.length === 62) {
+          const v = new DataView(out.buffer);
+          const c = this.opts.lossCounters ?? {};
+          v.setUint32(50, (c.btSendDrops ?? 0) >>> 0, true);
+          v.setUint16(54, (c.micInDrops ?? 0) & 0xffff, true);
+          v.setUint16(56, (c.micBufDrops ?? 0) & 0xffff, true);
+          v.setUint16(58, (c.micUnderruns ?? 0) & 0xffff, true);
+          v.setUint16(60, (c.usbOutOverruns ?? 0) & 0xffff, true);
+        }
+        return out.subarray(0, length);
       }
       default:
         throw new ReportStalledError(reportId);

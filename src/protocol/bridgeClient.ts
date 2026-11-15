@@ -25,6 +25,7 @@ export const REPORT = {
   liveInput: 0xf0, // protocol 1.2+, feature bit FEATURE.liveInput
   identity: 0xf1,
   audioCounters: 0xf5,
+  bridgeDiag: 0xfd, // the loss counters at [50..61]: firmware 0.9.5-dev.21 (protocol 1.22) on
   remapExtra: 0xed, // protocol 1.9, vendor interface only
   stickCurves: 0xec, // protocol 1.10, vendor interface only
   command: 0xf6,
@@ -891,6 +892,41 @@ export class Ds5BridgeClient {
   async readAudioCounters(): Promise<AudioCounters> {
     return decodeAudioCounters(await this.transport.getReport(REPORT.audioCounters, AUDIO_COUNTERS_BYTES));
   }
+
+  // Protocol 1.22+ (the first release with them, firmware 0.9.5-dev.21): the
+  // loss counters in 0xFD; null on older firmware (not read) or a short answer.
+  async readLossCounters(): Promise<LossCounters | null> {
+    const p = this.protocol;
+    if (!p || !(p.major > 1 || p.minor >= LOSS_COUNTERS_MINOR)) return null;
+    return decodeLossCounters(await this.transport.getReport(REPORT.bridgeDiag, BRIDGE_DIAG_BYTES));
+  }
+}
+
+// 0xFD (firmware src/cmd.cpp, the bridge-diagnostics report): its loss
+// counters. The firmware answers what it has, up to the length asked: 50
+// bytes before 0.9.5-dev.21, 62 from it. [50..53] u32 Bluetooth output
+// reports dropped because the queue was full (OLED "BT drop"); [54..61] four
+// u16, the low 16 bits of counts since boot (they wrap at 65536): mic Opus
+// packets dropped coming in (mic_fifo full, OLED "Mic i"), decoded mic frames
+// dropped (jitter buffer full, "Mic b"), 1 ms silent mic slices while playing
+// (jitter buffer empty, "Mic u"), and times the PC's speaker FIFO was found
+// full or overrun ("USB ovr": a lower bound, an overrun past twice the FIFO
+// reads as just full). Little-endian.
+export const LOSS_COUNTERS_MINOR = 22;
+export const BRIDGE_DIAG_BYTES = 62;
+export interface LossCounters {
+  btSendDrops: number;
+  // [54..61]; null when the answer stops before them.
+  inside: { micInDrops: number; micBufDrops: number; micUnderruns: number; usbOutOverruns: number } | null;
+}
+export function decodeLossCounters(bytes: Uint8Array): LossCounters | null {
+  if (bytes.length < 54) return null;
+  const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+  const inside =
+    bytes.length >= BRIDGE_DIAG_BYTES
+      ? { micInDrops: view.getUint16(54, true), micBufDrops: view.getUint16(56, true), micUnderruns: view.getUint16(58, true), usbOutOverruns: view.getUint16(60, true) }
+      : null;
+  return { btSendDrops: view.getUint32(50, true), inside };
 }
 
 // 0xF5: the 15 counters, then core1's health when the firmware sends the

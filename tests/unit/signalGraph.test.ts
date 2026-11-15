@@ -29,6 +29,7 @@ const sample = (at: number, rssi: number | null): Sample => ({
   peaks: [0, 0],
   hciErrors: 0,
   counters: null,
+  lost: null,
   core1Alive: true,
   oled: null,
   timings: null,
