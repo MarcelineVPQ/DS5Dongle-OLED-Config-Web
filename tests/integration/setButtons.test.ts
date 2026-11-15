@@ -75,11 +75,15 @@ describe("Make a set from these buttons (§7.4)", () => {
   });
 });
 
-function Editor({ start, out }: { start: TensionSet; out: { set: TensionSet | null } }) {
+function Editor({ start, onSet }: { start: TensionSet; onSet: (next: TensionSet) => void }) {
   const [set, setSet] = useState(start);
   const [pick, setPick] = useState<number | null>(null);
-  out.set = set;
-  return createElement(SetButtonsEditor, { set, onChange: setSet, pick, onPick: setPick, edge: false });
+  // The test reads each change as the editor reports it (not during render).
+  const onChange = (next: TensionSet) => {
+    onSet(next);
+    setSet(next);
+  };
+  return createElement(SetButtonsEditor, { set, onChange, pick, onPick: setPick, edge: false });
 }
 
 describe("the set's button editor (§7.3, §7.5, §7.6)", () => {
@@ -87,7 +91,7 @@ describe("the set's button editor (§7.3, §7.5, §7.6)", () => {
 
   it("starts with the Changed list; a picked button reads as sentences, its Press set from the controller grid", () => {
     const out: { set: TensionSet | null } = { set: null };
-    mount(createElement(Editor, { start: base, out }));
+    mount(createElement(Editor, { start: base, onSet: (next: TensionSet) => (out.set = next) }));
     expect(container!.textContent).toContain(i18n.t("desktop.buttons.noneChanged"));
     expect(container!.textContent).toContain(i18n.t("desktop.buttons.pickHint"));
     const pick = container!.querySelector<HTMLSelectElement>("select")!;
@@ -121,7 +125,7 @@ describe("the set's button editor (§7.3, §7.5, §7.6)", () => {
 
   it("Disable, Escape back to the row, Swap with…, the Changed list's links, Reset all", () => {
     const out: { set: TensionSet | null } = { set: null };
-    mount(createElement(Editor, { start: base, out }));
+    mount(createElement(Editor, { start: base, onSet: (next: TensionSet) => (out.set = next) }));
     const pick = container!.querySelector<HTMLSelectElement>("select")!;
     act(() => {
       pick.value = String(SOURCE.l1);
@@ -153,7 +157,7 @@ describe("the set's button editor (§7.3, §7.5, §7.6)", () => {
   });
 
   it("the PS button keeps its Press (always), with nothing to swap or reset", () => {
-    mount(createElement(Editor, { start: base, out: { set: null } }));
+    mount(createElement(Editor, { start: base, onSet: () => undefined }));
     const pick = container!.querySelector<HTMLSelectElement>("select")!;
     act(() => {
       pick.value = String(SOURCE.ps);
