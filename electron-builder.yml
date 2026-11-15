@@ -23,8 +23,8 @@ asar: true
 # Electron fuses (2026-10-31 app review S1): the shipped binary can't be used
 # as a plain Node runtime (ELECTRON_RUN_AS_NODE), ignores NODE_OPTIONS, loads
 # the app only from its app.asar and, on Windows and macOS, checks that
-# app.asar wasn't edited. The Mac build isn't signed with an identity, so
-# flipping the fuses resets its ad-hoc signature. --inspect (the
+# app.asar wasn't edited. Flipping the fuses resets the Mac build's ad-hoc
+# signature; a release is then signed with the Developer ID (mac: below). --inspect (the
 # EnableNodeCliInspectArguments fuse) is decided per build by the afterPack
 # hook: off in released builds, on in dev-tools builds, which the test tools
 # drive through it (tools/inspect_fuse.mjs, docs/SECURITY_AUDIT.md). It stays
@@ -87,9 +87,18 @@ mac:
   files:
     - "!node_modules/koffi{,/**/*}"
     - "!node_modules/@koromix{,/**/*}"
-  # The microphone test records from the controller's mic: macOS asks the
-  # user once, with this reason. (No entitlements file: the Mac build isn't
-  # signed with the hardened runtime; one would need
-  # com.apple.security.device.audio-input.)
+  # Signed with the Developer ID Application certificate when the release
+  # workflow passes it in (CSC_LINK / CSC_KEY_PASSWORD, GitHub secrets on the
+  # firmware repo, only in the macOS build step), with the hardened runtime,
+  # notarized with the App Store Connect API key (APPLE_API_KEY / _ID / _ISSUER)
+  # and stapled: the same setup as CorridorKey Desktop. Without those variables
+  # (a local build) it stays unsigned. The microphone test needs the
+  # audio-input entitlement (build/entitlements.mac.plist) and macOS asks the
+  # user once, with this reason.
+  hardenedRuntime: true
+  gatekeeperAssess: false
+  entitlements: build/entitlements.mac.plist
+  entitlementsInherit: build/entitlements.mac.plist
+  notarize: true
   extendInfo:
     NSMicrophoneUsageDescription: The microphone test records a few seconds from your controller's microphone and plays them back on its speaker. Nothing is saved.

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- The hardened runtime's exceptions the configurator needs (signed and notarized macOS build,
+     the same Developer ID setup as CorridorKey Desktop):
+     - allow-jit / allow-unsigned-executable-memory: Electron's JavaScript engine (V8) compiles code at run time.
+     - device.audio-input: the microphone test records from the controller's microphone (macOS still asks the
+       user once, with NSMicrophoneUsageDescription from electron-builder.yml). -->
+<plist version="1.0">
+<dict>
+  <key>com.apple.security.cs.allow-jit</key>
+  <true/>
+  <key>com.apple.security.cs.allow-unsigned-executable-memory</key>
+  <true/>
+  <key>com.apple.security.device.audio-input</key>
+  <true/>
+</dict>
+</plist>
