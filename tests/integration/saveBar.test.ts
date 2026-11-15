@@ -388,7 +388,7 @@ describe("the save bar", () => {
     expect(await keysSaved()).toBe(0);
     expect(dongle().keysMouseUp).toBe(false);
     // Cross picked: G pressed on the PC's keyboard is its Press; Save turns keys and mouse on and reconnects.
-    act(() => document.body.dispatchEvent(new KeyboardEvent("keydown", { key: "g", code: "KeyG", bubbles: true, cancelable: true })));
+    act(() => void document.body.dispatchEvent(new KeyboardEvent("keydown", { key: "g", code: "KeyG", bubbles: true, cancelable: true })));
     expect(drafts!.layout.layout.buttons!.entries.find((e) => e.source === CROSS)?.press).toEqual({ kind: 2, a: 0x0a, b: 0 }); // TARGET_KIND.key, HID usage G
     await save();
     expect(reconnects).toHaveBeenCalledTimes(1);
