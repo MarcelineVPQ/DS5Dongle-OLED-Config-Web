@@ -158,6 +158,9 @@ async function stageCross(target: number) {
   const pick = [...buttons.querySelectorAll<HTMLSelectElement>("select")].find((x) => [...x.options].some((o) => o.text === t("desktop.buttons.pickNone")))!;
   change(pick, String(CROSS));
   act(() => buttons.querySelector<HTMLButtonElement>('[data-row="btn-press"] .bt-target')!.click());
+  // A key target reopens the picker on its Key tab: the controller grid first.
+  const controllerTab = document.querySelector<HTMLButtonElement>('.bt-tab[data-tab="controller"]');
+  if (controllerTab && controllerTab.getAttribute("aria-selected") !== "true") act(() => controllerTab.click());
   act(() => document.querySelector<HTMLButtonElement>(`.bt-cell[aria-label="${t(`desktop.live.part.${PART[target]}`)}"]`)!.click());
 }
 // Cross's Press in a layout: the button it presses (undefined = itself).
