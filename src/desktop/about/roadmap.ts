@@ -329,7 +329,7 @@ export const ROADMAP: RoadmapItem[] = [
   },
   { column: "planned", title: "Per-trigger resistance strength", text: "Make each trigger's adaptive resistance stronger or weaker than the game sets it.", areas: ["controller"] },
   {
-    column: "progress",
+    column: "next",
     title: "Tension",
     text: "Your own adaptive trigger effects, part of a button layout: effects that build with how far you pull and how long you hold, run by {{device}} with or without the app, and picked per game.",
     areas: ["controller"],
@@ -366,9 +366,9 @@ export const ROADMAP: RoadmapItem[] = [
   { column: "planned", title: "Games on macOS", text: "The Games area on macOS too: your Steam, Heroic, Epic and GOG Galaxy games and the game that's running.", areas: ["games"] },
   { column: "planned", title: "Heroic games on Windows and macOS", text: "Games finds your Heroic games on Windows and macOS too.", areas: ["games"] },
   {
-    column: "progress",
+    column: "next",
     title: "Controller buttons as keyboard keys",
-    text: "Make a controller button or combo press a keyboard key, like F5 to quicksave, with no extra software.",
+    text: "Make a controller button press a keyboard key, like F5 to quicksave: pick the button, press the key. No extra software and no switch to find.",
     areas: ["buttons"],
   },
   {
