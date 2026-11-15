@@ -117,11 +117,12 @@ Sony's menus have no counterpart for these (they are upstream awalol's settings 
 
 Their choices: Auto, Speaker, Headset, Off, Built-in (de: Auto, Lautsprecher, Headset, Aus, Integriert; fr: Auto, Haut-parleur, Casque, Désactivé, Intégré; es: Auto, Altavoz, Auriculares, Desactivado, Integrado; pt-BR: Auto, Alto-falante, Headset, Desligado, Embutido; zh-CN: 自动, 扬声器, 耳机, 关, 内置; ja: 自動, スピーカー, ヘッドセット, オフ, 内蔵). "Built-in" follows Sony's **Built-in microphone**. **Trigger Effect Intensity** is Sony's own term (above).
 
-**Tension buttons** (protocol 1.24: a set holds a button layout too, the firmware's `docs/TENSION_BUTTONS.md` §7.12). Sony's **Button assignments** stays the section's name; these are our own words, in the same style (only Press shows in the app so far; the others come with their pieces):
+**Button layouts** (protocol 1.24: a layout holds the buttons, layers, gyro and the trigger effects, `docs/design/button-layouts-2026-11.md`). Sony's **Button assignments** stays the section's name; these are our own words, in the same style (each shows once the board has its piece). The app never says "set" for this:
 
 | Term | en | de | fr | es | pt-BR | zh-CN | ja |
 |---|---|---|---|---|---|---|---|
-| Set (triggers and buttons under a name) | Set | Set | set | set | set | 组合 | セット |
+| Button layout (trigger effects and buttons under a name) | Button layout | Tastenbelegung | disposition | distribución de botones | layout de botões | 按键布局 | ボタン配置 |
+| On the board (a layout kept on the board) | On the board | Auf dem Board | Sur la carte | En la placa | Na placa | 在开发板上 | ボード上 |
 | Layer | Layer | Ebene | Calque | Capa | Camada | 层 | レイヤー |
 | Base (the layout without a layer) | Base | Basis | Base | Base | Base | 基础层 | ベース |
 | Press | Press | Drücken | Appui | Pulsar | Apertar | 按下 | 押す |
@@ -135,7 +136,7 @@ Their choices: Auto, Speaker, Headset, Off, Built-in (de: Auto, Lautsprecher, He
 | Same as base | Same as base | Wie Basis | Comme la base | Igual que la base | Igual à base | 同基础层 | ベースと同じ |
 | Swap with | Swap with | Tauschen mit | Échanger avec | Intercambiar con | Trocar com | 与…互换 | 入れ替え |
 
-"Set" follows the Tension sets' existing wording in each language (Tension-Set, set Tension, 组合, セット). Without a set: Ohne Set, Sans set, Sin set, Sem set, 不使用组合, セットなし.
+Modifier keys in the Key tab follow each system's own labels: de Strg / Umschalt, fr Maj, es Mayús; the others keep Ctrl and Shift. Key names themselves are the US layout's, untranslated.
 
 ## Naming the board
 
