@@ -114,7 +114,13 @@ export const RestoreSchema = LibraryFileSchema.shape.restore.unwrap().nullable()
 // Developer card → Fake games (dev builds only): the switch, the game shown
 // as running (a fake game's key, or null), the fake computer's HDR setup.
 export const DevFakeGamesSchema = z.strictObject({ on: z.boolean().optional(), running: GameKeySchema.nullable().optional(), hdr: z.enum(FAKE_GAMES_HDR).optional() });
-export const SetLayoutSchema = z.strictObject({ id: LayoutIdSchema, name: ButtonLayoutSchema.shape.name, table: ButtonLayoutSchema.shape.table, extra: ButtonLayoutSchema.shape.extra, set: ButtonLayoutSchema.shape.set });
+export const SetLayoutSchema = z.strictObject({
+  id: LayoutIdSchema,
+  name: ButtonLayoutSchema.shape.name,
+  table: ButtonLayoutSchema.shape.table,
+  extra: ButtonLayoutSchema.shape.extra,
+  set: ButtonLayoutSchema.shape.set,
+});
 
 export interface IpcHandlers {
   gamesDetails: () => Record<string, GameInfo>;
