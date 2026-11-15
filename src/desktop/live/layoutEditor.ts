@@ -88,14 +88,15 @@ export function useLayoutEditor(tn: TensionDraft, remap: Remap, profile: { key: 
     [boardSet, legacy],
   );
   const { edit: tnEdit, choose } = tn;
-  const choice = tn.choice;
   const editBoard = useCallback(
     (next: TensionSet) => {
       if (slot === null) return;
       tnEdit(slot, next);
-      if (choice !== slot) choose(slot);
+      // Staged with the edit even when it already runs, so the editor stays on
+      // this layout across a reconnect, before the board's choice is read again.
+      choose(slot);
     },
-    [slot, tnEdit, choice, choose],
+    [slot, tnEdit, choose],
   );
 
   // A game's profile: its own layout, or (none yet) the board's to start from.
