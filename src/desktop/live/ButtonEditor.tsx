@@ -438,7 +438,12 @@ function ChosenButton({
   // Press a key on the PC's keyboard: this button's Press (firmware with key targets, [58] bit 4).
   const takesKey = caps.keys && !ps && !readOnly;
   const hint = useRef<HTMLParagraphElement>(null);
-  usePressToMap(takesKey, hint, (x) => set("press", x), () => onPick(null));
+  usePressToMap(
+    takesKey,
+    hint,
+    (x) => set("press", x),
+    () => onPick(null),
+  );
   const picker = (row: RowKey) =>
     readOnly ? (
       <span className="bt-fixed">{rowText(row)}</span>
@@ -471,7 +476,11 @@ function ChosenButton({
       <Row id={PRESS_ROW} label={t("desktop.buttons.row.press")} info={trigger ? t("desktop.buttons.warn.triggerEffectInfo") : undefined}>
         {ps ? <span className="bt-fixed">{t("desktop.buttons.psFixed")}</span> : picker("press")}
       </Row>
-      {takesKey && <p ref={hint} className="dk-hint">{t("desktop.buttons.pressKeyHint")}</p>}
+      {takesKey && (
+        <p ref={hint} className="dk-hint">
+          {t("desktop.buttons.pressKeyHint")}
+        </p>
+      )}
       {caps.pressTypes && (
         <>
           <Row label={t("desktop.buttons.row.hold")}>{picker("hold")}</Row>

@@ -521,24 +521,27 @@ export function useDs5Bridge(): UseDs5BridgeResult {
     });
   }, [draft, issues.length, run, savedConfig, setUnsaved]);
 
-  const saveToFlash = useCallback(async (patch?: Partial<ConfigBody>): Promise<boolean> => {
-    if (isDirty) return false;
-    return run("saving", async (c) => {
-      let saved = config;
-      if (patch && config) {
-        const next = normalizeConfig({ ...config, ...patch });
-        await c.applyConfig(next);
-        setConfig(next);
-        // Edits made meanwhile stay (and get applied next).
-        setDraft((current) => (configsEqual(current, config) ? next : current));
-        saved = next;
-      }
-      await c.saveToFlash();
-      setSavedConfig(saved);
-      setUnsaved(false);
-      setSaveState("saved");
-    });
-  }, [config, isDirty, run, setUnsaved]);
+  const saveToFlash = useCallback(
+    async (patch?: Partial<ConfigBody>): Promise<boolean> => {
+      if (isDirty) return false;
+      return run("saving", async (c) => {
+        let saved = config;
+        if (patch && config) {
+          const next = normalizeConfig({ ...config, ...patch });
+          await c.applyConfig(next);
+          setConfig(next);
+          // Edits made meanwhile stay (and get applied next).
+          setDraft((current) => (configsEqual(current, config) ? next : current));
+          saved = next;
+        }
+        await c.saveToFlash();
+        setSavedConfig(saved);
+        setUnsaved(false);
+        setSaveState("saved");
+      });
+    },
+    [config, isDirty, run, setUnsaved],
+  );
 
   const revertToSaved = useCallback(async () => {
     if (!savedConfig) return;
