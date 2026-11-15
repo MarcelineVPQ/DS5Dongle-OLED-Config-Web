@@ -63,7 +63,8 @@ describe("the board, on firmware without its own identity report (design §1.1)"
     expect(boardIdentity({ boardName: "Pico 2 W", protoMinor: 20 })).toEqual(PICO2_W);
     expect(boardIdentity({ boardName: null, protoMinor: 6 })).toEqual(PICO2_W); // before 1.7: every image was the Pico 2 W's
     expect(PICO_W).toMatchObject({ board: "pico_w", chip: "rp2040" });
-    expect(boardIdentity({ boardName: "RP2350B-Plus-W", protoMinor: 20 })).toBeNull();
+    expect(boardIdentity({ boardName: "RP2350B-Plus-W", protoMinor: 20 })).toMatchObject({ board: "waveshare_rp2350b_plus_w", chip: "rp2350b" });
+    expect(boardIdentity({ boardName: "Some Other Board", protoMinor: 20 })).toBeNull();
     expect(boardIdentity({ boardName: null, protoMinor: 20 })).toBeNull();
     expect(boardIdentity(null)).toBeNull();
   });
@@ -197,7 +198,7 @@ describe("the firmware card", () => {
   });
 
   it("an unknown board: no lookup, the same refusal", async () => {
-    const c = await card({ boardName: "RP2350B-Plus-W", protoMinor: 20 }, pico2wImage);
+    const c = await card({ boardName: "Some Other Board", protoMinor: 20 }, pico2wImage);
     expect(c.asked).toEqual([]);
     expect(c.fw()).toMatchObject({ latest: null, problem: "noBoardImage", available: false });
     expect(await c.fw().refreshLatest()).toEqual({ latest: null, problem: "noBoardImage" });
