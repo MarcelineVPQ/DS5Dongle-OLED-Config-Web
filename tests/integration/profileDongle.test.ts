@@ -105,7 +105,7 @@ describe("game profiles on the dongle (RAM only)", () => {
       config: s.config(),
       normal: s.normal,
       profile: { format: 2, hapticsGain: 3 },
-      parts: { layout: null, curves: null },
+      parts: { layout: null, curves: null, tension: null },
     });
     const ram = decodeConfigBody(s.dongle.config);
     expect(ram.hapticsGain).toBe(3);
