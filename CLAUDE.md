@@ -25,7 +25,7 @@ npm run check            # typecheck + lint + format check + gates (security, th
 npm test                 # vitest: tests/{unit,integration,security}
 node tools/update_version.mjs --verify
 pre-commit run --all-files
-git config core.hooksPath .hooks   # once per clone: .hooks/pre-push (typecheck, lint, format and every gate before a push; no tests) and .hooks/commit-msg (the message's checks)
+git config core.hooksPath .hooks   # once per clone: .hooks/pre-push (typecheck, lint, format and every gate before a push, then the tests related to the changed files through the ds5-prepush test budget) and .hooks/commit-msg (the message's checks)
 ```
 
 ## Architecture
