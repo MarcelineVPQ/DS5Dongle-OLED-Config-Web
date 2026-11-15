@@ -21,6 +21,12 @@
 // John "Nielk1" Klein, which the board encodes; the app only draws the zones
 // the same way, see zoneLevels; credited in About → Credits). Staging effects
 // by pull position on the board: an idea seen in artzox/DS5Dongle-Studio (MIT).
+//
+// Protocol 1.24 (the firmware's docs/TENSION_BUTTONS.md §3, §6): a set also
+// holds a button layout, the 360-byte ButtonPart (buttons.ts). On the wire
+// the staged buffer is then 494 bytes, SetBody [0..133] + ButtonPart
+// [134..493], staged with 0x1C ver 2 and saved / felt with 0x1D / 0x1E ver 2.
+import { BUTTON_PART_BYTES, buttonPartValid, decodeButtonPart, encodeButtonPart, type ButtonPart } from "./buttons";
 
 export const TENSION_WIRE_VER = 1; // tension::kWireVer: the 0xF6 0x1C..0x20 framing and the 0xE9 replies
 export const TENSION_RECORD_VER = 1; // SetBody::ver
@@ -36,6 +42,11 @@ export const TENSION_NONE = 0xff;
 export const TENSION_BACK_TO_SAVED = 0xfe;
 // 0x1C carries at most 60 bytes (a SET is ≤ 63 bytes: func, ver, offset, data).
 export const TENSION_STAGE_CHUNK = 60;
+// Protocol 1.24: the 494-byte wire buffer (TENSION_BUTTONS.md §3.1), 0x1C ver 2
+// = [2, offset lo, offset hi, data ≤ 59] (§6.1): nine SETs for a whole set.
+export const TENSION_WIRE_VER_BUTTONS = 2;
+export const SET_WIRE_BYTES = 134 + BUTTON_PART_BYTES;
+export const TENSION_STAGE_CHUNK_V2 = 59;
 // GET 0xE9: the selector is wValue's high byte (like 0xEB).
 export const TENSION_REPORT = 0xe9;
 export const TENSION_SEL = { status: 0x00, list: 0x01 } as const;
@@ -134,6 +145,8 @@ export interface TensionSet {
   name: string;
   l2: TensionProgram;
   r2: TensionProgram;
+  // Protocol 1.24: the set's button layout; absent = the set leaves the buttons as they are.
+  buttons?: ButtonPart;
 }
 
 // ---- Validation (tension.h params_valid / stage_valid / set_valid) ----
@@ -191,7 +204,8 @@ export function setValid(set: TensionSet): boolean {
   return (
     nameValid(set.name) &&
     // loop: HOT-PATH-OK — N = 2 triggers × ≤ 4 stages, validating one set
-    [set.l2, set.r2].every((pg) => pg.stages.length <= TENSION_STAGES && pg.stages.every(stageValid))
+    [set.l2, set.r2].every((pg) => pg.stages.length <= TENSION_STAGES && pg.stages.every(stageValid)) &&
+    (!set.buttons || buttonPartValid(set.buttons))
   );
 }
 
@@ -331,6 +345,24 @@ export function decodeSetBody(b: Uint8Array): TensionSet | null {
   return setValid(set) ? set : null;
 }
 
+// Protocol 1.24: the 494 bytes (SetBody, then the ButtonPart; all zero when
+// the set leaves the buttons alone). Throws like encodeSetBody.
+export function encodeSetWire(set: TensionSet): Uint8Array {
+  const out = new Uint8Array(SET_WIRE_BYTES);
+  out.set(encodeSetBody(set), 0);
+  out.set(encodeButtonPart(set.buttons), SET_BODY_BYTES);
+  return out;
+}
+
+// The 494 bytes back into a set (with `buttons` only when its ButtonPart is used).
+export function decodeSetWire(b: Uint8Array): TensionSet | null {
+  if (b.length < SET_WIRE_BYTES) return null;
+  const set = decodeSetBody(b.subarray(0, SET_BODY_BYTES));
+  const buttons = decodeButtonPart(b.subarray(SET_BODY_BYTES, SET_WIRE_BYTES));
+  if (!set || buttons === null) return null;
+  return buttons ? { ...set, buttons } : set;
+}
+
 // CRC-32 (IEEE 802.3 / zlib: reflected 0xEDB88320, init and final xor
 // 0xFFFFFFFF; "123456789" → 0xCBF43926), the one 0x1D / 0x1E carry.
 // cache: NOT-WORTH — key=byte; invalidated=never (constant table); bound=256 entries
@@ -342,7 +374,7 @@ const CRC_TABLE = Uint32Array.from({ length: 256 }, (_, n) => {
 });
 export function crc32(bytes: Uint8Array): number {
   let c = 0xffffffff;
-  // loop: NOT-WORTH — ≤ 134 bytes, on a save or Feel it
+  // loop: NOT-WORTH — ≤ 494 bytes, on a save, a read or Feel it
   for (const b of bytes) c = CRC_TABLE[(c ^ b) & 0xff] ^ (c >>> 8);
   return (c ^ 0xffffffff) >>> 0;
 }

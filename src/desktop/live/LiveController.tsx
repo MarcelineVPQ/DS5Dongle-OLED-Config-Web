@@ -21,6 +21,7 @@ import { litPlayerLights, type PlayerLightWiring } from "../../protocol/controll
 import { lineOnDark, type ColorwayColors } from "./colorways";
 import { hexToRgb, wantsLightInk } from "../theme/desktopPalette";
 import { PART_IDS, type PartId } from "./parts";
+import type { Badge } from "./SetButtons";
 
 const STICK_TRAVEL = 9; // viewBox units at full deflection
 const TOUCH_W = 1920;
@@ -35,6 +36,8 @@ interface Props {
   colors: ColorwayColors | null; // the connected controller's colorway, null = theme colors
   selected: PartId | null;
   remapped: ReadonlySet<PartId>;
+  // A Tension set's changed buttons (protocol 1.24): each one's new job beside it.
+  badges?: ReadonlyMap<PartId, Badge> | null;
   onSelect: (part: PartId) => void;
 }
 
@@ -50,7 +53,7 @@ const DPAD: Record<number, PartId[]> = {
   7: ["dpad-up", "dpad-left"],
 };
 
-function pressed(input: InputReport): Set<PartId> {
+export function pressedParts(input: InputReport): Set<PartId> {
   const on = new Set<PartId>(DPAD[input.dpad] ?? []);
   const map: Array<[boolean, PartId]> = [
     [input.cross, "cross"],
@@ -74,6 +77,7 @@ function pressed(input: InputReport): Set<PartId> {
     [input.backLeft, "paddle-l"],
     [input.backRight, "paddle-r"],
   ];
+  // loop: HOT-PATH-OK — N = 19 parts per live frame (the drawing, and Button assignments' pick by pressing)
   for (const [down, part] of map) if (down) on.add(part);
   return on;
 }
@@ -119,7 +123,7 @@ export default function LiveController(props: Props) {
   return <LiveArt key={edge ? "edge" : "dualsense"} art={edge ? edgeArt : dualsenseArt} {...props} />;
 }
 
-function LiveArt({ art, input, lightbar, playerLeds, playerWiring, colors, selected, remapped, onSelect }: Props & { art: string }) {
+function LiveArt({ art, input, lightbar, playerLeds, playerWiring, colors, selected, remapped, badges, onSelect }: Props & { art: string }) {
   const { t } = useTranslation();
   const host = useRef<HTMLDivElement>(null);
   // cache: OK — key=part id; invalidated=per mount, the art is keyed by model, so another model remounts; bound=≈ 30 parts
@@ -232,6 +236,45 @@ function LiveArt({ art, input, lightbar, playerLeds, playerWiring, colors, selec
     }
   }, [selected, remapped]);
 
+  // A set's badges (TENSION_BUTTONS.md §7.2): one small label per changed
+  // button, above its part, in the drawing's own coordinates (it scales with
+  // the drawing). Drawn only when the badges change: 0 frames a second idle,
+  // nothing while hidden, the same on the CPU fallback (no animation).
+  // lifetime: OK — cleanup: removes the badge group (badges change / unmount)
+  useLayoutEffect(() => {
+    const root = host.current?.querySelector("svg");
+    const toArt = root?.getScreenCTM?.()?.inverse();
+    if (!root || !toArt || !badges || badges.size === 0) return;
+    const ns = "http://www.w3.org/2000/svg";
+    const layer = document.createElementNS(ns, "g");
+    layer.setAttribute("class", "badges");
+    layer.setAttribute("aria-hidden", "true");
+    // loop: NOT-WORTH — N ≤ 22 badges, only when the layout changes
+    for (const [id, badge] of badges) {
+      const el = parts.current.get(id);
+      if (!el) continue;
+      const r = el.getBoundingClientRect();
+      const at = new DOMPoint(r.left + r.width / 2, r.top).matrixTransform(toArt);
+      const w = 8 + 7 * [...badge.text].length;
+      const g = document.createElementNS(ns, "g");
+      g.setAttribute("transform", `translate(${(at.x - w / 2).toFixed(1)} ${(at.y - 18).toFixed(1)})`);
+      const title = document.createElementNS(ns, "title");
+      title.textContent = badge.title;
+      const box = document.createElementNS(ns, "rect");
+      // loop: NOT-WORTH — N = 3 attributes, per badge
+      for (const [k, v] of [["width", w], ["height", 15], ["rx", 4]] as const) box.setAttribute(k, String(v));
+      const text = document.createElementNS(ns, "text");
+      text.setAttribute("x", "4");
+      text.setAttribute("y", "11.5");
+      text.setAttribute("font-size", "10");
+      text.textContent = badge.text;
+      g.append(title, box, text);
+      layer.append(g);
+    }
+    root.append(layer);
+    return () => layer.remove();
+  }, [badges]);
+
   // The lightbar like the real one: its color at full strength, mixed with
   // the unlit grey plastic by how bright it is (off = plain grey, dim = a
   // tinted grey), and a glow that fades with it.
@@ -288,7 +331,7 @@ function LiveArt({ art, input, lightbar, playerLeds, playerWiring, colors, selec
     const root = host.current?.querySelector("svg");
     if (!root) return;
     root.classList.toggle("live", !!input);
-    const on = input ? pressed(input) : new Set<PartId>();
+    const on = input ? pressedParts(input) : new Set<PartId>();
     // loop: HOT-PATH-OK — N ≈ 30 parts, classList.toggle per live frame
     for (const [id, el] of parts.current) el.classList.toggle("on", on.has(id));
     // The mute button's light: amber while the mic is muted, like the real one.

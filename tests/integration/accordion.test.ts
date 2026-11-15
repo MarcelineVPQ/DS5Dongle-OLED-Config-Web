@@ -623,14 +623,15 @@ const live = async (view: "overview" | "dongle" | "app") => {
 // The plan's table (MAPPING.md, "Controller page" and "Pico 2 W page"), by
 // what each section shows: its rows' labels, headings and buttons.
 const CONTROLLER_INVENTORY: Record<string, string[]> = {
+  // Sets first (protocol 1.24, TENSION_BUTTONS.md §7.1): which set the part sections show.
+  sets: ["desktop.tension.edit"],
   lightbar: ["desktop.lightbar.mode", "desktop.lightbar.modes.rainbow", "desktop.lightbar.favorites"],
   triggers: [
     "desktop.live.pull",
     "desktop.settings.triggerReduce",
     "desktop.calib.triggersTitle",
     "desktop.tension.title",
-    "desktop.tension.edit",
-    "desktop.tension.starters.bow",
+    "desktop.sets.editInSets",
     "desktop.tension.liveTitle",
     "desktop.triggers.title",
     "desktop.triggers.presets.weapon",
@@ -645,7 +646,8 @@ const CONTROLLER_INVENTORY: Record<string, string[]> = {
     "desktop.audioTest.speakerTitle",
   ],
   mic: ["haptics.btMicLabel", "desktop.settings.micInput", "desktop.settings.micLevel", "desktop.settings.echoCancel", "desktop.audioTest.micTitle"],
-  buttons: ["desktop.live.remapReset", "desktop.layouts.title", "desktop.layouts.saveAs"],
+  // Without a set (the simulated board's sets are empty): today's list, and Make a set from these buttons.
+  buttons: ["desktop.live.remapReset", "desktop.buttons.legacyHint", "desktop.buttons.makeSet", "desktop.layouts.title", "desktop.layouts.saveAs"],
   sticks: ["desktop.calib.sticksTitle", "desktop.calib.start", "desktop.calib.leftStick", "desktop.curves.title"],
   gyro: ["desktop.calib.gyroTitle", "desktop.calib.start"],
   slots: ["desktop.slots.wipe"],
@@ -654,7 +656,7 @@ const CONTROLLER_INVENTORY: Record<string, string[]> = {
 const DONGLE_INVENTORY: Record<string, string[]> = {
   oled: ["desktop.settings.brightness", "behavior.screenDimTimeoutLabel", "behavior.screenOffTimeoutLabel", "desktop.settings.controllerWakes"],
   power: ["desktop.settings.idleDisconnect", "behavior.inactiveTimeLabel", "desktop.settings.pcSleep", "desktop.settings.sleepControllerOff"],
-  usb: ["behavior.pollingRateLabel", "behavior.controllerModeLabel", "actions.reconnect"],
+  usb: ["behavior.pollingRateLabel", "behavior.controllerModeLabel", "desktop.settings.keysMouse", "actions.reconnect"],
   lights: ["desktop.settings.picoLed", "desktop.settings.statusPin", "desktop.settings.statusPinGpio", "desktop.settings.statusPinMode"],
   firmware: ["desktop.setup.checkUpdates"],
   device: ["desktop.firmware.enterBootsel", "desktop.firmware.factoryReset"],

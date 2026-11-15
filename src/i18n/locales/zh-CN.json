@@ -174,7 +174,11 @@
       "pollRealTime": "实时",
       "pollRateInfo": "1000 Hz：每毫秒发送一次控制器的最新状态。实时：每个蓝牙报告一到就发送。",
       "dockDisconnect": "放上底座时断开",
-      "dockDisconnectInfo": "把控制器放到充电座或底座上时，断开它的蓝牙连接。按 PS 按钮即可重新连接。"
+      "dockDisconnectInfo": "把控制器放到充电座或底座上时，断开它的蓝牙连接。按 PS 按钮即可重新连接。",
+      "keysMouse": "由控制器发送键盘和鼠标",
+      "keysMouseShort": "键盘和鼠标",
+      "keysMouseSub": "下次连接时生效。",
+      "keysMouseInfo": "开启：{{device}}在电脑上还会显示为键盘和鼠标，组合的按键就能按下键盘按键（按键目标将随以后的固件提供）。关闭：电脑只看到控制器，与以前完全相同。尚未在所有系统上测试：在 Linux 上键盘可能没有驱动，macOS 可能会要求设置新键盘。"
     },
     "lightbar": {
       "mode": "模式",
@@ -2051,7 +2055,8 @@
       "oled": "OLED 屏幕",
       "usb": "与电脑的连接",
       "lights": "状态指示灯",
-      "diagnostics": "诊断"
+      "diagnostics": "诊断",
+      "sets": "组合"
     },
     "boardBusy": {
       "title": "{{device}} 正被其他程序使用。",
@@ -2112,6 +2117,52 @@
       "find": "查找开发板",
       "identifyTip": "使用中。点击后其屏幕会闪烁 THIS ONE",
       "switchTip": "点击以显示这块开发板（其屏幕会闪烁 THIS ONE）"
+    },
+    "sets": {
+      "without": "不使用组合",
+      "status": "运行：{{name}}",
+      "info": "一个组合以一个名称保存 L2、R2 和按键。你的开发板最多保存 8 个，有没有本应用都会运行。“编辑组合”选择图示、自适应扳机和按键配置显示的组合；“不使用组合”编辑没有组合改动时使用的按键。",
+      "editInSets": "在“组合”中新建或选择一个组合以编辑其扳机。"
+    },
+    "buttons": {
+      "warn": {
+        "reconnect": "重新连接以启用键盘和鼠标。",
+        "noCross": "现在没有按键会按下 ✕：菜单可能难以操作。",
+        "noCircle": "现在没有按键会按下 ○：可能无法退出菜单。",
+        "duplicate": "{{other}} 已经有此作用。",
+        "promptsInfo": "游戏仍会显示它们自己的按键图标：它们不知道这个布局。",
+        "triggerEffectInfo": "扳机效果仍在你按下的那个扳机上。"
+      },
+      "status": "{{set}} · 已改 {{count}} 个",
+      "pick": "按键",
+      "pickHint": "点击部件，或在控制器上按下它。",
+      "pickNone": "已更改的按键",
+      "changed": "已更改",
+      "changedLine": "{{from}} → {{to}}",
+      "noneChanged": "此层中每个按键都保持原样。",
+      "does": "{{button}} 的作用",
+      "row": {
+        "press": "按下"
+      },
+      "psFixed": "PS键（始终）",
+      "swap": "与…互换",
+      "resetButton": "重置此按键",
+      "legacyHint": "长按、双击和层需要组合。",
+      "makeSet": "用这些按键新建组合",
+      "makeSetReplace": "替换组合",
+      "emptySlot": "空位：请在“组合”中新建组合。",
+      "needsFirmware": "长按、双击和层需要更新固件。",
+      "setLeaves": "此组合不改动按键。",
+      "useInSet": "在此组合中更改按键",
+      "target": {
+        "title": "{{row}}：作用",
+        "gridHint": "方向键移动，回车选择。"
+      },
+      "badge": {
+        "create": "创建",
+        "options": "选项",
+        "touchpad": "触摸板"
+      }
     }
   },
   "ad": {

@@ -307,6 +307,42 @@ describe("left / right grip haptics (protocol 1.6)", () => {
   });
 });
 
+describe("keys and mouse from the controller (protocol 1.24, TENSION_BUTTONS.md §5.4)", () => {
+  it("writes byte 53 in the 54-byte body; identity [59] says saved, then up after a USB reconnect", async () => {
+    const dongle = new FakeDongle();
+    const client = new Ds5BridgeClient(dongle);
+    let id = await client.identity();
+    expect(id.configBodyLength).toBe(54);
+    expect(client.configV24).toBe(true);
+    expect(id.keysMouseFlags).toBe(0);
+    const cfg = await client.readConfig();
+    expect(cfg.keysMouse).toBe(false);
+    const sets = dongle.sets.length;
+    await client.applyConfig({ ...cfg, keysMouse: true });
+    const sent = dongle.sets.slice(sets).find((p) => p[0] === 0x01)!;
+    expect([sent.length, sent[1 + 53]]).toEqual([1 + 54, 1]);
+    expect((await client.readConfig()).keysMouse).toBe(true);
+    expect((await client.identity()).keysMouseFlags).toBe(0); // in RAM only: not saved yet
+    await client.saveToFlash();
+    id = await client.identity();
+    expect(id.keysMouseFlags).toBe(0x04); // saved on, the interface not up: "Reconnect to start keys and mouse"
+    await client.reconnectUsb();
+    expect((await client.identity()).keysMouseFlags).toBe(0x05);
+  });
+
+  it("sends 1.23 firmware the 53-byte body and reads no [58]", async () => {
+    const dongle = new FakeDongle({ protoMinor: 23 });
+    const client = new Ds5BridgeClient(dongle);
+    const id = await client.identity();
+    expect([id.configBodyLength, id.features5, id.keysMouseFlags]).toEqual([53, 0, null]);
+    expect(client.configV24).toBe(false);
+    const sets = dongle.sets.length;
+    await client.applyConfig({ ...(await client.readConfig()), keysMouse: true });
+    expect(dongle.sets.slice(sets).find((p) => p[0] === 0x01)?.length).toBe(1 + 53);
+    expect((await client.readConfig()).keysMouse).toBe(false);
+  });
+});
+
 describe("upstream's 2026-10-17/18 settings (protocol 1.22)", () => {
   it("writes and reads the audio report choice, the dock disconnect and 1000 Hz with the 53-byte body", async () => {
     const dongle = new FakeDongle({ protoMinor: 22 });

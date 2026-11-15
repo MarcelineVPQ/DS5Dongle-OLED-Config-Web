@@ -174,7 +174,11 @@
       "pollRealTime": "Tempo real",
       "pollRateInfo": "1000 Hz envia o estado mais recente do controle a cada milissegundo. Tempo real envia cada relatório Bluetooth assim que ele chega.",
       "dockDisconnect": "Desconectar na base de carga",
-      "dockDisconnectInfo": "Desliga a conexão Bluetooth do controle quando você o coloca numa base de carga ou dock. Pressione o botão PS para conectar de novo."
+      "dockDisconnectInfo": "Desliga a conexão Bluetooth do controle quando você o coloca numa base de carga ou dock. Pressione o botão PS para conectar de novo.",
+      "keysMouse": "Teclas e mouse pelo controle",
+      "keysMouseShort": "Teclas e mouse",
+      "keysMouseSub": "Começa na próxima conexão.",
+      "keysMouseInfo": "Ligado: {{device}} também aparece no PC como teclado e mouse, para que os botões de um set possam apertar teclas (chegam com um firmware futuro). Desligado: o PC vê só o controle, exatamente como antes. Ainda não testado em todos os sistemas: no Linux o teclado pode ficar sem driver, e o macOS pode pedir para configurar um teclado novo."
     },
     "lightbar": {
       "mode": "Modo",
@@ -2068,7 +2072,8 @@
       "oled": "Tela OLED",
       "usb": "Conexão com o PC",
       "lights": "Luzes de status",
-      "diagnostics": "Diagnóstico"
+      "diagnostics": "Diagnóstico",
+      "sets": "Sets"
     },
     "boardBusy": {
       "title": "Outro programa está usando {{device}}.",
@@ -2129,6 +2134,52 @@
       "find": "Buscar uma placa",
       "identifyTip": "Em uso. Clique para piscar THIS ONE na tela dela",
       "switchTip": "Clique para mostrar esta placa (ela pisca THIS ONE na tela)"
+    },
+    "sets": {
+      "without": "Sem set",
+      "status": "Ativo: {{name}}",
+      "info": "Um set reúne L2, R2 e os botões com um nome. Sua placa guarda até 8 e os executa com ou sem o aplicativo. \"Editar set\" escolhe o set mostrado no desenho, em Gatilhos adaptáveis e em Atribuições de botões; \"Sem set\" edita os botões usados enquanto nenhum set os muda.",
+      "editInSets": "Crie ou escolha um set em Sets para editar os gatilhos."
+    },
+    "buttons": {
+      "warn": {
+        "reconnect": "Reconecte para ativar teclas e mouse.",
+        "noCross": "Nada aperta ✕ agora: os menus podem ficar difíceis.",
+        "noCircle": "Nada aperta ○ agora: você pode ficar preso em menus.",
+        "duplicate": "{{other}} já faz isso.",
+        "promptsInfo": "Os jogos continuam mostrando os próprios ícones de botões: eles não conhecem este layout.",
+        "triggerEffectInfo": "Os efeitos de gatilho ficam no gatilho que você aperta."
+      },
+      "status": "{{set}} · {{count}} alterados",
+      "pick": "Botão",
+      "pickHint": "Clique numa peça ou aperte-a no controle.",
+      "pickNone": "Botões alterados",
+      "changed": "Alterados",
+      "changedLine": "{{from}} → {{to}}",
+      "noneChanged": "Cada botão é ele mesmo nesta camada.",
+      "does": "{{button}} faz",
+      "row": {
+        "press": "Apertar"
+      },
+      "psFixed": "Botão PS (sempre)",
+      "swap": "Trocar com…",
+      "resetButton": "Redefinir este botão",
+      "legacyHint": "Segurar, toque duplo e camadas precisam de um set.",
+      "makeSet": "Criar um set com estes botões",
+      "makeSetReplace": "Substituir set",
+      "emptySlot": "Espaço vazio: crie um set em Sets.",
+      "needsFirmware": "Segurar, toque duplo e camadas exigem atualização.",
+      "setLeaves": "Este set deixa os botões como estão.",
+      "useInSet": "Mudar botões neste set",
+      "target": {
+        "title": "{{row}}: o que faz",
+        "gridHint": "Setas movem, Enter escolhe."
+      },
+      "badge": {
+        "create": "Criar",
+        "options": "Opções",
+        "touchpad": "Touch"
+      }
     }
   },
   "ad": {

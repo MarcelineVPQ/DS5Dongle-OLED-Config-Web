@@ -11,11 +11,12 @@ import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeAll, describe, expect, it } from "vitest";
 import i18n from "../../src/i18n";
 import { CommandError, Ds5BridgeClient, FEATURES4, FUNC, supportsTension, type BridgeIdentity } from "../../src/protocol/bridgeClient";
-import { crc32, decodeSetBody, encodeSetBody, STARTERS } from "../../src/protocol/tension";
+import { crc32, decodeSetBody, decodeSetWire, encodeSetBody, encodeSetWire, STARTERS } from "../../src/protocol/tension";
+import { buttonTarget, emptyButtonPart, SOURCE, withBasePress } from "../../src/protocol/buttons";
 import type { UseDs5BridgeResult } from "../../src/hooks/useDs5Bridge";
 import { BoardDraftsProvider, useBoardDrafts, type BoardDrafts } from "../../src/desktop/live/boardDrafts";
 import { tensionErrorText } from "../../src/desktop/live/tensionDraft";
-import { TensionSection } from "../../src/desktop/live/Tension";
+import { SetsSection, TensionSection } from "../../src/desktop/live/Tension";
 import { FakeDongle } from "../support/fakeDongle";
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
@@ -29,6 +30,50 @@ async function board(protoMinor?: number) {
 }
 const tensionSets = (d: FakeDongle) => d.sets.filter((p) => p[0] >= 0x1c && p[0] <= 0x20);
 
+describe("sets with buttons (protocol 1.24, TENSION_BUTTONS.md §6)", () => {
+  const swapped = { ...STARTERS.heavy, buttons: withBasePress(withBasePress(emptyButtonPart(), SOURCE.cross, buttonTarget(SOURCE.circle)), SOURCE.circle, buttonTarget(SOURCE.cross)) };
+
+  it("stages the 494 bytes in nine ver-2 SETs (each ≤ 63 bytes), saves with the CRC of all of them, reads them back by it", async () => {
+    const { dongle, client, identity } = await board();
+    expect(client.setButtons && (identity.features5 & 0x01) !== 0).toBe(true);
+    await client.saveTensionSet(2, swapped);
+    const sent = tensionSets(dongle);
+    expect(sent.map((p) => p[0])).toEqual([...new Array(9).fill(FUNC.tensionStage), FUNC.tensionSave]);
+    expect(Math.max(...sent.map((p) => p.length))).toBe(63);
+    expect(sent.slice(0, 9).map((p) => [p[1], p[2] | (p[3] << 8)])).toEqual([0, 59, 118, 177, 236, 295, 354, 413, 472].map((at) => [2, at]));
+    const crc = crc32(encodeSetWire(swapped));
+    expect([...sent[9].subarray(1)]).toEqual([2, 2, crc & 0xff, (crc >>> 8) & 0xff, (crc >>> 16) & 0xff, crc >>> 24]);
+    expect(decodeSetWire(dongle.tension.slots[2]!)).toEqual(swapped);
+    const list = (await client.readTensionList())!;
+    expect(list.crcs[2]).toBe(crc);
+    expect(await client.readTensionSet(2, crc)).toEqual(swapped);
+  });
+
+  it("Feel it ver 2 runs triggers and buttons; a 1.23 app's ver-1 save keeps the slot's buttons", async () => {
+    const { dongle, client } = await board();
+    await client.feelTension(swapped);
+    expect(decodeSetWire(dongle.tension.feel!)).toEqual(swapped);
+    await client.saveTensionSet(4, swapped);
+    // An older app's save (0x1C / 0x1D ver 1, the SetBody only): the buttons stay.
+    const body = encodeSetBody({ ...STARTERS.bow });
+    for (let at = 0; at < 134; at += 60) await client.command(FUNC.tensionStage, [1, at, ...body.subarray(at, at + 60)]);
+    const crc = crc32(body);
+    await client.command(FUNC.tensionSave, [1, 4, crc & 0xff, (crc >>> 8) & 0xff, (crc >>> 16) & 0xff, crc >>> 24]);
+    expect(decodeSetWire(dongle.tension.slots[4]!)).toEqual({ ...STARTERS.bow, buttons: swapped.buttons });
+  });
+
+  it("refuses a ButtonPart the rules don't allow (INVALID), nothing saved", async () => {
+    const { dongle, client } = await board();
+    const wire = encodeSetWire(swapped);
+    wire[134 + 52] = 22; // source 22 doesn't exist
+    for (let at = 0; at < wire.length; at += 59) await client.command(FUNC.tensionStage, [2, at & 0xff, at >> 8, ...wire.subarray(at, at + 59)]);
+    const crc = crc32(wire);
+    const r = await client.command(FUNC.tensionSave, [2, 0, crc & 0xff, (crc >>> 8) & 0xff, (crc >>> 16) & 0xff, crc >>> 24]).catch((e: unknown) => e);
+    expect(tensionErrorText(r)).toBe(i18n.t("desktop.tension.errors.invalid"));
+    expect(dongle.tension.slots[0]).toBeNull();
+  });
+});
+
 describe("Tension on the board (protocol 1.23)", () => {
   it("is offered from 1.23 with identity [49] bit 7, and not to older firmware", async () => {
     const now = await board();
@@ -41,8 +86,8 @@ describe("Tension on the board (protocol 1.23)", () => {
     expect(tensionSets(old.dongle)).toEqual([]);
   });
 
-  it("saves a set as three stage SETs (each ≤ 63 bytes) and a 0x1D with its CRC, and reads it back by that CRC", async () => {
-    const { dongle, client } = await board();
+  it("saves a set as three stage SETs (each ≤ 63 bytes) and a 0x1D with its CRC, and reads it back by that CRC (1.23)", async () => {
+    const { dongle, client } = await board(23);
     await client.saveTensionSet(3, STARTERS.bow);
     const sent = tensionSets(dongle);
     expect(sent.map((p) => p[0])).toEqual([FUNC.tensionStage, FUNC.tensionStage, FUNC.tensionStage, FUNC.tensionSave]);
@@ -116,16 +161,28 @@ async function page(protoMinor?: number) {
   container = document.createElement("div");
   document.body.append(container);
   root = createRoot(container);
-  act(() => root!.render(createElement(BoardDraftsProvider, { bridge }, createElement(TensionSection, { bridge }), createElement(Probe))));
+  act(() => root!.render(createElement(BoardDraftsProvider, { bridge }, createElement(SetsSection, { bridge }), createElement(TensionSection, { bridge }), createElement(Probe))));
   // loop: test — until the board's sets are read (a few reads of the simulated board)
   for (let i = 0; i < 100 && !container.textContent!.includes(i18n.t("desktop.tension.edit")) && protoMinor === undefined; i++) await act(() => new Promise((r) => setTimeout(r, 10)));
   return b;
 }
 const button = (text: string) => [...container!.querySelectorAll("button")].find((x) => x.textContent === text)!;
 
-describe("the Tension group (Controller page → Adaptive triggers)", () => {
+const choose = (select: HTMLSelectElement, value: string) =>
+  act(() => {
+    select.value = value;
+    select.dispatchEvent(new Event("change", { bubbles: true }));
+  });
+
+describe("the Sets section and Adaptive triggers' Tension group (Controller page)", () => {
   it("stages a starter set and the saved choice; only the save bar's Save writes them, Revert drops them", async () => {
     const { dongle } = await page();
+    // 1.24: Without a set is picked first (nothing runs); an empty slot offers the starters.
+    const edit = container!.querySelector<HTMLSelectElement>("select")!;
+    expect(edit.value).toBe("");
+    expect(edit.options[0].textContent).toBe(i18n.t("desktop.sets.without"));
+    expect(container!.textContent).toContain(i18n.t("desktop.sets.editInSets"));
+    choose(edit, "0");
     act(() => button(i18n.t("desktop.tension.starters.bow")).click());
     expect(seen.drafts!.staged).toBe(true);
     expect(tensionSets(dongle)).toEqual([]); // nothing on the board yet
@@ -133,12 +190,8 @@ describe("the Tension group (Controller page → Adaptive triggers)", () => {
     await act(async () => void (await seen.drafts!.saveStaged()));
     expect(decodeSetBody(dongle.tension.slots[0]!)).toEqual(STARTERS.bow);
     expect(seen.drafts!.staged).toBe(false);
-    // Which set runs from power-on: staged too.
-    const runs = container!.querySelector<HTMLSelectElement>("select")!;
-    act(() => {
-      runs.value = "0";
-      runs.dispatchEvent(new Event("change", { bubbles: true }));
-    });
+    // Which set runs from power-on: staged too (the first row once a set is saved).
+    choose(container!.querySelector<HTMLSelectElement>("select")!, "0");
     expect(seen.drafts!.staged).toBe(true);
     expect(dongle.tension.saved).toBe(0xff);
     await act(async () => void (await seen.drafts!.saveStaged()));

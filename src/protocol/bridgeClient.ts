@@ -1,6 +1,6 @@
 // High-level client for the dongle's configurator protocol (firmware src/cmd.cpp),
 // over any Ds5Transport. Report payloads here never include the report-id byte.
-import { CONFIG_BODY_SIZE, CONFIG_BODY_SIZE_V22, type ConfigBody, decodeConfigBody, encodeConfigBody } from "./config";
+import { CONFIG_BODY_SIZE, CONFIG_BODY_SIZE_V24, type ConfigBody, decodeConfigBody, encodeConfigBody } from "./config";
 import { CALIB_BODY_SIZE, CALIB_PROTO_VER, decodeCalibration, encodeCalibration, type Calibration } from "./calibration";
 import { CURVE_PROTO_VER, CURVE_REPORT_BYTES, type CurvesReport, decodeCurvesReport, encodeCurve, isValidCurve, type StickCurve } from "./stickCurve";
 import { REMAP_EXTRA_COUNT, type RemapState, decodeRemapFromConfigReport, encodeRemapSet, isValidExtra } from "./remap";
@@ -11,11 +11,14 @@ import {
   crc32,
   crcBytes,
   decodeSetBody,
+  decodeSetWire,
   decodeTensionChunk,
   decodeTensionList,
   decodeTensionStatus,
   encodeSetBody,
+  encodeSetWire,
   SET_BODY_BYTES,
+  SET_WIRE_BYTES,
   TENSION_BACK_TO_SAVED,
   TENSION_CHUNK_AT,
   TENSION_CHUNK_REPLY_BYTES,
@@ -24,13 +27,16 @@ import {
   TENSION_SEL,
   TENSION_STAGE_CHUNK,
   TENSION_STATUS_BYTES,
+  TENSION_STAGE_CHUNK_V2,
   TENSION_WIRE_VER,
+  TENSION_WIRE_VER_BUTTONS,
   tensionChunkSel,
   tensionReport,
   type TensionList,
   type TensionSet,
   type TensionStatus,
 } from "./tension";
+import { BUTTON_PART_BYTES, BUTTONS_CHUNK_AT, BUTTONS_CHUNKS, buttonsChunkReplyBytes, buttonsChunkSel, decodeButtonsChunk } from "./buttons";
 import {
   CTRL_FIRMWARE_BYTES,
   CTRL_HEADER_BYTES,
@@ -100,6 +106,8 @@ export const FUNC = {
   tensionFeel: 0x1e, // protocol 1.23: [ver, 1, crc32 LE] Feel it with the staged set; [ver, 0] stops it
   tensionDelete: 0x1f, // protocol 1.23: [ver, slot] (deferred: flash)
   tensionChoose: 0x20, // protocol 1.23: [ver, slot / 0xFF none / 0xFE back to the saved choice, temporary 0/1]
+  buttonsPause: 0x21, // protocol 1.24 (FEATURES5.keysMouse): [1, seconds 0..10] pauses keys and mouse (TENSION_BUTTONS.md §5.5)
+  runSetForNow: 0x22, // protocol 1.24 (FEATURES5.setForNow): [2, 1, crc32] runs the staged set for now; [2, 0] ends it (§6.2)
 } as const;
 
 // The commands that take the board off USB on purpose: losing it after one of
@@ -113,7 +121,7 @@ export const SUPPORTED_PROTO_MAJOR = 1;
 // under it): the firmware's PICO_PROTO_MINOR (src/cmd.h), checked against the
 // firmware repo by tests/unit/protocolLockstep.test.ts. The simulated board
 // (the tests' fake) speaks it unless told otherwise.
-export const PROTOCOL_MINOR_KNOWN = 23;
+export const PROTOCOL_MINOR_KNOWN = 24;
 
 export const IDENTITY_FEATURES = {
   remap: 0x01,
@@ -159,6 +167,25 @@ export const FEATURES4 = {
   dockDisconnect: 0x40, // protocol 1.22: config byte 52, drop the controller's link when it is docked (body 53 bytes)
   tension: 0x80, // protocol 1.23: Tension, your own adaptive trigger effects (0xF6 0x1C..0x20, GET 0xE9; docs/TENSION.md in the firmware repo)
 } as const;
+
+// Identity [58] (protocol 1.24): a fifth feature byte, one bit per piece of
+// Tension buttons as it lands (the firmware's docs/TENSION_BUTTONS.md §6).
+export const FEATURES5 = {
+  setButtons: 0x01, // button layouts in sets: ButtonPart, 0x1C/0x1D/0x1E ver 2, GET 0xE9 sel 0x80
+  pressTypes: 0x02, // Hold, Double press, With PS, Toggle, Turbo
+  layers: 0x04,
+  liveTruth: 0x08, // GET 0xE8
+  keysMouse: 0x10, // key / mouse targets, 0xF6 0x21 (build step 6; the switch itself is announced by the 54-byte body, see supportsKeysMouse)
+  gyroMouse: 0x20,
+  setForNow: 0x40, // 0xF6 0x22
+} as const;
+// Identity [59] (protocol 1.24): keys and mouse now.
+export const KEYS_MOUSE_FLAGS = {
+  up: 0x01, // the keyboard + mouse interface is on the bus now
+  paused: 0x02, // keys and mouse are paused (0xF6 0x21)
+  saved: 0x04, // keys_mouse is saved on (so: "Reconnect to start keys and mouse")
+} as const;
+export const BUTTONS_MINOR = 24;
 
 // 0xEA (protocol 1.21, firmware src/fw_identity.h): what this board and its
 // firmware are, from the board itself, so an update is matched to the board
@@ -214,7 +241,7 @@ export const POWER_FLAGS = {
   psWakesPc: 0x02, // the PS button wakes the PC (default off)
 } as const;
 // The longest identity this app reads; older firmware answers its own length.
-export const IDENTITY_BYTES = 58;
+export const IDENTITY_BYTES = 60;
 
 // What the dongle's OLED shows, pixel for pixel (protocol 1.4).
 // The mirror's 1024 image bytes against a 0xEF answer's (they start at [4]).
@@ -242,7 +269,7 @@ const RESULTS: readonly CommandResult[] = ["ok", "pending", "invalid", "failed",
 
 // A protocol 1.x addition announced by a bit in one of identity's feature
 // bytes ([29] FEATURES2, [46] FEATURES3), from protocol 1.<minMinor> on.
-export function supportsFeature(identity: BridgeIdentity | null, byte: "features2" | "features3" | "features4", minMinor: number, bit: number): boolean {
+export function supportsFeature(identity: BridgeIdentity | null, byte: "features2" | "features3" | "features4" | "features5", minMinor: number, bit: number): boolean {
   return !!identity && (identity.protoMajor > 1 || identity.protoMinor >= minMinor) && (identity[byte] & bit) !== 0;
 }
 export const supportsFeature2 = (identity: BridgeIdentity | null, minMinor: number, bit: number) => supportsFeature(identity, "features2", minMinor, bit);
@@ -253,6 +280,15 @@ export const supportsIdentify = (identity: BridgeIdentity | null) => supportsFea
 // Protocol 1.23: Tension, the board's own adaptive trigger effects.
 export const TENSION_MINOR = 23;
 export const supportsTension = (identity: BridgeIdentity | null) => supportsFeature4(identity, TENSION_MINOR, FEATURES4.tension);
+// Protocol 1.24: the pieces of Tension buttons, each by its identity [58] bit.
+export const supportsFeature5 = (identity: BridgeIdentity | null, bit: number) => supportsFeature(identity, "features5", BUTTONS_MINOR, bit);
+export const supportsSetButtons = (identity: BridgeIdentity | null) => supportsTension(identity) && supportsFeature5(identity, FEATURES5.setButtons);
+// The Keys and mouse switch (build step 1) is the config body's byte 53: the
+// firmware announces it by its 54-byte body (identity [6]) from 1.24, before
+// [58] bit 4 (which the key targets bring; firmware c7a9688 sends [58] = 0).
+export const KEYS_MOUSE_BODY = 54;
+export const supportsKeysMouse = (identity: BridgeIdentity | null) =>
+  !!identity && (identity.protoMajor > 1 || identity.protoMinor >= BUTTONS_MINOR) && identity.configBodyLength >= KEYS_MOUSE_BODY;
 
 export interface BridgeIdentity {
   protoMajor: number;
@@ -301,6 +337,10 @@ export interface BridgeIdentity {
   // as 16 hex digits (its flash unique id). The same whatever controller is
   // paired, unlike the USB serial (the controller's MAC); null on older firmware.
   boardId: string | null;
+  // Protocol 1.24+: identity [58], a fifth feature byte (FEATURES5); 0 on older firmware.
+  features5: number;
+  // Protocol 1.24+: identity [59], the KEYS_MOUSE_FLAGS bits; null on older firmware.
+  keysMouseFlags: number | null;
 }
 
 // The DualSense's player patterns (as Linux and games set them) -> player number.
@@ -359,6 +399,8 @@ export function decodeIdentity(bytes: Uint8Array): BridgeIdentity {
     pcMicLevel: bytes.length >= 49 && (bytes[4] > 1 || bytes[5] >= 16) && (bytes[46] & FEATURES3.micLevel) !== 0 ? bytes[48] : null,
     features4: bytes.length >= 50 && (bytes[4] > 1 || bytes[5] >= 20) ? bytes[49] : 0,
     boardId: bytes.length >= 58 && (bytes[4] > 1 || bytes[5] >= 20) && (bytes[49] & FEATURES4.boardId) !== 0 ? hexId(bytes.subarray(50, 58)) : null,
+    features5: bytes.length >= 59 && (bytes[4] > 1 || bytes[5] >= BUTTONS_MINOR) ? bytes[58] : 0,
+    keysMouseFlags: bytes.length >= 60 && (bytes[4] > 1 || bytes[5] >= BUTTONS_MINOR) ? bytes[59] & 0x07 : null,
   };
 }
 
@@ -517,11 +559,11 @@ export class Ds5BridgeClient {
 
   // The firmware's protocol, as of the last identity read (decides the config layout).
   // cache: OK — key=the client (one per connected board); invalidated=every identity read (the 1 s poll), a new board makes a new client; bound=1 entry
-  private protocol: { major: number; minor: number; features3: number; features4: number; boardId: string | null } | null = null;
+  private protocol: { major: number; minor: number; bodyLength: number; features3: number; features4: number; features5: number; boardId: string | null } | null = null;
 
   async identity(): Promise<BridgeIdentity> {
     const id = decodeIdentity(await this.transport.getReport(REPORT.identity, IDENTITY_BYTES));
-    this.protocol = { major: id.protoMajor, minor: id.protoMinor, features3: id.features3, features4: id.features4, boardId: id.boardId };
+    this.protocol = { major: id.protoMajor, minor: id.protoMinor, bodyLength: id.configBodyLength, features3: id.features3, features4: id.features4, features5: id.features5, boardId: id.boardId };
     return id;
   }
 
@@ -547,6 +589,12 @@ export class Ds5BridgeClient {
   get configV22(): boolean {
     const p = this.protocol;
     return !!p && (p.major > 1 || p.minor >= 22) && (p.features4 & (FEATURES4.packetMode | FEATURES4.dockDisconnect)) !== 0;
+  }
+
+  // Protocol 1.24+ with the 54-byte body: keys and mouse from the controller (supportsKeysMouse).
+  get configV24(): boolean {
+    const p = this.protocol;
+    return !!p && (p.major > 1 || p.minor >= BUTTONS_MINOR) && p.bodyLength >= KEYS_MOUSE_BODY;
   }
 
   // Protocol 1.18+: KEY0 / KEY1 can be pressed from the app (0xF6 0x18).
@@ -634,12 +682,12 @@ export class Ds5BridgeClient {
 
   async readConfig(): Promise<ConfigBody> {
     // The whole body: older firmware answers its own (shorter) body to this.
-    return decodeConfigBody(await this.transport.getReport(REPORT.config, CONFIG_BODY_SIZE_V22));
+    return decodeConfigBody(await this.transport.getReport(REPORT.config, CONFIG_BODY_SIZE_V24));
   }
 
   // Applies to the dongle's RAM; takes effect immediately. saveToFlash() persists.
   async applyConfig(config: ConfigBody): Promise<void> {
-    const body = encodeConfigBody(config, this.splitHaptics, this.configTail, this.micLevel, this.echoCancel, this.configV22);
+    const body = encodeConfigBody(config, this.splitHaptics, this.configTail, this.micLevel, this.echoCancel, this.configV22, this.configV24);
     await this.command(FUNC.applyConfig, [...body]);
   }
 
@@ -934,6 +982,13 @@ export class Ds5BridgeClient {
     return !!p && (p.major > 1 || p.minor >= TENSION_MINOR) && (p.features4 & FEATURES4.tension) !== 0;
   }
 
+  // Protocol 1.24 (FEATURES5.setButtons): sets carry a button layout; the
+  // staged buffer is 494 bytes and 0x1C / 0x1D / 0x1E speak ver 2.
+  get setButtons(): boolean {
+    const p = this.protocol;
+    return this.tension && !!p && (p.major > 1 || p.minor >= BUTTONS_MINOR) && (p.features5 & FEATURES5.setButtons) !== 0;
+  }
+
   // The board has one staged set: staging one and saving it (or feeling it)
   // must not interleave with another stage-and-commit.
   private tensionQueue: Promise<unknown> = Promise.resolve();
@@ -946,8 +1001,17 @@ export class Ds5BridgeClient {
     return run;
   }
 
-  // The whole SetBody into the board's staged buffer (three SETs: 0, 60, 120); returns its CRC-32.
+  // The whole SetBody into the board's staged buffer (three SETs: 0, 60, 120);
+  // from 1.24 the 494-byte wire (nine SETs of ≤ 59 bytes, ver 2). Returns its CRC-32.
   private async stageTension(set: TensionSet): Promise<number> {
+    if (this.setButtons) {
+      const wire = encodeSetWire(set);
+      // loop: SERIAL-REQUIRED — one HID session: nine SETs in protocol order (offsets 0, 59, …, 472)
+      for (let at = 0; at < SET_WIRE_BYTES; at += TENSION_STAGE_CHUNK_V2) {
+        await this.command(FUNC.tensionStage, [TENSION_WIRE_VER_BUTTONS, at & 0xff, at >> 8, ...wire.subarray(at, at + TENSION_STAGE_CHUNK_V2)]);
+      }
+      return crc32(wire);
+    }
     const body = encodeSetBody(set);
     // loop: SERIAL-REQUIRED — one HID session: three SETs in protocol order (offsets 0, 60, 120)
     for (let at = 0; at < SET_BODY_BYTES; at += TENSION_STAGE_CHUNK) {
@@ -956,11 +1020,16 @@ export class Ds5BridgeClient {
     return crc32(body);
   }
 
+  // 0x1D / 0x1E's framing: ver 2 with set buttons (triggers and buttons), else ver 1.
+  private get wireVer(): number {
+    return this.setButtons ? TENSION_WIRE_VER_BUTTONS : TENSION_WIRE_VER;
+  }
+
   // Saved in the board's flash in that slot (0..7).
   saveTensionSet(slot: number, set: TensionSet): Promise<void> {
     return this.tensionOp(async () => {
       const crc = await this.stageTension(set);
-      await this.command(FUNC.tensionSave, [TENSION_WIRE_VER, slot, ...crcBytes(crc)]);
+      await this.command(FUNC.tensionSave, [this.wireVer, slot, ...crcBytes(crc)]);
     });
   }
 
@@ -969,11 +1038,11 @@ export class Ds5BridgeClient {
   feelTension(set: TensionSet | null): Promise<void> {
     return this.tensionOp(async () => {
       if (!set) {
-        await this.command(FUNC.tensionFeel, [TENSION_WIRE_VER, 0]);
+        await this.command(FUNC.tensionFeel, [this.wireVer, 0]);
         return;
       }
       const crc = await this.stageTension(set);
-      await this.command(FUNC.tensionFeel, [TENSION_WIRE_VER, 1, ...crcBytes(crc)]);
+      await this.command(FUNC.tensionFeel, [this.wireVer, 1, ...crcBytes(crc)]);
     });
   }
 
@@ -1000,7 +1069,7 @@ export class Ds5BridgeClient {
     return decodeTensionList(await this.transport.getReport(tensionReport(TENSION_SEL.list), TENSION_LIST_BYTES));
   }
 
-  // One saved set (three chunks), null for an empty slot. Checked against
+  // One saved set (three chunks, and from 1.24 the seven of its buttons), null for an empty slot. Checked against
   // \`crc\` (the list's): a set saved between two chunk reads reads as changed.
   async readTensionSet(slot: number, crc: number): Promise<TensionSet | null> {
     const body = new Uint8Array(SET_BODY_BYTES);
@@ -1011,9 +1080,26 @@ export class Ds5BridgeClient {
       if (!reply.used) return null;
       body.set(reply.bytes, TENSION_CHUNK_AT(chunk));
     }
+    if (!this.setButtons) {
+      // error: SHOWN — desktop.tension.errors.changed via the section's error line (Retry reads again)
+      if (crc32(body) !== crc) throw new KeyedError("desktop.tension.errors.changed");
+      const set = decodeSetBody(body);
+      // error: SHOWN — desktop.tension.errors.unreadable via the section's error line: a set this app can't read (a newer layout)
+      if (!set) throw new KeyedError("desktop.tension.errors.unreadable");
+      return set;
+    }
+    // 1.24: the ButtonPart too (GET 0xE9 sel 0x80, seven chunks); the list's CRC covers all 494 bytes.
+    const wire = new Uint8Array(SET_WIRE_BYTES);
+    wire.set(body, 0);
+    // loop: SERIAL-REQUIRED — one HID session: chunk reads must not interleave; 63-byte report cap
+    for (let chunk = 0; chunk < BUTTONS_CHUNKS; chunk++) {
+      const reply = decodeButtonsChunk(await this.transport.getReport(tensionReport(buttonsChunkSel(slot, chunk)), buttonsChunkReplyBytes(chunk)), slot, chunk);
+      if (!reply) throw new KeyedError("desktop.errors.board.short");
+      wire.set(reply.bytes.subarray(0, BUTTON_PART_BYTES - BUTTONS_CHUNK_AT(chunk)), SET_BODY_BYTES + BUTTONS_CHUNK_AT(chunk));
+    }
     // error: SHOWN — desktop.tension.errors.changed via the section's error line (Retry reads again)
-    if (crc32(body) !== crc) throw new KeyedError("desktop.tension.errors.changed");
-    const set = decodeSetBody(body);
+    if (crc32(wire) !== crc) throw new KeyedError("desktop.tension.errors.changed");
+    const set = decodeSetWire(wire);
     // error: SHOWN — desktop.tension.errors.unreadable via the section's error line: a set this app can't read (a newer layout)
     if (!set) throw new KeyedError("desktop.tension.errors.unreadable");
     return set;

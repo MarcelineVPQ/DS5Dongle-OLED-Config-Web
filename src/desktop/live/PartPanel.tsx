@@ -4,7 +4,7 @@
 // section bodies are functions, so a folded section renders nothing and its
 // polls (the level meters, the slot list) and tests stop.
 import { HeadsetStereo } from "./HeadsetStereo";
-import { Bluetooth, Gamepad2, Lightbulb, Mic, MoveDown, Volume2, AudioWaveform, Joystick, Rotate3d } from "lucide-react";
+import { Bluetooth, Gamepad2, Layers, Lightbulb, Mic, MoveDown, Volume2, AudioWaveform, Joystick, Rotate3d } from "lucide-react";
 import { GyroCalibration, StickCalibration, TriggerCalibration, gyroCalibrated, sticksCalibrated } from "./Calibration";
 import StickCurves from "./StickCurves";
 import StickTests from "./StickTestCards";
@@ -25,7 +25,8 @@ import LightbarPage, { LIGHTBAR_MODES } from "../pages/LightbarPage";
 import { AutoHapticsSection, HapticsSection, HapticsTest, MicSection, SpeakerSection, TriggerIntensitySection } from "../pages/SettingsPage";
 import SlotsPage from "../pages/SlotsPage";
 import TriggersPage from "../pages/TriggersPage";
-import { TensionLive, TensionSection } from "./Tension";
+import { SetsSection, setsStatus, TensionLive, TensionSection } from "./Tension";
+import { buttonsFromLegacy, MakeSetFromButtons, SetButtonsEditor, SetButtonsNeedFirmware, setButtonsStatus, SetLeavesButtons } from "./SetButtons";
 import { usePoll } from "../usePoll";
 import { EDGE_REMAP_ROWS } from "./parts";
 import type { Remap } from "./useRemap";
@@ -45,13 +46,16 @@ interface Props {
   onButtonHover: (index: number | null) => void;
   edge: boolean; // a DualSense Edge (or its preview): the Buttons list adds its Fn buttons and paddles
   trigger: "l2" | "r2"; // the trigger picked last on the drawing: its pull shows first
+  // A Tension set's button editor (protocol 1.24): the button picked (a source), from the list, the drawing or the controller.
+  sourcePick: number | null;
+  onSourcePick: (source: number | null) => void;
 }
 
 const CHOICES = ["auto", "speaker", "headset", "off"] as const;
 const MICS = ["auto", "builtIn", "headset"] as const;
 const AH_MODES = ["off", "fallback", "mix", "replace"] as const;
 
-export default function ControllerSections({ bridge, input, remap, buttonFocus, onButtonFocus, onButtonHover, edge, trigger }: Props) {
+export default function ControllerSections({ bridge, input, remap, buttonFocus, onButtonFocus, onButtonHover, edge, trigger, sourcePick, onSourcePick }: Props) {
   const { t } = useTranslation();
   const d = bridge.draft;
   // loop: HOT-PATH-OK — N = 9 light bar modes; per render of the panel
@@ -61,7 +65,15 @@ export default function ControllerSections({ bridge, input, remap, buttonFocus, 
   const { library } = useLibrary();
   const loaded = remap.loaded ? (library.layouts?.[remap.loaded.id]?.name ?? remap.loaded.name) : null;
   const slot = bridge.identity?.currentSlot;
-  const { calibration: cal, curves } = useBoardDrafts();
+  const { calibration: cal, curves, tension: tn } = useBoardDrafts();
+  // Protocol 1.24: what Button assignments edits (TENSION_BUTTONS.md §7.1, §7.4, §7.11).
+  const setsReady = tn.buttons && tn.loaded && !tn.readOnly;
+  const editedSet = setsReady && tn.editing !== null ? tn.sets[tn.editing] : null;
+  // The Sets header and the drawing's badges need the board's sets: read once per connection.
+  const { load: loadSets } = tn;
+  // lifetime: OK — acquires nothing (the read is the draft's, once per connection)
+  useEffect(() => loadSets(), [loadSets]);
+  const legacyStatus = loaded ?? (changed ? t("desktop.accordion.buttonsChanged", { count: changed }) : t("desktop.layouts.normal"));
   // loop: HOT-PATH-OK — N = 2 sticks' curves per render of the panel
   const curveNames = curves.draft.map((c) => t(`desktop.curves.type.${c.type}`)).join(" / ");
   // loop: NOT-WORTH — N = 2 parts of one status line
@@ -72,8 +84,21 @@ export default function ControllerSections({ bridge, input, remap, buttonFocus, 
     .filter(Boolean)
     .join(" · ");
   const gains = bridge.client?.splitHaptics ? `L ${d.hapticsGain.toFixed(1)}× · R ${d.hapticsGainRight.toFixed(1)}×` : `${d.hapticsGain.toFixed(1)}×`;
+  // Today's list (the legacy table), as before sets held buttons.
+  const legacy = (
+    <>
+      <AllButtonsList remap={remap} focus={buttonFocus} onFocus={onButtonFocus} onHover={onButtonHover} edge={edge} />
+      {edge && !remap.extraDevice && <EdgePartInfo />}
+    </>
+  );
   return (
     <>
+      {/* Sets first (TENSION_BUTTONS.md §7.1, approved 2026-11-15; an exception to page rule 10's drawing order): it decides what the part sections show. */}
+      {tn.supported && (
+        <Section id="sets" icon={Layers} title={t("desktop.sections.sets")} status={setsStatus(t, tn)}>
+          {() => <SetsSection bridge={bridge} />}
+        </Section>
+      )}
       <Section id="lightbar" icon={Lightbulb} title={t("desktop.sections.lightbar")} status={mode ? t(`desktop.lightbar.modes.${mode.key}`) : null}>
         {() => <LightbarPage bridge={bridge} />}
       </Section>
@@ -148,16 +173,33 @@ export default function ControllerSections({ bridge, input, remap, buttonFocus, 
         id="buttons"
         icon={Gamepad2}
         title={t("desktop.sections.buttons")}
-        status={loaded ?? (changed ? t("desktop.accordion.buttonsChanged", { count: changed }) : t("desktop.layouts.normal"))}
+        status={(editedSet && setButtonsStatus(t, editedSet)) ?? legacyStatus}
       >
-        {() => (
-          <>
-            <AllButtonsList remap={remap} focus={buttonFocus} onFocus={onButtonFocus} onHover={onButtonHover} edge={edge} />
-            {edge && !remap.extraDevice && <EdgePartInfo />}
-            <TouchLive input={input} />
-            {remap.supported && <SavedLayouts remap={remap} />}
-          </>
-        )}
+        {() =>
+          !setsReady ? (
+            // Older firmware (no identity [58] bit 0), or the sets not read (yet): today's editor.
+            <>
+              {legacy}
+              {remap.supported && !tn.buttons && <SetButtonsNeedFirmware />}
+              <TouchLive input={input} />
+              {remap.supported && <SavedLayouts remap={remap} />}
+            </>
+          ) : tn.editing === null || !editedSet ? (
+            // Without a set (today's list, §7.4), or an empty slot being edited.
+            <>
+              {tn.editing === null ? legacy : <p className="dk-hint">{t("desktop.buttons.emptySlot")}</p>}
+              {remap.supported && tn.editing === null && <p className="dk-hint">{t("desktop.buttons.legacyHint")}</p>}
+              {remap.supported && <MakeSetFromButtons tn={tn} remap={remap} />}
+              {tn.editing === null && <TouchLive input={input} />}
+              {tn.editing === null && remap.supported && <SavedLayouts remap={remap} />}
+            </>
+          ) : !editedSet.buttons ? (
+            // A set that leaves the buttons as they are (first run, §7.11).
+            <SetLeavesButtons onUse={() => tn.edit(tn.editing!, { ...editedSet, buttons: buttonsFromLegacy(remap) })} />
+          ) : (
+            <SetButtonsEditor set={editedSet} onChange={(next) => tn.edit(tn.editing!, next)} pick={sourcePick} onPick={onSourcePick} edge={edge} />
+          )
+        }
       </Section>
       {/* How the sticks are set: calibrated or not, each stick's curve (IA audit C10). */}
       <Section id="sticks" icon={Joystick} title={t("desktop.sections.sticks")} status={sticksStatus}>

@@ -366,7 +366,7 @@ export const ROADMAP: RoadmapItem[] = [
   { column: "planned", title: "Games on macOS", text: "The Games area on macOS too: your Steam, Heroic, Epic and GOG Galaxy games and the game that's running.", areas: ["games"] },
   { column: "planned", title: "Heroic games on Windows and macOS", text: "Games finds your Heroic games on Windows and macOS too.", areas: ["games"] },
   {
-    column: "planned",
+    column: "progress",
     title: "Controller buttons as keyboard keys",
     text: "Make a controller button or combo press a keyboard key, like F5 to quicksave, with no extra software.",
     areas: ["buttons"],

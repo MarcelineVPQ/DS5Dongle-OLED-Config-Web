@@ -27,7 +27,8 @@ import { supportsLiveInput, useLiveInput, useLiveLightbar } from "../useLiveInpu
 import type { FirmwareUpdate } from "../useUpdates";
 import { colorway } from "./colorways";
 import { useControllerColors } from "./customColors";
-import LiveController from "./LiveController";
+import LiveController, { pressedParts } from "./LiveController";
+import { newlyPressed, PART_SOURCE, SOURCE_PART, setBadges } from "./SetButtons";
 import LiveData from "./LiveData";
 import ControllerInfo, { controllerInfoStatus, useControllerInfo } from "./ControllerInfo";
 import { MainBlock, useMainBlock } from "../accordion/MainBlock";
@@ -117,7 +118,10 @@ export default function ControllerView({ bridge, fw, view, onView }: Props) {
   const oled = useOledFrame(client, shown && dongleView && supportsOledMirror(bridge.identity));
   const { library, setButtonsDraft } = useLibrary();
   // The button assignments: the app's one draft (boardDrafts.tsx), saved by the save bar.
-  const { remap } = useBoardDrafts();
+  const { remap, tension: tn } = useBoardDrafts();
+  // Protocol 1.24: a Tension set being edited, with its buttons in use (TENSION_BUTTONS.md §7.1-§7.2).
+  const editedSet = tn.buttons && tn.loaded && !tn.readOnly && tn.editing !== null ? tn.sets[tn.editing] : null;
+  const setButtons = editedSet?.buttons ?? null;
   // A game's profile on: button changes are part of what "Save to profile" saves.
   const profileKey = useProfileTarget()?.gameKey;
   const inProfile = !!(profileKey && library.games[profileKey]?.profile);
@@ -129,12 +133,15 @@ export default function ControllerView({ bridge, fw, view, onView }: Props) {
   // lifetime: OK — cleanup: clears the button draft on unmount
   useEffect(() => () => setButtonsDraft(null), [setButtonsDraft]);
 
+  // The set's badges replace the remapped marks for a set (§7.2).
+  const badges = useMemo(() => (setButtons ? setBadges(t, setButtons) : null), [setButtons, t]);
   const remapped = useMemo(() => {
     const set = new Set<PartId>();
+    if (setButtons) return set;
     // loop: HOT-PATH-OK — N = 16 remap slots, useMemo on the device table
     for (const [part, index] of Object.entries(REMAP_INDEX)) if (remap.device[index!] !== index) set.add(part as PartId);
     return set;
-  }, [remap.device]);
+  }, [remap.device, setButtons]);
 
   // The accordion: pins per board and pairing slot.
   const acc = useAccordion("controller", pinScope("controller", bridge.identity?.boardName ?? null, bridge.identity?.currentSlot ?? null));
@@ -147,9 +154,38 @@ export default function ControllerView({ bridge, fw, view, onView }: Props) {
   const [buttonHover, setButtonHover] = useState<number | null>(null);
   // The part clicked last: lit while its section is open.
   const [picked, setPicked] = useState<PartId | null>(null);
+  // A set's editor: the button picked (a source, TENSION_BUTTONS.md §3.3).
+  const [sourcePick, setSourcePick] = useState<number | null>(null);
   const listPart = (i: number | null) => (i === null ? null : partForRemapIndex(i));
   const buttonsOpen = view === "overview" && acc.isOpen("buttons");
-  const selected = buttonsOpen ? (listPart(buttonHover) ?? listPart(buttonFocus)) : picked && view === "overview" && acc.isOpen(sectionForPart(picked)) ? picked : null;
+  const inSet = !!setButtons;
+  const selected = buttonsOpen
+    ? inSet
+      ? sourcePick === null
+        ? null
+        : SOURCE_PART[sourcePick]
+      : (listPart(buttonHover) ?? listPart(buttonFocus))
+    : picked && view === "overview" && acc.isOpen(sectionForPart(picked))
+      ? picked
+      : null;
+  // Pick by pressing it on the controller (§7.2): a rising edge in the live
+  // input the drawing already polls (no new poll), while Button assignments is open.
+  // cache: OK — key=none (the parts down in the last live frame); invalidated=every live frame; bound=1 set of ≤ 19 parts
+  const down = useRef<ReadonlySet<PartId>>(new Set());
+  // lifetime: OK — acquires nothing (compares two live frames)
+  useEffect(() => {
+    const now = input && buttonsOpen ? pressedParts(input) : new Set<PartId>();
+    const source = newlyPressed(down.current, now);
+    down.current = now;
+    if (source === null) return;
+    if (inSet) setSourcePick(source);
+    else {
+      const part = SOURCE_PART[source];
+      const edgeRow = remap.extraDevice ? EDGE_REMAP_ROWS.indexOf(part) : -1;
+      const row = edgeRow >= 0 ? 16 + edgeRow : REMAP_INDEX[part];
+      if (row !== undefined) setButtonFocus(row);
+    }
+  }, [input, buttonsOpen, inSet, remap.extraDevice]);
   // A click on the drawing opens its section; a button opens Button
   // assignments at its row. Always a deep link, the list open or not: it
   // shows a hidden panel, scrolls the row into view ("nearest": no jump when
@@ -158,6 +194,14 @@ export default function ControllerView({ bridge, fw, view, onView }: Props) {
     const index = REMAP_INDEX[part];
     // The Edge's Fn buttons and paddles live in the Buttons list too (firmware with protocol 1.9).
     const edgeRow = remap.extraDevice ? EDGE_REMAP_ROWS.indexOf(part) : -1;
+    // A set's editor: every source, the touch pad and PS button too (while the section is open).
+    const source = inSet ? PART_SOURCE.get(part) : undefined;
+    if (source !== undefined && view === "overview" && (buttonsOpen || REMAP_ONLY.has(part) || EDGE_REMAP_ROWS.includes(part))) {
+      setPicked(part);
+      setSourcePick(source);
+      acc.reveal("buttons");
+      return;
+    }
     const row = edgeRow >= 0 ? 16 + edgeRow : index !== undefined && (buttonsOpen || REMAP_ONLY.has(part)) ? index : null;
     const section = row !== null ? "buttons" : sectionForPart(part);
     if (view === "app") {
@@ -239,6 +283,7 @@ export default function ControllerView({ bridge, fw, view, onView }: Props) {
           colors={on ? lookColors : null}
           selected={selected}
           remapped={remapped}
+          badges={badges}
           onSelect={pickPart}
         />
         {hdr && <HdrGlow hero={heroRef} model={shownModel} nits={hdrNits} />}
@@ -349,6 +394,8 @@ export default function ControllerView({ bridge, fw, view, onView }: Props) {
           buttonFocus={buttonFocus}
           onButtonFocus={setButtonFocus}
           onButtonHover={setButtonHover}
+          sourcePick={sourcePick}
+          onSourcePick={setSourcePick}
           edge={id?.model === "edge"}
           trigger={picked === "l2" ? "l2" : "r2"}
         />

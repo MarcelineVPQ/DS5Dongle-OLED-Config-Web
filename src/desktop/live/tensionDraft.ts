@@ -5,17 +5,28 @@
 // (deletes, then sets, then the choice: protocol order, so a choice can name a
 // set saved in the same Save); Revert drops them. Feel it is not a save: it
 // runs the set being edited, unsaved, from the section (Tension.tsx).
+//
+// Protocol 1.24 (the firmware's docs/TENSION_BUTTONS.md §7.1): a set is
+// triggers and buttons, and which set is being edited (or Without a set, the
+// legacy button table) is shared by the Sets, Adaptive triggers and Button
+// assignments sections and the drawing's badges, so it lives here too.
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import i18n from "../../i18n";
 import type { UseDs5BridgeResult } from "../../hooks/useDs5Bridge";
-import { CommandError, supportsTension, type Ds5BridgeClient } from "../../protocol/bridgeClient";
-import { encodeSetBody, setValid, TENSION_SLOTS, type TensionSet } from "../../protocol/tension";
+import { CommandError, supportsSetButtons, supportsTension, type Ds5BridgeClient } from "../../protocol/bridgeClient";
+import { encodeSetWire, setValid, TENSION_SLOTS, type TensionSet } from "../../protocol/tension";
 import { causeText } from "../shownError";
 import { KeyedError, logged } from "../../errorText";
 import { sameBoard, showDraftsDropped } from "./slotSettings";
 
 export interface TensionDraft {
   supported: boolean;
+  // Protocol 1.24 (identity [58] bit 0): sets hold buttons too.
+  buttons: boolean;
+  // The set the Sets, Adaptive triggers and Button assignments sections show:
+  // a slot 0..7, or null = Without a set (the legacy table; with `buttons` only).
+  editing: number | null;
+  setEditing: (slot: number | null) => void;
   loaded: boolean; // the board's sets were read on this connection
   readOnly: boolean; // saved by newer firmware: shown, never written over
   // error: SHOWN — desktop.tension.errors.* and the board's keyed errors (causeText) in the Tension section's error line, and the save bar's notice
@@ -51,9 +62,9 @@ interface Staged {
 function sameSet(a: TensionSet | null, b: TensionSet | null): boolean {
   if (!a || !b) return a === b;
   if (!setValid(a) || !setValid(b)) return JSON.stringify(a) === JSON.stringify(b);
-  const x = encodeSetBody(a);
-  const y = encodeSetBody(b);
-  // loop: HOT-PATH-OK — N = 134 bytes, per render of a changed slot
+  const x = encodeSetWire(a);
+  const y = encodeSetWire(b);
+  // loop: HOT-PATH-OK — N = 494 bytes, per render of a changed slot
   return x.every((v, i) => v === y[i]);
 }
 
@@ -67,6 +78,10 @@ export function tensionErrorText(cause: unknown): string {
 export function useTensionDraft(bridge: UseDs5BridgeResult): TensionDraft {
   const { client } = bridge;
   const supported = supportsTension(bridge.identity);
+  const buttons = supportsSetButtons(bridge.identity);
+  // undefined until the user picks one: then the saved choice (or, with
+  // buttons, Without a set; slot 0 before 1.24), fixed at the first read.
+  const [picked, setPicked] = useState<number | null | undefined>(undefined);
   const [board, setBoard] = useState<Board | null>(null);
   const [staged, setStaged] = useState<Staged | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -194,8 +209,12 @@ export function useTensionDraft(bridge: UseDs5BridgeResult): TensionDraft {
   }, [dirty, client, mine, changedSlots, sets, choiceChanged, choice, read]);
 
   const changed = useCallback((slot: number) => changedSlots[slot] ?? false, [changedSlots]);
+  // The first read fixes the default (adjusted while rendering): the set that runs, if any.
+  if (picked === undefined && current) setPicked(boardChoice ?? (buttons ? null : 0));
+  const editing = picked === undefined ? (buttons ? null : 0) : picked === null && !buttons ? 0 : picked;
+  const setEditing = useCallback((slot: number | null) => setPicked(slot), []);
   return useMemo(
-    () => ({ supported, loaded: current, readOnly: !!loadedBoard?.readOnly, error, sets, choice, changed, dirty, load, retry, edit, choose, save, revert }),
-    [supported, current, loadedBoard, error, sets, choice, changed, dirty, load, retry, edit, choose, save, revert],
+    () => ({ supported, buttons, editing, setEditing, loaded: current, readOnly: !!loadedBoard?.readOnly, error, sets, choice, changed, dirty, load, retry, edit, choose, save, revert }),
+    [supported, buttons, editing, setEditing, current, loadedBoard, error, sets, choice, changed, dirty, load, retry, edit, choose, save, revert],
   );
 }

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { FEATURES2, FEATURES3, FEATURES4, POWER_FLAGS, supportsFeature2, supportsFeature3, supportsFeature4 } from "../../protocol/bridgeClient";
+import { FEATURES2, FEATURES3, FEATURES4, KEYS_MOUSE_FLAGS, POWER_FLAGS, supportsFeature2, supportsFeature3, supportsFeature4, supportsKeysMouse } from "../../protocol/bridgeClient";
 import type { UseDs5BridgeResult } from "../../hooks/useDs5Bridge";
 import {
   AUDIO_BUFFER_MAX,
@@ -472,6 +472,35 @@ export function DisplaySection(props: SectionProps) {
   );
 }
 
+// Keys and mouse from the controller (protocol 1.24, the firmware's
+// docs/TENSION_BUTTONS.md §5.4, §7.9): a board setting (config byte 53) the
+// save bar saves; the board adds its keyboard + mouse interface at the next
+// USB connect, so once it's saved on and not up yet (identity [59]) the row
+// says Reconnect, with the button.
+function KeysMouseToggle(props: SectionProps) {
+  const { t } = useTranslation();
+  const { bridge } = props;
+  const { d, set } = useFields(props);
+  const flags = bridge.identity?.keysMouseFlags ?? 0;
+  const waiting = (flags & KEYS_MOUSE_FLAGS.saved) !== 0 && (flags & KEYS_MOUSE_FLAGS.up) === 0;
+  return (
+    <>
+      <Toggle label={t("desktop.settings.keysMouse")} sub={t("desktop.settings.keysMouseSub")} info={t("desktop.settings.keysMouseInfo")} value={d.keysMouse} onChange={(v) => set("keysMouse", v)} />
+      {waiting && (
+        <Notice
+          action={
+            <BusyButton disabled={!bridge.client || bridge.operation !== null} onClick={bridge.reconnectUsb}>
+              {t("actions.reconnect")}
+            </BusyButton>
+          }
+        >
+          {t("desktop.buttons.warn.reconnect")}
+        </Notice>
+      )}
+    </>
+  );
+}
+
 export function UsbSection(props: SectionProps) {
   const { t } = useTranslation();
   const { bridge } = props;
@@ -508,6 +537,7 @@ export function UsbSection(props: SectionProps) {
         ]}
         onChange={(v) => set("controllerMode", v)}
       />
+      {supportsKeysMouse(bridge.identity) && <KeysMouseToggle {...props} />}
       {/* hint: MUST-SHOW — a warning: these settings wait for Reconnect USB */}
       <p className="dk-hint">{t("desktop.settings.usbHint", "These take effect after Reconnect USB (the PC sees {{device}} unplug and replug).")}</p>
       <div className="dk-row-btns">

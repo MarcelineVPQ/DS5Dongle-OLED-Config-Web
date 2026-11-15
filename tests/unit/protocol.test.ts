@@ -1,5 +1,17 @@
 import { describe, expect, it } from "vitest";
-import { AUDIO_COUNTER_NAMES, decodeAudioCounters, decodeCpu, decodeIdentity, sameIdentity, supportsIdentify, TIMING_MAX_SATURATED, TIMING_STAGES } from "../../src/protocol/bridgeClient";
+import {
+  AUDIO_COUNTER_NAMES,
+  decodeAudioCounters,
+  decodeCpu,
+  decodeIdentity,
+  FEATURES5,
+  KEYS_MOUSE_FLAGS,
+  sameIdentity,
+  supportsIdentify,
+  supportsKeysMouse,
+  TIMING_MAX_SATURATED,
+  TIMING_STAGES,
+} from "../../src/protocol/bridgeClient";
 import { HIDDEN_LIGHTBAR_MS, takeIdentity } from "../../src/hooks/useDs5Bridge";
 import {
   CONFIG_BODY_SIZE,
@@ -7,6 +19,7 @@ import {
   CONFIG_BODY_SIZE_V16,
   CONFIG_BODY_SIZE_V17,
   CONFIG_BODY_SIZE_V22,
+  CONFIG_BODY_SIZE_V24,
   DEFAULT_CONFIG,
   MIC_LEVEL_MAX,
   decodeConfigBody,
@@ -97,6 +110,21 @@ describe("config codec (firmware Config_body, 37 bytes)", () => {
     expect(validateConfig({ ...DEFAULT_CONFIG, pollingRateMode: 3 })).toEqual([]);
     expect(validateConfig({ ...DEFAULT_CONFIG, pollingRateMode: 4 as 3 }).map((i) => i.field)).toEqual(["pollingRateMode"]);
     expect(validateConfig({ ...DEFAULT_CONFIG, packetMode: 2 as 1 }).map((i) => i.field)).toEqual(["packetMode"]);
+  });
+
+  it("carries protocol 1.24's keys and mouse at byte 53 (54 bytes); 0xFF from older firmware reads as off", () => {
+    const cfg = normalizeConfig({ ...DEFAULT_CONFIG, keysMouse: true, disconnectOnDock: true });
+    const bytes = encodeConfigBody(cfg, true, true, true, true, true, true);
+    expect(bytes.length).toBe(CONFIG_BODY_SIZE_V24);
+    expect([bytes[52], bytes[53]]).toEqual([1, 1]);
+    expect(decodeConfigBody(bytes)).toEqual(cfg);
+    expect(encodeConfigBody(DEFAULT_CONFIG, false, false, false, false, false, true)[53]).toBe(0); // off by default
+    const erased = bytes.slice();
+    erased[53] = 0xff;
+    expect(decodeConfigBody(erased).keysMouse).toBe(false);
+    // 1.22 / 1.23 firmware's body (53 bytes): off, and not sent to it.
+    expect(decodeConfigBody(bytes.subarray(0, 53)).keysMouse).toBe(false);
+    expect(encodeConfigBody(cfg, true, true, true, true, true).length).toBe(CONFIG_BODY_SIZE_V22);
   });
 
   it("checks the mic level's range", () => {
@@ -213,6 +241,8 @@ describe("identity report (0xF1)", () => {
       pcMicLevel: null,
       features4: 0,
       boardId: null,
+      features5: 0,
+      keysMouseFlags: null,
     });
   });
 
@@ -322,6 +352,32 @@ describe("identity report (0xF1)", () => {
     older[5] = 19;
     expect(decodeIdentity(older).boardId).toBeNull();
     expect(supportsIdentify(decodeIdentity(older))).toBe(false);
+  });
+
+  it("reads protocol 1.24's fifth feature byte [58] and [59]; the keys-and-mouse switch is the 54-byte body (TENSION_BUTTONS.md §5.4, §6)", () => {
+    const b = new Uint8Array(60);
+    b.set(sample());
+    b[5] = 24;
+    b[6] = 54; // the config body's length
+    b[58] = FEATURES5.setButtons;
+    b[59] = KEYS_MOUSE_FLAGS.saved | 0xf8; // bits 3..7 are not ours
+    const id = decodeIdentity(b);
+    expect(id.features5).toBe(0x01);
+    expect(id.keysMouseFlags).toBe(KEYS_MOUSE_FLAGS.saved);
+    expect(supportsKeysMouse(id)).toBe(true);
+    // The firmware's step 1 (c7a9688): no [58] bits yet, the switch still there.
+    const step1 = b.slice();
+    step1[58] = 0;
+    expect(supportsKeysMouse(decodeIdentity(step1))).toBe(true);
+    expect(decodeIdentity(b.subarray(0, 59)).keysMouseFlags).toBeNull(); // too short for [59]
+    expect(decodeIdentity(b.subarray(0, 58)).features5).toBe(0); // a 1.23 answer
+    const body53 = b.slice();
+    body53[6] = 53;
+    expect(supportsKeysMouse(decodeIdentity(body53))).toBe(false);
+    const older = b.slice();
+    older[5] = 23;
+    expect(decodeIdentity(older).features5).toBe(0);
+    expect(supportsKeysMouse(decodeIdentity(older))).toBe(false);
   });
 
   it("reads the board name (protocol 1.7) only when the firmware announces it", () => {

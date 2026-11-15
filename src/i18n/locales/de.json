@@ -174,7 +174,11 @@
       "pollRealTime": "Echtzeit",
       "pollRateInfo": "1000 Hz sendet jede Millisekunde den neuesten Zustand des Controllers. Echtzeit sendet jeden Bluetooth-Bericht, sobald er ankommt.",
       "dockDisconnect": "Beim Laden in der Station trennen",
-      "dockDisconnectInfo": "Trennt die Bluetooth-Verbindung des Controllers, wenn du ihn auf eine Ladestation oder ein Dock legst. Drücke die PS-Taste, um ihn wieder zu verbinden."
+      "dockDisconnectInfo": "Trennt die Bluetooth-Verbindung des Controllers, wenn du ihn auf eine Ladestation oder ein Dock legst. Drücke die PS-Taste, um ihn wieder zu verbinden.",
+      "keysMouse": "Tasten und Maus vom Controller",
+      "keysMouseShort": "Tasten und Maus",
+      "keysMouseSub": "Gilt ab der nächsten Verbindung.",
+      "keysMouseInfo": "An: {{device, capitalize}} erscheint am PC zusätzlich als Tastatur und Maus, damit die Tasten eines Sets Tasten drücken können (Tastenziele kommen mit einer späteren Firmware). Aus: Der PC sieht nur den Controller, genau wie bisher. Noch nicht auf jedem System getestet: Unter Linux bekommt die Tastatur eventuell keinen Treiber, und macOS fragt eventuell, eine neue Tastatur einzurichten."
     },
     "lightbar": {
       "mode": "Modus",
@@ -2068,7 +2072,8 @@
       "oled": "OLED-Bildschirm",
       "usb": "Verbindung zum PC",
       "lights": "Statusleuchten",
-      "diagnostics": "Diagnose"
+      "diagnostics": "Diagnose",
+      "sets": "Sets"
     },
     "boardBusy": {
       "title": "{{device, capitalize}} wird von einem anderen Programm benutzt.",
@@ -2129,6 +2134,52 @@
       "find": "Board suchen",
       "identifyTip": "In Benutzung. Klicken: THIS ONE blinkt auf seinem Bildschirm",
       "switchTip": "Klicken, um dieses Board anzuzeigen (THIS ONE blinkt auf seinem Bildschirm)"
+    },
+    "sets": {
+      "without": "Ohne Set",
+      "status": "Läuft: {{name}}",
+      "info": "Ein Set fasst L2, R2 und die Tasten unter einem Namen zusammen. Dein Board speichert bis zu 8 und führt sie mit oder ohne App aus. „Set bearbeiten“ wählt das Set, das die Zeichnung, Adaptive Trigger und Tastenzuweisung zeigen; „Ohne Set“ bearbeitet die Tasten, die gelten, solange kein Set sie ändert.",
+      "editInSets": "Starte oder wähle unter Sets ein Set für seine Trigger."
+    },
+    "buttons": {
+      "warn": {
+        "reconnect": "Neu verbinden, um Tasten und Maus zu starten.",
+        "noCross": "Nichts drückt jetzt ✕: Menüs sind evtl. schwer bedienbar.",
+        "noCircle": "Nichts drückt jetzt ○: Du kommst evtl. aus Menüs nicht raus.",
+        "duplicate": "{{other}} macht das schon.",
+        "promptsInfo": "Spiele zeigen weiter ihre eigenen Tastensymbole: Sie kennen diese Belegung nicht.",
+        "triggerEffectInfo": "Trigger-Effekte bleiben auf dem Trigger, den du ziehst."
+      },
+      "status": "{{set}} · {{count}} geändert",
+      "pick": "Taste",
+      "pickHint": "Teil anklicken oder am Controller drücken.",
+      "pickNone": "Geänderte Tasten",
+      "changed": "Geändert",
+      "changedLine": "{{from}} → {{to}}",
+      "noneChanged": "Jede Taste ist in dieser Ebene sie selbst.",
+      "does": "{{button}} macht",
+      "row": {
+        "press": "Drücken"
+      },
+      "psFixed": "PS-Taste (immer)",
+      "swap": "Tauschen mit…",
+      "resetButton": "Diese Taste zurücksetzen",
+      "legacyHint": "Halten, Doppeldruck und Ebenen brauchen ein Set.",
+      "makeSet": "Set aus diesen Tasten machen",
+      "makeSetReplace": "Set ersetzen",
+      "emptySlot": "Leerer Platz: unter Sets ein Set starten.",
+      "needsFirmware": "Halten, Doppeldruck und Ebenen brauchen ein Update.",
+      "setLeaves": "Dieses Set lässt die Tasten, wie sie sind.",
+      "useInSet": "Tasten in diesem Set ändern",
+      "target": {
+        "title": "{{row}}: was es macht",
+        "gridHint": "Pfeiltasten bewegen, Eingabe wählt."
+      },
+      "badge": {
+        "create": "Create",
+        "options": "Options",
+        "touchpad": "Touch"
+      }
     }
   },
   "ad": {

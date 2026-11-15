@@ -173,7 +173,11 @@
       "pollRealTime": "Real-time",
       "pollRateInfo": "1000 Hz sends the controller's latest state every millisecond. Real-time sends each Bluetooth report the moment it arrives.",
       "dockDisconnect": "Disconnect when docked",
-      "dockDisconnectInfo": "Turns the controller's Bluetooth connection off when you put it on a charging station or dock. Press the PS button to connect again."
+      "dockDisconnectInfo": "Turns the controller's Bluetooth connection off when you put it on a charging station or dock. Press the PS button to connect again.",
+      "keysMouse": "Keys and mouse from the controller",
+      "keysMouseShort": "Keys and mouse",
+      "keysMouseSub": "Starts the next time {{device}} connects.",
+      "keysMouseInfo": "On: {{device}} also shows up on the PC as a keyboard and mouse, so a set's buttons can press keys (key targets come with a later firmware). Off: the PC sees only the controller, exactly as before. Not yet tested on every system: on Linux the keyboard may get no driver, and macOS may ask you to set up a new keyboard."
     },
     "lightbar": {
       "mode": "Mode",
@@ -2067,7 +2071,8 @@
       "oled": "OLED screen",
       "usb": "Connection to the PC",
       "lights": "Status lights",
-      "diagnostics": "Diagnostics"
+      "diagnostics": "Diagnostics",
+      "sets": "Sets"
     },
     "boardBusy": {
       "title": "{{device, capitalize}} is in use by another program.",
@@ -2128,6 +2133,52 @@
       "find": "Find a board",
       "identifyTip": "In use. Click to flash THIS ONE on its screen",
       "switchTip": "Click to show this board (it flashes THIS ONE on its screen)"
+    },
+    "sets": {
+      "without": "Without a set",
+      "status": "Runs: {{name}}",
+      "info": "A set holds L2, R2 and the buttons together under a name. Your board keeps up to 8 and runs them with or without the app. Edit set picks the set that the drawing, Adaptive triggers and Button assignments show; Without a set edits the buttons used while no set changes them.",
+      "editInSets": "Start or choose a set under Sets to edit its triggers."
+    },
+    "buttons": {
+      "warn": {
+        "reconnect": "Reconnect to start keys and mouse.",
+        "noCross": "Nothing presses ✕ now: menus may be hard to use.",
+        "noCircle": "Nothing presses ○ now: you may get stuck in menus.",
+        "duplicate": "{{other}} already does this.",
+        "promptsInfo": "Games still show their own button icons: they don't know about this layout.",
+        "triggerEffectInfo": "Trigger effects stay on the trigger you pull."
+      },
+      "status": "{{set}} · {{count}} changed",
+      "pick": "Button",
+      "pickHint": "Click a part, or press it on the controller.",
+      "pickNone": "Changed buttons",
+      "changed": "Changed",
+      "changedLine": "{{from}} → {{to}}",
+      "noneChanged": "Every button is itself in this layer.",
+      "does": "{{button}} does",
+      "row": {
+        "press": "Press"
+      },
+      "psFixed": "PS button (always)",
+      "swap": "Swap with…",
+      "resetButton": "Reset this button",
+      "legacyHint": "Hold, double press and layers need a set.",
+      "makeSet": "Make a set from these buttons",
+      "makeSetReplace": "Replace set",
+      "emptySlot": "An empty slot: start a set under Sets.",
+      "needsFirmware": "Hold, double press and layers need an update.",
+      "setLeaves": "This set leaves the buttons as they are.",
+      "useInSet": "Change buttons in this set",
+      "target": {
+        "title": "{{row}}: what it does",
+        "gridHint": "Arrow keys move, Enter picks."
+      },
+      "badge": {
+        "create": "Create",
+        "options": "Options",
+        "touchpad": "Touch"
+      }
     }
   },
   "ad": {

@@ -14,6 +14,7 @@ import {
   CONFIG_BODY_SIZE_V16,
   CONFIG_BODY_SIZE_V17,
   CONFIG_BODY_SIZE_V22,
+  CONFIG_BODY_SIZE_V24,
   DEFAULT_CONFIG,
   decodeConfigBody,
   encodeConfigBody,
@@ -25,7 +26,8 @@ import { DeviceGoneError, ReportStalledError, type Ds5Transport } from "./transp
 import { drawBattery, drawPad, kBattTextX, kBattY, kEtaX, packedCanvas } from "../oled/statusPad";
 import { SCREEN_NAMES } from "../oled/screenNames";
 import { type SimBoard, SimOledScreens } from "../oled/simScreens";
-import { crc32, decodeSetBody, SET_BODY_BYTES, TENSION_CHUNK_AT, TENSION_CHUNK_REPLY_BYTES, TENSION_REPORT, TENSION_SLOTS, type TensionProgram } from "./tension";
+import { crc32, decodeSetBody, decodeSetWire, SET_BODY_BYTES, SET_WIRE_BYTES, TENSION_CHUNK_AT, TENSION_CHUNK_REPLY_BYTES, TENSION_REPORT, TENSION_SLOTS, type TensionProgram } from "./tension";
+import { BUTTON_PART_BYTES, BUTTONS_CHUNK_AT, BUTTONS_CHUNKS, buttonsChunkReplyBytes } from "./buttons";
 import { CTRL_FIRMWARE_BYTES, CTRL_HEADER_BYTES, CTRL_INFO_REPORT, CTRL_MAX_PAGES, CTRL_PAGE_BYTES, CTRL_PAGE_REPLY_BYTES, CTRL_SEL, CTRL_TEST, telemetryPages } from "./controllerInfo";
 
 const DEFERRED = new Set([0x02, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0e]);
@@ -229,8 +231,8 @@ export class SimulatedDongle implements Ds5Transport {
   // The bytes after the right grip, as the firmware's defaults: the seven of
   // protocol 1.13 (trigger reduction ... status pin mode), 1.16's mic level
   // and 1.17's echo cancellation, 1.22's audio report choice and dock
-  // disconnect (a body only as long as the simulated protocol's is read or written).
-  tail = encodeConfigBody(DEFAULT_CONFIG, true, true, true, true, true).slice(CONFIG_BODY_SIZE_SPLIT);
+  // disconnect, 1.24's keys and mouse (a body only as long as the simulated protocol's is read or written).
+  tail = encodeConfigBody(DEFAULT_CONFIG, true, true, true, true, true, true).slice(CONFIG_BODY_SIZE_SPLIT);
   flashTail = this.tail.slice();
   private get v13() {
     return this.minor >= 13;
@@ -244,8 +246,19 @@ export class SimulatedDongle implements Ds5Transport {
   private get v22() {
     return this.minor >= 22;
   }
+  // Protocol 1.24: Tension buttons (identity [58] bits 0 and 4: button layouts in sets, keys and mouse).
+  private get v24() {
+    return this.minor >= 24;
+  }
+  // Keys and mouse (1.24): the interface is on the bus (identity [59] bit 0)
+  // from the USB connect (0xF6 0x03) after keys_mouse was saved on.
+  keysMouseUp = false;
+  private get keysMouseSaved() {
+    return this.flashTail[CONFIG_BODY_SIZE_V22 - CONFIG_BODY_SIZE_SPLIT] === 1;
+  }
   // Config_body's size at this protocol (identity [6]).
   private get bodySize() {
+    if (this.v24) return CONFIG_BODY_SIZE_V24;
     if (this.v22) return CONFIG_BODY_SIZE_V22;
     return this.v17 ? CONFIG_BODY_SIZE_V17 : this.v16 ? CONFIG_BODY_SIZE_V16 : this.v13 ? CONFIG_BODY_SIZE_V13 : this.split ? CONFIG_BODY_SIZE_SPLIT : CONFIG_BODY_SIZE + 1;
   }
@@ -274,9 +287,12 @@ export class SimulatedDongle implements Ds5Transport {
   private core1Loops = 1234;
 
   // Tension (protocol 1.23, firmware tension.cpp): the staged set, the saved
-  // sets (the flash), the saved choice and the one for now, and Feel it.
+  // sets (the flash), the saved choice and the one for now, and Feel it. From
+  // 1.24 a set is 494 bytes (SetBody + ButtonPart, TENSION_BUTTONS.md §3.1);
+  // the buffers here are always that long (the ButtonPart zero before 1.24).
   readonly tension = {
-    staged: new Uint8Array(SET_BODY_BYTES),
+    staged: new Uint8Array(SET_WIRE_BYTES),
+    saveVer: 1, // the framing of the 0x1D waiting to run
     slots: new Array<Uint8Array | null>(TENSION_SLOTS).fill(null),
     saved: 0xff,
     now: 0xff,
@@ -699,17 +715,24 @@ export class SimulatedDongle implements Ds5Transport {
     } else if (DEFERRED.has(func)) {
       this.pending = { func, arg, polls: this.opts.pendingPolls ?? 1 };
       this.lastResult = RESULT.pending;
-    } else if (func !== 0x03) {
+    } else if (func === 0x03) {
+      // A USB reconnect: the keys-and-mouse interface follows the saved setting (1.24, §5.4).
+      this.keysMouseUp = this.v24 && this.keysMouseSaved;
+    } else {
       this.lastResult = RESULT.invalid;
     }
   }
 
   // ---- Tension (protocol 1.23): firmware tension.cpp's checks, then cmd_task()'s flash writes ----
 
-  private tensionCrcOk(a: Uint8Array): boolean {
+  // ver 1: the CRC of [0..133] and a valid SetBody; ver 2 (1.24): the CRC of
+  // all 494 bytes, and both parts valid (the app's own codec: the same rules, §3.5).
+  private tensionCrcOk(a: Uint8Array, ver: number): boolean {
     if (a.length < 4) return false;
     const crc = (a[0] | (a[1] << 8) | (a[2] << 16) | (a[3] << 24)) >>> 0;
-    return crc === crc32(this.tension.staged) && decodeSetBody(this.tension.staged) !== null;
+    const staged = this.tension.staged;
+    if (ver === 2) return crc === crc32(staged) && decodeSetWire(staged) !== null;
+    return crc === crc32(staged.subarray(0, SET_BODY_BYTES)) && decodeSetBody(staged) !== null;
   }
 
   private tensionSet(func: number, payload: Uint8Array): void {
@@ -719,17 +742,32 @@ export class SimulatedDongle implements Ds5Transport {
       this.pending = { func, arg: slot, polls: this.opts.pendingPolls ?? 1 };
       this.lastResult = RESULT.pending;
     };
-    if (a.length < 2 || a[0] !== 1) this.lastResult = RESULT.invalid;
-    else if (func === 0x1c) {
+    // ver 2 (1.24, TENSION_BUTTONS.md §6.1) only for 0x1C..0x1E; 0x1F / 0x20 stay ver 1.
+    const ver = a[0];
+    if (a.length < 2 || !(ver === 1 || (ver === 2 && this.v24 && func <= 0x1e))) this.lastResult = RESULT.invalid;
+    else if (func === 0x1c && ver === 2) {
+      const at = a.length >= 3 ? a[1] | (a[2] << 8) : 0;
+      if (a.length < 4 || a.length - 3 > 59 || at + (a.length - 3) > SET_WIRE_BYTES) this.lastResult = RESULT.invalid;
+      else t.staged.set(a.subarray(3), at);
+    } else if (func === 0x1c) {
       if (a.length < 3 || a[1] + (a.length - 2) > SET_BODY_BYTES) this.lastResult = RESULT.invalid;
       else t.staged.set(a.subarray(2), a[1]);
     } else if (func === 0x1d) {
-      if (a.length < 6 || a[1] >= TENSION_SLOTS || !this.tensionCrcOk(a.subarray(2))) this.lastResult = RESULT.invalid;
+      if (a.length < 6 || a[1] >= TENSION_SLOTS || !this.tensionCrcOk(a.subarray(2), ver)) this.lastResult = RESULT.invalid;
       else if (t.newerStore) this.lastResult = RESULT.failed;
-      else defer(a[1]);
+      else {
+        t.saveVer = ver;
+        defer(a[1]);
+      }
     } else if (func === 0x1e) {
-      if (a[1] > 1 || (a[1] === 1 && (a.length < 6 || !this.tensionCrcOk(a.subarray(2))))) this.lastResult = RESULT.invalid;
-      else t.feel = a[1] === 1 ? t.staged.slice() : null;
+      if (a[1] > 1 || (a[1] === 1 && (a.length < 6 || !this.tensionCrcOk(a.subarray(2), ver)))) this.lastResult = RESULT.invalid;
+      else if (a[1] === 0) t.feel = null;
+      else {
+        // ver 1 runs the triggers only (§6.1): no buttons.
+        const feel = t.staged.slice();
+        if (ver === 1) feel.fill(0, SET_BODY_BYTES);
+        t.feel = feel;
+      }
     } else if (func === 0x1f) {
       if (a[1] >= TENSION_SLOTS) this.lastResult = RESULT.invalid;
       else if (t.newerStore) this.lastResult = RESULT.failed;
@@ -755,7 +793,12 @@ export class SimulatedDongle implements Ds5Transport {
       this.lastResult = RESULT.failed;
       return;
     }
-    if (func === 0x1d) t.slots[slot] = t.staged.slice();
+    if (func === 0x1d) {
+      const next = t.staged.slice();
+      // ver 1 saves the triggers and keeps the slot's ButtonPart (zero for an empty slot, §6.1).
+      if (t.saveVer === 1) next.set(t.slots[slot]?.subarray(SET_BODY_BYTES) ?? new Uint8Array(BUTTON_PART_BYTES), SET_BODY_BYTES);
+      t.slots[slot] = next;
+    }
     else if (func === 0x1f) {
       t.slots[slot] = null;
       if (t.saved === slot) t.saved = 0xff;
@@ -812,8 +855,22 @@ export class SimulatedDongle implements Ds5Transport {
       t.slots.forEach((body, i) => {
         if (!body) return;
         out[2] |= 1 << i;
-        v.setUint32(6 + 4 * i, crc32(body), true);
+        // From 1.24 the slot CRC covers the SetBody and the ButtonPart (494 bytes, §6.3).
+        v.setUint32(6 + 4 * i, crc32(this.v24 ? body : body.subarray(0, SET_BODY_BYTES)), true);
       });
+      return out;
+    }
+    if ((sel & 0x80) !== 0 && this.v24) {
+      // 1.24: a saved set's ButtonPart, sel 0x80 | slot << 3 | chunk (§6.3).
+      const bc = sel & 0x07;
+      if (bc >= BUTTONS_CHUNKS) return new Uint8Array(0);
+      const want = buttonsChunkReplyBytes(bc);
+      if (length < want) return new Uint8Array(0);
+      const slot = (sel >> 3) & 0x07;
+      const part = t.slots[slot]?.subarray(SET_BODY_BYTES) ?? new Uint8Array(BUTTON_PART_BYTES);
+      const out = new Uint8Array(want);
+      out.set([2, slot, bc, t.slots[slot] ? 1 : 0]);
+      out.set(part.subarray(BUTTONS_CHUNK_AT(bc), BUTTONS_CHUNK_AT(bc) + want - 4), 4);
       return out;
     }
     const chunk = sel & 0x03;
@@ -892,7 +949,7 @@ export class SimulatedDongle implements Ds5Transport {
     } else if (func === 0x09) {
       this.config = encodeConfigBody(DEFAULT_CONFIG);
       this.flashConfig = this.config.slice();
-      this.tail = encodeConfigBody(DEFAULT_CONFIG, true, true, true, true, true).slice(CONFIG_BODY_SIZE_SPLIT);
+      this.tail = encodeConfigBody(DEFAULT_CONFIG, true, true, true, true, true, true).slice(CONFIG_BODY_SIZE_SPLIT);
       this.flashTail = this.tail.slice();
       this.powerFlags = 0x01;
       this.hostGen++;
@@ -923,7 +980,7 @@ export class SimulatedDongle implements Ds5Transport {
 
   // The whole config body in RAM (config + narrator + right grip + tail).
   private body(): ConfigBody {
-    const whole = new Uint8Array(CONFIG_BODY_SIZE_V22);
+    const whole = new Uint8Array(CONFIG_BODY_SIZE_V24);
     whole.set(this.config, 0);
     whole[CONFIG_BODY_SIZE] = this.narrator;
     whole.set(this.rightGain, CONFIG_BODY_SIZE + 1);
@@ -938,7 +995,7 @@ export class SimulatedDongle implements Ds5Transport {
     powerFlags: () => this.powerFlags,
     save: (body, power) => {
       if (this.opts.saveFails) return false;
-      const e = encodeConfigBody(body, true, true, true, true, true);
+      const e = encodeConfigBody(body, true, true, true, true, true, true);
       this.config = e.slice(0, CONFIG_BODY_SIZE);
       this.rightGain = e.slice(CONFIG_BODY_SIZE + 1, CONFIG_BODY_SIZE_SPLIT);
       this.tail = e.slice(CONFIG_BODY_SIZE_SPLIT);
@@ -980,7 +1037,7 @@ export class SimulatedDongle implements Ds5Transport {
 
   private identity(): Uint8Array {
     const minor = this.minor;
-    const out = new Uint8Array(minor >= 20 ? IDENTITY_BYTES : minor >= 16 ? 49 : minor >= 14 ? 48 : minor >= 12 ? 47 : minor >= 7 ? 46 : 30);
+    const out = new Uint8Array(minor >= 24 ? IDENTITY_BYTES : minor >= 20 ? 58 : minor >= 16 ? 49 : minor >= 14 ? 48 : minor >= 12 ? 47 : minor >= 7 ? 46 : 30);
     out.set([0x44, 0x53, 0x35, 0x4f, this.opts.protoMajor ?? 1, minor, this.bodySize, 0xff]);
     const view = new DataView(out.buffer);
     view.setUint16(8, this.seq, true);
@@ -1034,6 +1091,10 @@ export class SimulatedDongle implements Ds5Transport {
       if (minor >= 23) out[49] |= 0x80; // FEATURES4: Tension, 0xF6 0x1C..0x20 and GET 0xE9 (1.23)
       // loop: HOT-PATH-OK — dev/test fake only; N = 8 id bytes
       for (let i = 0; i < 8; i++) out[50 + i] = parseInt(this.boardId.slice(i * 2, i * 2 + 2), 16) || 0;
+    }
+    if (minor >= 24) {
+      out[58] = 0x01; // FEATURES5: button layouts in sets (1.24, build step 2); the keys-and-mouse switch is the 54-byte body (step 1)
+      out[59] = (this.keysMouseUp ? 0x01 : 0) | (this.keysMouseSaved ? 0x04 : 0); // [59]: interface up, saved on
     }
     return out;
   }

@@ -1,5 +1,5 @@
 // Config_body wire layout for DS5Dongle OLED Edition firmware.
-// 37 bytes (42 from protocol 1.6, 49 from 1.13, 50 from 1.16, 51 from 1.17, 53 from 1.22), little-endian, packed
+// 37 bytes (42 from protocol 1.6, 49 from 1.13, 50 from 1.16, 51 from 1.17, 53 from 1.22, 54 from 1.24), little-endian, packed
 // (matches src/config.h in the firmware).
 //
 //   offset 0   uint8   config_version              (firmware-set; read-only)
@@ -41,10 +41,12 @@
 //   protocol 1.22 (upstream's 2026-10-17/18 batch):
 //   offset 51  uint8   packet_mode                 0 = two frames per 0x39 audio report (default), 1 = one per 0x36 (identity [49] bit 5)
 //   offset 52  uint8   disconnect_on_dock          1 = drop the controller's link when it is docked, 0 = off (default; identity [49] bit 6)
+//   protocol 1.24 (the firmware's docs/TENSION_BUTTONS.md §5.4; announced by the 54-byte body, identity [6]):
+//   offset 53  uint8   keys_mouse                  1 = the keyboard + mouse interface from the next USB connect, 0 = off (default; 0xFF from older firmware = off)
 //
 // The config GET (0xF7) is capped at 63 bytes: from 1.13 a 63-byte GET still
 // answers the 42-byte body with the remap block at 42 (remap.ts), and a
-// shorter one the whole body, so readConfig asks for CONFIG_BODY_SIZE_V22
+// shorter one the whole body, so readConfig asks for CONFIG_BODY_SIZE_V24
 // (older firmware answers its own, shorter body).
 //
 // NOTE: lightbar_mode / lb_fav_* are edited on the OLED and in the desktop app's
@@ -84,6 +86,10 @@ const ECHO_CANCEL_AT = CONFIG_BODY_SIZE_V16;
 export const CONFIG_BODY_SIZE_V22 = 53;
 const PACKET_MODE_AT = CONFIG_BODY_SIZE_V17;
 const DOCK_AT = CONFIG_BODY_SIZE_V17 + 1;
+// Protocol 1.24 appends keys and mouse from the controller (54 in all). Only
+// sent to firmware whose body is 54 bytes: a 53-byte write leaves it as it is.
+export const CONFIG_BODY_SIZE_V24 = 54;
+const KEYS_MOUSE_AT = CONFIG_BODY_SIZE_V22;
 // The status pin: the GPIOs the firmware accepts (status_gpio.h), the ones
 // nothing else on the dongle uses (not the UART, the OLED add-on or the radio).
 export const STATUS_GPIO_OFF = 0xff;
@@ -148,6 +154,9 @@ export interface ConfigBody {
   // Protocol 1.22 (defaults on older firmware, and not sent to it).
   packetMode: PacketMode;
   disconnectOnDock: boolean;
+  // Protocol 1.24 (off on older firmware, and not sent to it): the board adds
+  // a keyboard + mouse interface from the next USB connect.
+  keysMouse: boolean;
 }
 
 export interface ConfigValidationIssue {
@@ -190,6 +199,7 @@ export const DEFAULT_CONFIG: ConfigBody = {
   micEchoCancel: true,
   packetMode: 0,
   disconnectOnDock: false,
+  keysMouse: false,
 };
 
 export const POLLING_RATE_OPTIONS: Array<{ value: PollingRateMode; label: string }> = [
@@ -259,19 +269,21 @@ export function decodeConfigBody(source: ArrayBuffer | DataView | Uint8Array): C
 
 // split: protocol 1.6+ (the right grip); tail: protocol 1.13+ (implies split);
 // micLevel: protocol 1.16+ (implies tail); echoCancel: protocol 1.17+ (implies micLevel);
-// v22: protocol 1.22+, the audio report choice and the dock disconnect (implies echoCancel).
-export function encodeConfigBody(config: ConfigBody, split = false, tail = false, micLevel = false, echoCancel = false, v22 = false): Uint8Array<ArrayBuffer> {
+// v22: protocol 1.22+, the audio report choice and the dock disconnect (implies echoCancel);
+// v24: protocol 1.24+, keys and mouse from the controller (implies v22).
+export function encodeConfigBody(config: ConfigBody, split = false, tail = false, micLevel = false, echoCancel = false, v22 = false, v24 = false): Uint8Array<ArrayBuffer> {
   const issues = validateConfig(config);
   if (issues.length > 0) {
     // loop: NOT-WORTH — error path only (invalid draft)
     console.warn("not sending settings that don't check out:", issues.map((i) => i.message).join("; "));
     throw new KeyedError("desktop.errors.badRequest"); // the page blocks an invalid draft first (an app bug if it gets here)
   }
+  v22 ||= v24;
   echoCancel ||= v22;
   micLevel ||= echoCancel;
   tail ||= micLevel;
   split ||= tail;
-  const size = v22 ? CONFIG_BODY_SIZE_V22 : echoCancel ? CONFIG_BODY_SIZE_V17 : micLevel ? CONFIG_BODY_SIZE_V16 : tail ? CONFIG_BODY_SIZE_V13 : split ? CONFIG_BODY_SIZE_SPLIT : CONFIG_BODY_SIZE;
+  const size = v24 ? CONFIG_BODY_SIZE_V24 : v22 ? CONFIG_BODY_SIZE_V22 : echoCancel ? CONFIG_BODY_SIZE_V17 : micLevel ? CONFIG_BODY_SIZE_V16 : tail ? CONFIG_BODY_SIZE_V13 : split ? CONFIG_BODY_SIZE_SPLIT : CONFIG_BODY_SIZE;
   const bytes = new Uint8Array(new ArrayBuffer(size));
   const view = new DataView(bytes.buffer);
   view.setUint8(0, config.configVersion & 0xff);
@@ -318,6 +330,7 @@ export function encodeConfigBody(config: ConfigBody, split = false, tail = false
     view.setUint8(PACKET_MODE_AT, config.packetMode);
     view.setUint8(DOCK_AT, config.disconnectOnDock ? 1 : 0);
   }
+  if (v24) view.setUint8(KEYS_MOUSE_AT, config.keysMouse ? 1 : 0);
   return bytes;
 }
 
@@ -430,6 +443,7 @@ export function normalizeConfig(config: ConfigBody): ConfigBody {
     micEchoCancel: Boolean(config.micEchoCancel),
     packetMode: config.packetMode === 1 ? 1 : 0,
     disconnectOnDock: Boolean(config.disconnectOnDock),
+    keysMouse: Boolean(config.keysMouse),
   };
 }
 
@@ -469,7 +483,8 @@ export function configsEqual(left: ConfigBody | null, right: ConfigBody | null):
     left.micLevel === right.micLevel &&
     left.micEchoCancel === right.micEchoCancel &&
     left.packetMode === right.packetMode &&
-    left.disconnectOnDock === right.disconnectOnDock
+    left.disconnectOnDock === right.disconnectOnDock &&
+    left.keysMouse === right.keysMouse
   );
 }
 
@@ -489,7 +504,7 @@ function decodeAt(bytes: Uint8Array, offset: number): ConfigBody | null {
   // A 63-byte read of 1.13+ firmware has the remap block ('RM') at 42, not
   // the 1.13 fields.
   const remapAt42 = avail > TAIL_AT + 1 && bytes[offset + TAIL_AT] === 0x52 && bytes[offset + TAIL_AT + 1] === 0x4d;
-  const len = Math.min(avail, remapAt42 ? CONFIG_BODY_SIZE_SPLIT : CONFIG_BODY_SIZE_V22);
+  const len = Math.min(avail, remapAt42 ? CONFIG_BODY_SIZE_SPLIT : CONFIG_BODY_SIZE_V24);
   const tail = len >= CONFIG_BODY_SIZE_V13;
   const view = new DataView(bytes.buffer, bytes.byteOffset + offset, len);
   // Read tail fields (offset >= 19) only when the firmware actually sent them;
@@ -533,6 +548,8 @@ function decodeAt(bytes: Uint8Array, offset: number): ConfigBody | null {
     micEchoCancel: len >= CONFIG_BODY_SIZE_V17 ? view.getUint8(ECHO_CANCEL_AT) !== 0 : DEFAULT_CONFIG.micEchoCancel,
     packetMode: (len >= CONFIG_BODY_SIZE_V22 ? view.getUint8(PACKET_MODE_AT) : DEFAULT_CONFIG.packetMode) as PacketMode,
     disconnectOnDock: len >= CONFIG_BODY_SIZE_V22 ? view.getUint8(DOCK_AT) === 1 : DEFAULT_CONFIG.disconnectOnDock,
+    // 0xFF (a body saved by older firmware) reads as off, like the firmware.
+    keysMouse: len >= CONFIG_BODY_SIZE_V24 ? view.getUint8(KEYS_MOUSE_AT) === 1 : DEFAULT_CONFIG.keysMouse,
   };
 }
 

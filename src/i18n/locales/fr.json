@@ -174,7 +174,11 @@
       "pollRealTime": "Temps réel",
       "pollRateInfo": "1000 Hz envoie le dernier état de la manette chaque milliseconde. Temps réel envoie chaque rapport Bluetooth dès qu'il arrive.",
       "dockDisconnect": "Déconnecter sur la station de charge",
-      "dockDisconnectInfo": "Coupe la connexion Bluetooth de la manette quand vous la posez sur une station de charge ou un dock. Appuyez sur la touche PS pour la reconnecter."
+      "dockDisconnectInfo": "Coupe la connexion Bluetooth de la manette quand vous la posez sur une station de charge ou un dock. Appuyez sur la touche PS pour la reconnecter.",
+      "keysMouse": "Clavier et souris depuis la manette",
+      "keysMouseShort": "Clavier et souris",
+      "keysMouseSub": "Actif à la prochaine connexion.",
+      "keysMouseInfo": "Activé : {{device}} apparaît aussi sur le PC comme clavier et souris, pour que les touches d'un set puissent taper des touches (elles arrivent avec un prochain firmware). Désactivé : le PC ne voit que la manette, exactement comme avant. Pas encore testé partout : sous Linux, le clavier risque de n'avoir aucun pilote, et macOS peut proposer de configurer un nouveau clavier."
     },
     "lightbar": {
       "mode": "Mode",
@@ -2068,7 +2072,8 @@
       "oled": "Écran OLED",
       "usb": "Connexion au PC",
       "lights": "Voyants d'état",
-      "diagnostics": "Diagnostic"
+      "diagnostics": "Diagnostic",
+      "sets": "Sets"
     },
     "boardBusy": {
       "title": "Un autre programme utilise {{device}}.",
@@ -2129,6 +2134,52 @@
       "find": "Chercher une carte",
       "identifyTip": "Utilisée. Clique pour faire clignoter THIS ONE sur son écran",
       "switchTip": "Clique pour afficher cette carte (THIS ONE clignote sur son écran)"
+    },
+    "sets": {
+      "without": "Sans set",
+      "status": "Actif : {{name}}",
+      "info": "Un set réunit L2, R2 et les touches sous un nom. Ta carte en garde jusqu'à 8 et les exécute avec ou sans l'application. « Modifier le set » choisit le set affiché par le dessin, Gâchettes adaptatives et Attribution des touches ; « Sans set » modifie les touches utilisées quand aucun set ne les change.",
+      "editInSets": "Crée ou choisis un set dans Sets pour ses gâchettes."
+    },
+    "buttons": {
+      "warn": {
+        "reconnect": "Reconnecte pour activer clavier et souris.",
+        "noCross": "Rien n'appuie sur ✕ : les menus seront difficiles.",
+        "noCircle": "Rien n'appuie sur ○ : tu risques d'être bloqué.",
+        "duplicate": "{{other}} le fait déjà.",
+        "promptsInfo": "Les jeux affichent toujours leurs propres icônes de touches : ils ne connaissent pas cette disposition.",
+        "triggerEffectInfo": "Les effets de gâchette restent sur la gâchette que tu presses."
+      },
+      "status": "{{set}} · {{count}} modifiée(s)",
+      "pick": "Touche",
+      "pickHint": "Clique une pièce ou appuie dessus sur la manette.",
+      "pickNone": "Touches modifiées",
+      "changed": "Modifiées",
+      "changedLine": "{{from}} → {{to}}",
+      "noneChanged": "Chaque touche est elle-même dans ce calque.",
+      "does": "{{button}} fait",
+      "row": {
+        "press": "Appui"
+      },
+      "psFixed": "Touche PS (toujours)",
+      "swap": "Échanger avec…",
+      "resetButton": "Réinitialiser cette touche",
+      "legacyHint": "Maintien, double appui et calques : il faut un set.",
+      "makeSet": "Créer un set avec ces touches",
+      "makeSetReplace": "Remplacer le set",
+      "emptySlot": "Emplacement vide : crée un set dans Sets.",
+      "needsFirmware": "Maintien, double appui et calques : mise à jour requise.",
+      "setLeaves": "Ce set laisse les touches telles quelles.",
+      "useInSet": "Changer les touches dans ce set",
+      "target": {
+        "title": "{{row}} : ce que ça fait",
+        "gridHint": "Flèches pour bouger, Entrée pour choisir."
+      },
+      "badge": {
+        "create": "Créer",
+        "options": "Options",
+        "touchpad": "Pavé"
+      }
     }
   },
   "ad": {

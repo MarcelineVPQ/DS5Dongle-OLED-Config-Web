@@ -5668,3 +5668,106 @@ main.dk-body:focus:not(:focus-visible),
   stroke-width: 1;
   stroke-dasharray: 2 2;
 }
+
+/* Tension buttons (Button assignments for a set, SetButtons.tsx): the
+   Changed list as links, the Press row's target button, and its picker, a
+   top-layer popover with the controller on a 7 x 5 grid. Static, no
+   animation (idle cost 0). */
+.bt-changed {
+  display: grid;
+  gap: 2px;
+  margin: 2px 0 4px;
+  padding: 0;
+  list-style: none;
+}
+.bt-link {
+  padding: 2px 0;
+  border: 0;
+  background: none;
+  color: var(--dk-accent-text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.bt-link:hover {
+  text-decoration: underline;
+}
+.bt-link:focus-visible,
+.bt-cell:focus-visible {
+  outline: 2px solid var(--dk-focus);
+  outline-offset: 1px;
+}
+.bt-fixed {
+  color: var(--text-muted);
+}
+.bt-target {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.bt-pop {
+  display: grid;
+  gap: 6px;
+  width: 260px;
+  max-width: calc(100vw - 32px);
+  padding: 8px;
+  border: 1px solid var(--border-default);
+  border-radius: var(--dk-radius);
+  background: var(--bg-panel);
+  box-shadow: var(--shadow-1);
+}
+.bt-pad {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  grid-template-rows: repeat(5, 28px);
+  gap: 3px;
+}
+.bt-cell {
+  min-width: 0;
+  padding: 0 2px;
+  overflow: hidden;
+  border: 1px solid var(--border-default);
+  border-radius: calc(var(--dk-radius) - 2px);
+  background: var(--bg-inset);
+  color: var(--text-body);
+  font: inherit;
+  font-size: var(--dk-small);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.bt-cell:hover {
+  background: var(--bg-segment);
+  color: var(--text-strong);
+}
+/* The button itself ("(default)"): a dashed edge; the value now: the accent. */
+.bt-cell.own {
+  border-style: dashed;
+}
+.bt-cell.on,
+.bt-pop-off.on {
+  border-color: var(--dk-accent);
+  box-shadow: inset 0 0 0 1px var(--dk-accent);
+  color: var(--text-strong);
+}
+.bt-pop-off {
+  justify-self: start;
+}
+
+/* The drawing's badges (LiveController): a changed button's new job beside
+   it, in the layer shown. A static overlay drawn when the layout changes:
+   0 frames a second idle, nothing while hidden, the same on the CPU fallback. */
+.live-ctl .badges {
+  pointer-events: none;
+}
+.live-ctl .badges rect {
+  fill: var(--bg-panel);
+  stroke: var(--border-default);
+  stroke-width: 1;
+}
+.live-ctl .badges text {
+  fill: var(--text-strong);
+  font-family: var(--font-mono);
+  font-weight: 600;
+}

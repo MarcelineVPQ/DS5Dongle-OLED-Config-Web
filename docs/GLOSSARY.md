@@ -117,6 +117,26 @@ Sony's menus have no counterpart for these (they are upstream awalol's settings 
 
 Their choices: Auto, Speaker, Headset, Off, Built-in (de: Auto, Lautsprecher, Headset, Aus, Integriert; fr: Auto, Haut-parleur, Casque, Désactivé, Intégré; es: Auto, Altavoz, Auriculares, Desactivado, Integrado; pt-BR: Auto, Alto-falante, Headset, Desligado, Embutido; zh-CN: 自动, 扬声器, 耳机, 关, 内置; ja: 自動, スピーカー, ヘッドセット, オフ, 内蔵). "Built-in" follows Sony's **Built-in microphone**. **Trigger Effect Intensity** is Sony's own term (above).
 
+**Tension buttons** (protocol 1.24: a set holds a button layout too, the firmware's `docs/TENSION_BUTTONS.md` §7.12). Sony's **Button assignments** stays the section's name; these are our own words, in the same style (only Press shows in the app so far; the others come with their pieces):
+
+| Term | en | de | fr | es | pt-BR | zh-CN | ja |
+|---|---|---|---|---|---|---|---|
+| Set (triggers and buttons under a name) | Set | Set | set | set | set | 组合 | セット |
+| Layer | Layer | Ebene | Calque | Capa | Camada | 层 | レイヤー |
+| Base (the layout without a layer) | Base | Basis | Base | Base | Base | 基础层 | ベース |
+| Press | Press | Drücken | Appui | Pulsar | Apertar | 按下 | 押す |
+| Hold | Hold | Halten | Maintien | Mantener | Segurar | 长按 | 長押し |
+| Double press | Double press | Doppeldruck | Double appui | Doble pulsación | Toque duplo | 双击 | ダブル押し |
+| With PS (a chord with the PS button) | With PS | Mit PS | Avec PS | Con PS | Com PS | 配合 PS 键 | PS と同時 |
+| Toggle | Toggle | Umschalten | Bascule | Alternar | Alternar | 切换 | トグル |
+| Turbo | Turbo | Turbo | Turbo | Turbo | Turbo | 连发 | ターボ |
+| Keys and mouse from the controller | Keys and mouse from the controller | Tasten und Maus vom Controller | Clavier et souris depuis la manette | Teclas y ratón desde el mando | Teclas e mouse pelo controle | 由控制器发送键盘和鼠标 | コントローラーからキーとマウス |
+| Gyro as mouse | Gyro as mouse | Gyro als Maus | Gyro en souris | Giroscopio como ratón | Giroscópio como mouse | 陀螺仪作鼠标 | ジャイロをマウスに |
+| Same as base | Same as base | Wie Basis | Comme la base | Igual que la base | Igual à base | 同基础层 | ベースと同じ |
+| Swap with | Swap with | Tauschen mit | Échanger avec | Intercambiar con | Trocar com | 与…互换 | 入れ替え |
+
+"Set" follows the Tension sets' existing wording in each language (Tension-Set, set Tension, 组合, セット). Without a set: Ohne Set, Sans set, Sin set, Sem set, 不使用组合, セットなし.
+
 ## Naming the board
 
 The app never says "dongle" (that is the owner's slang) in any language. Every string that names the board uses the `{{device…}}` variables (`src/i18n/deviceForms.ts`): the board the firmware reports ("the Pico 2 W"), the last board that connected while none is, and **your board** before any has (Dein Board, ta carte, tu placa, sua placa, 你的开发板, お使いのボード). `{{deviceName}}` is the bare name for headings and labels ("Pico 2 W" / "Your board"), `{{device, capitalize}}` starts a sentence, and languages with articles or cases have one variable per grammatical spot (German `device_dat`, French `device_de`…). The board's page is named after the board in the side bar, and the save button reads **Save to the Pico 2 W**. Only the product's own name keeps the word: **DS5 Dongle OLED Edition**, and the firmware's USB name "DS5 Dongle Wake Keyboard". `tests/unit/deviceWording.test.ts` fails if a translation says "dongle" again.
