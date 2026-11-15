@@ -22,6 +22,8 @@ on:
       - "docs/LINT_SUPPRESSIONS.md"
       - "docs/PROTON_CHANGELOG.md"
       - "docs/SECURITY_AUDIT.md"
+      - "docs/schemas/**"
+      - "src/desktop/about/firmwareChangelogMissing.md"
   pull_request:
     branches: [master]
     # Docs-only pushes run nothing (Marcy 2026-11-01: CI only where it proves
@@ -43,6 +45,8 @@ on:
       - "docs/LINT_SUPPRESSIONS.md"
       - "docs/PROTON_CHANGELOG.md"
       - "docs/SECURITY_AUDIT.md"
+      - "docs/schemas/**"
+      - "src/desktop/about/firmwareChangelogMissing.md"
   # Windows and macOS run only by hand (Marcy 2026-11-01): once before every
   # release tag, and the release itself builds and tests on both:
   # gh workflow run CI --ref master
