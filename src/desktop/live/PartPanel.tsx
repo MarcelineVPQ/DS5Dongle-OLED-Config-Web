@@ -169,12 +169,7 @@ export default function ControllerSections({ bridge, input, remap, buttonFocus, 
           </>
         )}
       </Section>
-      <Section
-        id="buttons"
-        icon={Gamepad2}
-        title={t("desktop.sections.buttons")}
-        status={(editedSet && setButtonsStatus(t, editedSet)) ?? legacyStatus}
-      >
+      <Section id="buttons" icon={Gamepad2} title={t("desktop.sections.buttons")} status={(editedSet && setButtonsStatus(t, editedSet)) ?? legacyStatus}>
         {() =>
           !setsReady ? (
             // Older firmware (no identity [58] bit 0), or the sets not read (yet): today's editor.

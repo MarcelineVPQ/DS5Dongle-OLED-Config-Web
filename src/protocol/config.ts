@@ -283,7 +283,19 @@ export function encodeConfigBody(config: ConfigBody, split = false, tail = false
   micLevel ||= echoCancel;
   tail ||= micLevel;
   split ||= tail;
-  const size = v24 ? CONFIG_BODY_SIZE_V24 : v22 ? CONFIG_BODY_SIZE_V22 : echoCancel ? CONFIG_BODY_SIZE_V17 : micLevel ? CONFIG_BODY_SIZE_V16 : tail ? CONFIG_BODY_SIZE_V13 : split ? CONFIG_BODY_SIZE_SPLIT : CONFIG_BODY_SIZE;
+  const size = v24
+    ? CONFIG_BODY_SIZE_V24
+    : v22
+      ? CONFIG_BODY_SIZE_V22
+      : echoCancel
+        ? CONFIG_BODY_SIZE_V17
+        : micLevel
+          ? CONFIG_BODY_SIZE_V16
+          : tail
+            ? CONFIG_BODY_SIZE_V13
+            : split
+              ? CONFIG_BODY_SIZE_SPLIT
+              : CONFIG_BODY_SIZE;
   const bytes = new Uint8Array(new ArrayBuffer(size));
   const view = new DataView(bytes.buffer);
   view.setUint8(0, config.configVersion & 0xff);

@@ -384,7 +384,11 @@ function GridPopover({
   const pop = useRef<HTMLDivElement>(null);
   useTopLayer(pop, open, { anchor: button, gap: 4 });
   // loop: NOT-WORTH — N = 18 cells, on open
-  const startAt = () => Math.max(0, cells.findIndex(([s]) => s === current));
+  const startAt = () =>
+    Math.max(
+      0,
+      cells.findIndex(([s]) => s === current),
+    );
   // lifetime: OK — cleanup: removes the outside-click listener (popover closes / unmount)
   useEffect(() => {
     if (!open) return;

@@ -287,8 +287,7 @@ export const supportsSetButtons = (identity: BridgeIdentity | null) => supportsT
 // firmware announces it by its 54-byte body (identity [6]) from 1.24, before
 // [58] bit 4 (which the key targets bring; firmware c7a9688 sends [58] = 0).
 export const KEYS_MOUSE_BODY = 54;
-export const supportsKeysMouse = (identity: BridgeIdentity | null) =>
-  !!identity && (identity.protoMajor > 1 || identity.protoMinor >= BUTTONS_MINOR) && identity.configBodyLength >= KEYS_MOUSE_BODY;
+export const supportsKeysMouse = (identity: BridgeIdentity | null) => !!identity && (identity.protoMajor > 1 || identity.protoMinor >= BUTTONS_MINOR) && identity.configBodyLength >= KEYS_MOUSE_BODY;
 
 export interface BridgeIdentity {
   protoMajor: number;

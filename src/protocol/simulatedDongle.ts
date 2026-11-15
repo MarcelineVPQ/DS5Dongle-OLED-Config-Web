@@ -798,8 +798,7 @@ export class SimulatedDongle implements Ds5Transport {
       // ver 1 saves the triggers and keeps the slot's ButtonPart (zero for an empty slot, §6.1).
       if (t.saveVer === 1) next.set(t.slots[slot]?.subarray(SET_BODY_BYTES) ?? new Uint8Array(BUTTON_PART_BYTES), SET_BODY_BYTES);
       t.slots[slot] = next;
-    }
-    else if (func === 0x1f) {
+    } else if (func === 0x1f) {
       t.slots[slot] = null;
       if (t.saved === slot) t.saved = 0xff;
       if (t.now === slot) {

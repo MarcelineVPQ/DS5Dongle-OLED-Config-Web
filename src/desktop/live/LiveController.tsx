@@ -262,7 +262,12 @@ function LiveArt({ art, input, lightbar, playerLeds, playerWiring, colors, selec
       title.textContent = badge.title;
       const box = document.createElementNS(ns, "rect");
       // loop: NOT-WORTH — N = 3 attributes, per badge
-      for (const [k, v] of [["width", w], ["height", 15], ["rx", 4]] as const) box.setAttribute(k, String(v));
+      for (const [k, v] of [
+        ["width", w],
+        ["height", 15],
+        ["rx", 4],
+      ] as const)
+        box.setAttribute(k, String(v));
       const text = document.createElementNS(ns, "text");
       text.setAttribute("x", "4");
       text.setAttribute("y", "11.5");
