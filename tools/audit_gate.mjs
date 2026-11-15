@@ -12,13 +12,6 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
-// fast-uri 3.1.9 fixes all four; it was published 2026-10-19, so the 14-day rule allows it from 2026-11-02.
-const FAST_URI = {
-  package: "fast-uri",
-  why: "dev only (electron-builder's ajv); the fix, 3.1.9, was published 2026-10-19 and is younger than the 14-day rule",
-  removedBy: "updating fast-uri to 3.1.9 from 2026-11-02 (Dependabot's npm-minor-patch group)",
-};
-
 export const ALLOWED = [
   {
     advisory: "GHSA-g3hv-75wg-m249",
@@ -26,10 +19,6 @@ export const ALLOWED = [
     why: "dev only (eslint, typescript-eslint, electron-builder's glob, filelist, asar and dir-compare); fixed only in minimatch 11.0.1 (2026-10-27), a new major that none of them accept (they need 3.x, 5.x, 9.x or 10.x); they match our own build and lint patterns, never untrusted input",
     removedBy: "the tools' own releases moving to minimatch 11 (docs/BACKLOG.md, Major dependency upgrades)",
   },
-  { advisory: "GHSA-w74x-v6f9-j3xg", ...FAST_URI },
-  { advisory: "GHSA-xhq7-xmqj-769h", ...FAST_URI },
-  { advisory: "GHSA-wjr9-j795-jxcr", ...FAST_URI },
-  { advisory: "GHSA-333x-w4r6-6crp", ...FAST_URI },
 ];
 
 /** npm audit --json -> [{ advisory, package, severity, title }], one per advisory and package. */
