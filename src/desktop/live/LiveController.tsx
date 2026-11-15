@@ -280,7 +280,12 @@ function LiveArt({ art, input, lightbar, playerLeds, playerWiring, colors, selec
       if (badge.dot) {
         const dot = document.createElementNS(ns, "circle");
         // loop: NOT-WORTH — N = 3 attributes, per badge with a dot
-        for (const [k, v] of [["cx", w - 1], ["cy", 1], ["r", 3]] as const) dot.setAttribute(k, String(v));
+        for (const [k, v] of [
+          ["cx", w - 1],
+          ["cy", 1],
+          ["r", 3],
+        ] as const)
+          dot.setAttribute(k, String(v));
         g.append(dot);
       }
       layer.append(g);

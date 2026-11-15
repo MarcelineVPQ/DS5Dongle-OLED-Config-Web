@@ -23,7 +23,9 @@ export function GyroMouse({ bridge }: { bridge: UseDs5BridgeResult }) {
   const part = set.buttons ?? emptyButtonPart();
   const g = part.gyro;
   const put = (gyro: ButtonGyro | null) => editor.edit({ ...set, buttons: withGyro(part, gyro) });
-  const change = (c: Partial<ButtonGyro>) => g && put({ ...g, ...c });
+  const change = (c: Partial<ButtonGyro>) => {
+    if (g) put({ ...g, ...c });
+  };
   const mode = !g ? "off" : g.flags & NEEDS_BUTTON ? "button" : "on";
   return (
     <SectionGroup title={t("desktop.gyroMouse.title")}>
@@ -66,7 +68,15 @@ export function GyroMouse({ bridge }: { bridge: UseDs5BridgeResult }) {
           <Slider label={t("desktop.gyroMouse.speedV")} value={g.speedV} min={1} max={255} step={1} onChange={(speedV) => change({ speedV })} />
           <Toggle label={t("desktop.gyroMouse.invertH")} value={(g.flags & 0x01) !== 0} onChange={(v) => change({ flags: v ? g.flags | 0x01 : g.flags & ~0x01 })} />
           <Toggle label={t("desktop.gyroMouse.invertV")} value={(g.flags & 0x02) !== 0} onChange={(v) => change({ flags: v ? g.flags | 0x02 : g.flags & ~0x02 })} />
-          <Slider label={t("desktop.gyroMouse.steadiness")} info={t("desktop.gyroMouse.steadinessInfo")} value={g.steadiness} min={0} max={255} step={1} onChange={(steadiness) => change({ steadiness })} />
+          <Slider
+            label={t("desktop.gyroMouse.steadiness")}
+            info={t("desktop.gyroMouse.steadinessInfo")}
+            value={g.steadiness}
+            min={0}
+            max={255}
+            step={1}
+            onChange={(steadiness) => change({ steadiness })}
+          />
           {g.mode === 1 && <KeysWarning bridge={bridge} flags={bridge.identity?.keysMouseFlags ?? 0} />}
         </>
       )}

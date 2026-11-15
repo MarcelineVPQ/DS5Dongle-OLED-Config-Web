@@ -81,11 +81,7 @@ export function LiveLine({ truth, error, part, connected }: { truth: LiveTruth |
         {!connected ? t("desktop.buttons.live.noController") : (line ?? t("desktop.buttons.live.idle"))}
         {truth && <HoldRing truth={truth} />}
       </p>
-      {truth?.paused && (
-        <p className="dk-hint">
-          {t("desktop.buttons.warn.paused")}
-        </p>
-      )}
+      {truth?.paused && <p className="dk-hint">{t("desktop.buttons.warn.paused")}</p>}
     </>
   );
 }

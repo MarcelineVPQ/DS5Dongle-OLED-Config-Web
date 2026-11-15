@@ -65,7 +65,11 @@ export function LayoutList() {
   if (!desktop) return null;
   const board = tn.loaded && !tn.readOnly;
   const free = firstFreeSlot(tn.sets);
-  const save = (id: string, layoutName: string, set: TensionSet) => void desktop.librarySetLayout(layoutRecord(id, layoutName, set)).then(setLibrary).catch(shown("desktop.errors.layoutSave"));
+  const save = (id: string, layoutName: string, set: TensionSet) =>
+    void desktop
+      .librarySetLayout(layoutRecord(id, layoutName, set))
+      .then(setLibrary)
+      .catch(shown("desktop.errors.layoutSave"));
   const summary = (set: TensionSet) => {
     const part = set.buttons ?? emptyButtonPart();
     // loop: HOT-PATH-OK — N ≤ 22 changed buttons per row; rebuilt per render of the list
@@ -152,7 +156,12 @@ export function DeleteLayout({ id }: { id: string }) {
   const desktop = window.desktop;
   if (!desktop) return null;
   return (
-    <button type="button" className="dk-btn danger" title={t("desktop.layouts.deleteHint")} onClick={() => void desktop.libraryDeleteLayout(id).then(setLibrary).catch(shown("desktop.errors.layoutDelete"))}>
+    <button
+      type="button"
+      className="dk-btn danger"
+      title={t("desktop.layouts.deleteHint")}
+      onClick={() => void desktop.libraryDeleteLayout(id).then(setLibrary).catch(shown("desktop.errors.layoutDelete"))}
+    >
       {t("desktop.layouts.delete")}
     </button>
   );
@@ -172,7 +181,14 @@ export function SaveAsLayout({ onSave }: { onSave: (name: string) => void }) {
         setName("");
       }}
     >
-      <input className="dk-input" maxLength={40} placeholder={t("desktop.layouts.namePlaceholder")} aria-label={t("desktop.layouts.namePlaceholder")} value={name} onChange={(e) => setName(e.target.value)} />
+      <input
+        className="dk-input"
+        maxLength={40}
+        placeholder={t("desktop.layouts.namePlaceholder")}
+        aria-label={t("desktop.layouts.namePlaceholder")}
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+      />
       <button type="submit" className="dk-btn primary" disabled={!name.trim()}>
         {t("desktop.layouts.saveAs")}
       </button>

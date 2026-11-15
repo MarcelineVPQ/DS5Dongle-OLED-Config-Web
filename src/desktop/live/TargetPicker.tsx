@@ -70,9 +70,16 @@ export function Popover({ label, buttonText, buttonClass, children }: { label: s
     document.addEventListener("pointerdown", onDown);
     return () => document.removeEventListener("pointerdown", onDown);
   }, [open]);
+  // Closing hands the focus back to the row's button, after the popover is gone
+  // (an effect, so close itself touches no ref and can be handed to children).
+  const [refocus, setRefocus] = useState(0);
+  // lifetime: OK — acquires nothing (moves the focus back to the row's button)
+  useEffect(() => {
+    if (refocus) button.current?.focus();
+  }, [refocus]);
   const close = () => {
     setOpen(false);
-    button.current?.focus();
+    setRefocus((n) => n + 1);
   };
   const onKeys = (e: KeyboardEvent<HTMLDivElement>) => {
     if (e.defaultPrevented) return;
@@ -103,10 +110,27 @@ export function Popover({ label, buttonText, buttonClass, children }: { label: s
 }
 
 // The controller grid: a roving tabindex (arrows, Home, End), Enter / click picks.
-export function PadGrid({ label, cells, current, own, onPick }: { label: string; cells: ReadonlyArray<[number, number, number]>; current: number | null; own: number | null; onPick: (s: number) => void }) {
+export function PadGrid({
+  label,
+  cells,
+  current,
+  own,
+  onPick,
+}: {
+  label: string;
+  cells: ReadonlyArray<[number, number, number]>;
+  current: number | null;
+  own: number | null;
+  onPick: (s: number) => void;
+}) {
   const { t } = useTranslation();
   // loop: NOT-WORTH — N = 18 cells, on open
-  const [at, setAt] = useState(() => Math.max(0, cells.findIndex(([s]) => s === current)));
+  const [at, setAt] = useState(() =>
+    Math.max(
+      0,
+      cells.findIndex(([s]) => s === current),
+    ),
+  );
   const grid = useRef<HTMLDivElement>(null);
   const move = (i: number) => {
     setAt(i);
@@ -264,7 +288,12 @@ function PickerBody({
           <>
             <PadGrid label={t("desktop.buttons.tab.controller")} cells={PAD} current={current} own={own} onPick={(s) => onPick(s === own ? null : buttonTarget(s))} />
             <p className="dk-hint">{t("desktop.buttons.target.gridHint")}</p>
-            <button type="button" className={`dk-btn bt-pop-off${value && sameTarget(value, DISABLE) ? " on" : ""}`} aria-pressed={!!value && sameTarget(value, DISABLE)} onClick={() => onPick(DISABLE)}>
+            <button
+              type="button"
+              className={`dk-btn bt-pop-off${value && sameTarget(value, DISABLE) ? " on" : ""}`}
+              aria-pressed={!!value && sameTarget(value, DISABLE)}
+              onClick={() => onPick(DISABLE)}
+            >
               {t("remap.disabled")}
             </button>
           </>
@@ -394,7 +423,14 @@ function MouseTab({ value, motion, onPick }: { value: Target | null; motion: boo
         {MOUSE_BUTTONS.map((m, i) => {
           const on = value?.kind === TARGET_KIND.mouseButton && value.a === i + 1;
           return (
-            <button key={m} type="button" data-first={i === 0 ? "1" : undefined} className={`dk-btn${on ? " on" : ""}`} aria-pressed={on} onClick={() => onPick({ kind: TARGET_KIND.mouseButton, a: i + 1, b: 0 })}>
+            <button
+              key={m}
+              type="button"
+              data-first={i === 0 ? "1" : undefined}
+              className={`dk-btn${on ? " on" : ""}`}
+              aria-pressed={on}
+              onClick={() => onPick({ kind: TARGET_KIND.mouseButton, a: i + 1, b: 0 })}
+            >
               {t(`desktop.buttons.mouse.${m}`)}
             </button>
           );

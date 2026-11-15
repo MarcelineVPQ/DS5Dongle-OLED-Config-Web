@@ -95,7 +95,11 @@ async function open(opts: FakeDongleOptions = {}, prepare?: (d: FakeDongle) => v
   await wait(() => !!container!.querySelector(".bt-layers") || seen.d?.layout.ready === false);
   return { dongle, client };
 }
-const pickButton = (source: number) => choose([...container!.querySelectorAll<HTMLSelectElement>("select")].find((s) => [...s.options].some((o) => o.text === i18n.t("desktop.buttons.pickNone")))!, String(source));
+const pickButton = (source: number) =>
+  choose(
+    [...container!.querySelectorAll<HTMLSelectElement>("select")].find((s) => [...s.options].some((o) => o.text === i18n.t("desktop.buttons.pickNone")))!,
+    String(source),
+  );
 const rowButton = (row: string) => {
   const r = [...container!.querySelectorAll(".dk-row")].find((x) => x.querySelector(".dk-label")?.firstChild?.textContent === i18n.t(`desktop.buttons.row.${row}`));
   return r!.querySelector<HTMLButtonElement>(".bt-target")!;

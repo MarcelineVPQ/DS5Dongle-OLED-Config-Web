@@ -5898,7 +5898,9 @@ span.bt-swatch {
   cursor: default;
 }
 .bt-swatch.on {
-  box-shadow: 0 0 0 2px var(--bg-panel), 0 0 0 4px var(--layer);
+  box-shadow:
+    0 0 0 2px var(--bg-panel),
+    0 0 0 4px var(--layer);
 }
 .bt-keys {
   display: grid;

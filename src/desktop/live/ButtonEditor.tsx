@@ -207,17 +207,20 @@ export function ButtonAssignments({
       {warnings.noCross && <p className="dk-hint dk-bad">{t("desktop.buttons.warn.noCross")}</p>}
       {warnings.noCircle && <p className="dk-hint dk-bad">{t("desktop.buttons.warn.noCircle")}</p>}
       {warnings.sixKeys && <p className="dk-hint dk-bad">{t("desktop.buttons.warn.sixKeys")}</p>}
-      {refused && (
-        <p className="dk-hint dk-bad">
-          {t("desktop.buttons.warn.full")}
-        </p>
-      )}
+      {refused && <p className="dk-hint dk-bad">{t("desktop.buttons.warn.full")}</p>}
     </>
   );
   return (
     <>
       <Row label={t("desktop.buttons.name")} sub={t("desktop.buttons.nameSub")} invalid={!set.name}>
-        <input className="dk-input tn-name" type="text" maxLength={16} value={set.name} aria-label={t("desktop.buttons.name")} onChange={(e) => editor.edit({ ...set, name: cleanName(e.target.value) })} />
+        <input
+          className="dk-input tn-name"
+          type="text"
+          maxLength={16}
+          value={set.name}
+          aria-label={t("desktop.buttons.name")}
+          onChange={(e) => editor.edit({ ...set, name: cleanName(e.target.value) })}
+        />
       </Row>
       {editor.full && (
         <Row label={t("desktop.buttons.saveInto")} info={t("desktop.buttons.saveIntoInfo")}>
@@ -379,7 +382,13 @@ function ChosenButton({
       <span className="bt-row-ctl">
         <TargetPicker label={t(`desktop.buttons.row.${row}`)} part={part} layer={layer} source={source} value={e?.[row] ?? null} unset={rowText(row)} caps={caps} onPick={(x) => set(row, x)} />
         {row !== "press" && e?.[row] && (
-          <button type="button" className="dk-btn tn-icon" aria-label={t("desktop.buttons.clearRow", { row: t(`desktop.buttons.row.${row}`) })} title={t("desktop.buttons.clearRow", { row: t(`desktop.buttons.row.${row}`) })} onClick={() => set(row, null)}>
+          <button
+            type="button"
+            className="dk-btn tn-icon"
+            aria-label={t("desktop.buttons.clearRow", { row: t(`desktop.buttons.row.${row}`) })}
+            title={t("desktop.buttons.clearRow", { row: t(`desktop.buttons.row.${row}`) })}
+            onClick={() => set(row, null)}
+          >
             <X size={13} aria-hidden="true" />
           </button>
         )}
@@ -423,7 +432,8 @@ function ChosenButton({
           <Row label={t("desktop.buttons.row.double")}>{picker("double")}</Row>
           {e?.double && (
             <p className="dk-hint dk-bad">
-              {t("desktop.buttons.warn.doubleCost", { button: name, time: `${seconds(part.doubleWindow)} s` })} <InfoTip text={t("desktop.buttons.warn.doubleCostInfo", { time: `${seconds(part.doubleWindow)} s` })} />
+              {t("desktop.buttons.warn.doubleCost", { button: name, time: `${seconds(part.doubleWindow)} s` })}{" "}
+              <InfoTip text={t("desktop.buttons.warn.doubleCostInfo", { time: `${seconds(part.doubleWindow)} s` })} />
             </p>
           )}
           {!ps && (
@@ -441,14 +451,7 @@ function ChosenButton({
               <Toggle label={t("desktop.buttons.row.toggle")} value={!!e?.toggle} onChange={(v) => onChange(withSwitch(part, layer, source, "toggle", v))} />
               <Toggle label={t("desktop.buttons.row.turbo")} value={!!e?.turbo} onChange={(v) => onChange(withSwitch(part, layer, source, "turbo", v))} />
               {e?.turbo && (
-                <Slider
-                  label={t("desktop.buttons.turboRate")}
-                  value={e.turboRate ?? 10}
-                  min={2}
-                  max={30}
-                  step={1}
-                  onChange={(v) => onChange(withTime(part, layer, source, "turboRate", v))}
-                />
+                <Slider label={t("desktop.buttons.turboRate")} value={e.turboRate ?? 10} min={2} max={30} step={1} onChange={(v) => onChange(withTime(part, layer, source, "turboRate", v))} />
               )}
             </>
           )}

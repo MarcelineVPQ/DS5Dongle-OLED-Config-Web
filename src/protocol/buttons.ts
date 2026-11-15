@@ -355,8 +355,7 @@ export function effectiveEntry(part: ButtonPart, layer: number, source: number):
 const hasRows = (e: ButtonEntry) => !!(e.press || e.hold || e.double || e.withPs || e.toggle || e.turbo);
 
 // Toggle and Turbo need a Press that is a button, a key or a mouse button (§3.5 rule 5; none = itself).
-export const pressTakesToggle = (press: Target | undefined) =>
-  !press || press.kind === TARGET_KIND.button || press.kind === TARGET_KIND.key || press.kind === TARGET_KIND.mouseButton;
+export const pressTakesToggle = (press: Target | undefined) => !press || press.kind === TARGET_KIND.button || press.kind === TARGET_KIND.key || press.kind === TARGET_KIND.mouseButton;
 
 // One entry made fit for the board: Press "itself" in the base is no Press
 // (absent = itself); in a layer an entry with nothing left keeps an explicit

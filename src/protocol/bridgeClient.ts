@@ -36,7 +36,18 @@ import {
   type TensionSet,
   type TensionStatus,
 } from "./tension";
-import { BUTTON_PART_BYTES, BUTTONS_CHUNK_AT, BUTTONS_CHUNKS, buttonsChunkReplyBytes, buttonsChunkSel, decodeButtonsChunk, decodeLiveTruth, LIVE_TRUTH_BYTES, LIVE_TRUTH_REPORT, type LiveTruth } from "./buttons";
+import {
+  BUTTON_PART_BYTES,
+  BUTTONS_CHUNK_AT,
+  BUTTONS_CHUNKS,
+  buttonsChunkReplyBytes,
+  buttonsChunkSel,
+  decodeButtonsChunk,
+  decodeLiveTruth,
+  LIVE_TRUTH_BYTES,
+  LIVE_TRUTH_REPORT,
+  type LiveTruth,
+} from "./buttons";
 import {
   CTRL_FIRMWARE_BYTES,
   CTRL_HEADER_BYTES,

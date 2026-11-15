@@ -74,11 +74,7 @@ export interface LayoutEditor {
   revert: () => void;
 }
 
-export function useLayoutEditor(
-  tn: TensionDraft,
-  remap: Remap,
-  profile: { key: string; title: string; layout: ButtonLayout | null } | null,
-): LayoutEditor {
+export function useLayoutEditor(tn: TensionDraft, remap: Remap, profile: { key: string; title: string; layout: ButtonLayout | null } | null): LayoutEditor {
   const ready = tn.buttons && tn.loaded && !tn.readOnly;
   const legacy = useMemo(() => (remap.supported ? partFromLegacy(remap.device, remap.extraDevice) : emptyButtonPart()), [remap.supported, remap.device, remap.extraDevice]);
   const [picked, setPicked] = useState<number | null>(null);
@@ -103,12 +99,18 @@ export function useLayoutEditor(
   );
 
   // A game's profile: its own layout, or (none yet) the board's to start from.
-  const profileBase = useMemo<TensionSet | null>(() => (profile ? (profile.layout ? layoutSet(profile.layout) : { ...boardLayout, name: boardLayoutName(profile.title) }) : null), [profile, boardLayout]);
+  const profileBase = useMemo<TensionSet | null>(
+    () => (profile ? (profile.layout ? layoutSet(profile.layout) : { ...boardLayout, name: boardLayoutName(profile.title) }) : null),
+    [profile, boardLayout],
+  );
   const [draft, setDraft] = useState<{ key: string; base: TensionSet; set: TensionSet } | null>(null);
   const mine = profile && profileBase && draft && draft.key === profile.key && draft.base === profileBase ? draft : null;
-  const editProfile = useCallback((next: TensionSet) => {
-    if (profile && profileBase) setDraft({ key: profile.key, base: profileBase, set: next });
-  }, [profile, profileBase]);
+  const editProfile = useCallback(
+    (next: TensionSet) => {
+      if (profile && profileBase) setDraft({ key: profile.key, base: profileBase, set: next });
+    },
+    [profile, profileBase],
+  );
   const revert = useCallback(() => setDraft(null), []);
   const dirty = !!mine && !!profileBase && !sameLayout(mine.set, profileBase);
 

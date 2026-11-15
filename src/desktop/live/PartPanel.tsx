@@ -164,7 +164,12 @@ export default function ControllerSections({ bridge, input, remap, buttonFocus, 
           </>
         )}
       </Section>
-      <Section id="buttons" icon={Gamepad2} title={t("desktop.sections.buttons")} status={editor.ready ? layoutStatus(t, editor.layout.name, editor.layout.buttons ?? emptyButtonPart()) : legacyStatus}>
+      <Section
+        id="buttons"
+        icon={Gamepad2}
+        title={t("desktop.sections.buttons")}
+        status={editor.ready ? layoutStatus(t, editor.layout.name, editor.layout.buttons ?? emptyButtonPart()) : legacyStatus}
+      >
         {() =>
           editor.ready ? (
             <ButtonAssignments bridge={bridge} pick={sourcePick} onPick={onSourcePick} layer={layer} onLayer={onLayer} edge={edge} live={live} />
@@ -214,7 +219,10 @@ export default function ControllerSections({ bridge, input, remap, buttonFocus, 
           icon={Rotate3d}
           title={t("desktop.sections.gyro")}
           // loop: NOT-WORTH — N = 2 parts of one status line
-          status={[cal.supported ? t(gyroCalibrated(cal.draft) ? "desktop.calib.calibrated" : "desktop.calib.uncalibrated") : null, gyroMouse ? onOff(t, t("desktop.gyroMouse.title"), !!editor.layout.buttons?.gyro) : null]
+          status={[
+            cal.supported ? t(gyroCalibrated(cal.draft) ? "desktop.calib.calibrated" : "desktop.calib.uncalibrated") : null,
+            gyroMouse ? onOff(t, t("desktop.gyroMouse.title"), !!editor.layout.buttons?.gyro) : null,
+          ]
             .filter(Boolean)
             .join(" · ")}
         >
