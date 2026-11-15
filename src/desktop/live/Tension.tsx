@@ -267,15 +267,7 @@ function TriggerEditor({ label, program, onChange }: { label: string; program: T
           <TensionPicture program={program} label={label} />
           {/* loop: HOT-PATH-OK — N ≤ 4 stages */}
           {program.stages.map((s, i) => (
-            <StageEditor
-              key={i}
-              index={i}
-              stage={s}
-              count={program.stages.length}
-              onChange={(next) => setStage(i, next)}
-              onMove={(by) => move(i, by)}
-              onRemove={() => setStage(i, null)}
-            />
+            <StageEditor key={i} index={i} stage={s} count={program.stages.length} onChange={(next) => setStage(i, next)} onMove={(by) => move(i, by)} onRemove={() => setStage(i, null)} />
           ))}
           {program.stages.length < TENSION_STAGES && (
             <div className="dk-row-btns">

@@ -899,8 +899,7 @@ export class SimulatedDongle implements Ds5Transport {
     } else if (func === 0x0a) {
       this.lastTrigger = arg;
       this.tension.paused = arg !== 0; // 1.23: a preset other than Off pauses Tension, Off resumes it
-    }
-    else if (func === 0x0e) {
+    } else if (func === 0x0e) {
       if (arg2 === 0) this.gripStops++;
       else {
         this.lastGripTest = arg;

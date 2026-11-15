@@ -29,11 +29,7 @@ import {
 
 const hex = (s: string) => s.split(" ").map((b) => parseInt(b, 16));
 // TENSION.md §3, "The bow": R2's three stages as the table gives their bytes.
-const BOW_STAGE_BYTES = [
-  hex("03 00 01 1E 00 00 00 00 F2 FF 0F 82 08 32"),
-  hex("00 00 00 00 00 00 00 00 F2 FF 00 00 00 00"),
-  hex("01 00 01 00 00 00 00 00 00 F1 00 02 08 00"),
-];
+const BOW_STAGE_BYTES = [hex("03 00 01 1E 00 00 00 00 F2 FF 0F 82 08 32"), hex("00 00 00 00 00 00 00 00 F2 FF 00 00 00 00"), hex("01 00 01 00 00 00 00 00 00 F1 00 02 08 00")];
 const bow: TensionSet = { name: "Bow", l2: { stages: [], policy: "fill" }, r2: { stages: BOW_R2_STAGES, policy: "replace" } };
 const stage = (over: Partial<TensionStage>): TensionStage => ({ ...newStage(EFFECT.feedback), ...over });
 
